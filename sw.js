@@ -3,7 +3,7 @@
 const VERSION = 'v4';
 const SHELL = 'kalbek-shell-' + VERSION;
 const CDN = 'kalbek-cdn-v1';
-const SHELL_FILES = ['./', './lithuanian.html', './manifest.webmanifest', './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
+const SHELL_FILES = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
 const CDN_HOSTS = ['cdn.jsdelivr.net'];
 
 self.addEventListener('install', e => {
@@ -43,7 +43,7 @@ async function networkFirst(req) {
     if (res && res.ok) cache.put(req, res.clone());
     return res;
   } catch (err) {
-    return (await cache.match(req)) || (await cache.match('./lithuanian.html')) || (await cache.match('./')) || Response.error();
+    return (await cache.match(req)) || (await cache.match('./index.html')) || (await cache.match('./')) || Response.error();
   }
 }
 async function cacheFirst(req) {

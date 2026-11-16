@@ -2,7 +2,7 @@
   "name": "Kalbėk · Lithuanian Audio Dashboard",
   "short_name": "Kalbėk",
   "description": "Turn your Lithuanian course MP3s into a searchable, practisable phrase library.",
-  "start_url": "./lithuanian.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
