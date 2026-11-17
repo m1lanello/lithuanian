@@ -229,18 +229,63 @@ body.has-np #toasts{bottom:88px}
 #dropveil{position:fixed;inset:0;z-index:150;display:grid;place-items:center;background:rgba(10,40,30,.8);color:#fff;font-size:1.5rem;font-weight:800;border:4px dashed var(--accent);pointer-events:none}
 .help-grid{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;align-items:center}
 
-/* ---- waveform editor ---- */
-.wvp{padding:10px 12px;margin-bottom:10px}
-.wvp h3{margin:0 0 8px;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-.wv-bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+/* ---- waveform editor (pinned under the header while you scroll the clip list) ---- */
+.wvp{position:sticky;top:var(--top-h,56px);z-index:30;padding:8px 12px 10px;margin-bottom:10px;box-shadow:0 8px 18px -10px rgba(0,0,0,.45)}
+.wvp.unpinned{position:static;box-shadow:none}
+.wv-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.wv-top h3{margin:0;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.wv-top .btn[aria-pressed=true]{border-color:var(--accent);color:var(--accent)}
+.wv-tools{display:flex;gap:4px 14px;flex-wrap:wrap}
+.wvp.tools-off .wv-tools{display:none}
+.wv-bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px;min-width:0;max-width:100%}
+.wv-bar .lbl-s{font-size:.8rem}
 .wv-bar .sep{width:1px;height:22px;background:var(--line);margin:0 2px}
 .wv-bar .btn:disabled{opacity:.4;cursor:default}
 .wv-canvas{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg2)}
-#wvMain{display:block;width:100%;height:170px;touch-action:none;cursor:crosshair;outline-offset:-3px}
-#wvMini{display:block;width:100%;height:36px;touch-action:none;margin-top:6px;border:1px solid var(--line);border-radius:8px;background:var(--bg2);cursor:pointer}
-.wv-info{margin:6px 0 8px;font-size:.84rem;color:var(--muted);font-variant-numeric:tabular-nums;min-height:1.3em}
+#wvMain{display:block;width:100%;height:150px;touch-action:none;cursor:crosshair;outline-offset:-3px}
+#wvMini{display:block;width:100%;height:30px;touch-action:none;margin:6px 0 0;border:1px solid var(--line);border-radius:8px;background:var(--bg2);cursor:pointer}
+.wv-info{flex:1;min-width:0;font-size:.84rem;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .clip.sel{box-shadow:inset 3px 0 0 var(--gold)}
-@media (max-width:600px){#wvMain{height:140px}.wv-bar .btn{min-height:36px}.wv-bar.scroll{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}.wv-bar.scroll>*{flex:none}}
+html{scroll-padding-top:calc(var(--top-h,0px) + var(--wv-h,0px) + 12px);scroll-padding-bottom:100px}
+.clip{scroll-margin-top:calc(var(--top-h,0px) + var(--wv-h,0px) + 12px);scroll-margin-bottom:100px}
+@media (max-width:700px){
+  .wvp{padding:6px 8px 8px}
+  .wv-top h3{display:none}
+  #wvMain{height:108px}#wvMini{height:24px;margin-top:4px}
+  .wv-tools{flex-direction:column;flex-wrap:nowrap;gap:0}
+  .wv-bar{flex-wrap:nowrap;overflow-x:auto;margin-top:6px;padding-bottom:3px;scrollbar-width:thin}
+  .wv-bar>*{flex:none}.wv-bar .btn{min-height:36px}
+}
+@media (max-width:700px){body.wb-open .top{position:static}}
+@media (max-height:520px){.wvp{position:static;box-shadow:none}}   /* landscape phones: no room to pin */
+/* ---- practice: typing, shadowing, goal ---- */
+.pr-type{width:100%;max-width:520px;display:flex;flex-direction:column;gap:8px;align-items:stretch}
+.pr-type input{font-size:1.3rem;text-align:center;padding:10px 12px}
+.pr-type .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.pr-type .charpad{justify-content:center}
+.pr-res{font-weight:700;padding:6px 14px;border-radius:999px;border:1px solid var(--line)}
+.pr-res.exact{color:var(--green);border-color:var(--green)}
+.pr-res.diacritics,.pr-res.close{color:var(--gold-text);border-color:var(--gold)}
+.pr-res.wrong,.pr-res.skip,.pr-res.empty{color:var(--red);border-color:var(--red)}
+.pr-diff{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;text-align:left;font-size:1.2rem;align-items:center}
+.pr-diff small{color:var(--muted);text-transform:uppercase;font-size:.68rem;letter-spacing:.05em}
+.dx.bad{color:var(--red);text-decoration:underline wavy}
+.dx.miss{color:var(--green);font-weight:800;text-decoration:underline}
+.dx.dia{color:var(--gold-text);font-weight:800;background:color-mix(in srgb,var(--gold) 22%,transparent);border-radius:3px}
+.dx.gap{color:var(--red);opacity:.7}
+.rate button.suggested{outline:2px solid var(--accent);outline-offset:2px}
+.sh-box{width:100%;max-width:520px;text-align:left;border:1px dashed var(--line);border-radius:12px;padding:8px 10px}
+.sh-box>summary{cursor:pointer;font-weight:600;color:var(--muted)}
+.sh-row{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.sh-row .rec{border-color:var(--red);color:var(--red)}.sh-row .rec.on{background:var(--red);color:#fff}
+.sh-row .btn:disabled{opacity:.45}
+.sh-wave{display:block;width:100%;height:96px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.sh-msg{font-size:.82rem;margin-top:6px}
+.goal{display:flex;align-items:center;gap:10px;font-size:.9rem;margin:8px 0}
+.goalbar{flex:1;max-width:260px;height:8px;border-radius:99px;background:var(--surface2);overflow:hidden}
+.goalbar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.pr-limits{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+.pr-limits>summary{cursor:pointer;font-weight:600}
 /* ---- polish: safe areas, dynamic viewport, touch, mobile inputs ---- */
 body{min-height:100dvh}
 .modal{max-height:92dvh}
@@ -292,7 +337,7 @@ main{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env
   body.has-np #toasts{bottom:124px}
   .np-in{gap:2px 4px;padding-top:6px;padding-bottom:6px}
   .np-title{order:0;flex:1 1 0;min-width:0;max-width:none}
-  #npPlay{order:1}#npReplay{order:2}#npSpeed{order:3}#npLoop{order:4}#npClose{order:5}
+  #npPlay{order:1}#npReplay{order:2}#npSpeed{order:3}#npLoop{order:4}#npAB{order:4}#npClose{order:5}
   .np input[type=range]{order:6;flex:1 1 60%;min-width:0}
   .np .time{order:7;min-width:76px}
   .item .tag{display:none}
@@ -359,7 +404,8 @@ main{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env
     <input type="range" id="npSeek" min="0" max="1000" value="0" aria-label="Seek">
     <span class="time" id="npTime">0:00 / 0:00</span>
     <button class="chip" id="npSpeed" title="Playback speed">1×</button>
-    <button class="icon-btn loop" id="npLoop" aria-pressed="false" title="Loop" aria-label="Loop">⟲</button>
+    <button class="icon-btn loop" id="npLoop" aria-pressed="false" title="Loop the whole clip" aria-label="Loop">⟲</button>
+    <button class="chip" id="npAB" aria-pressed="false" title="Repeat just a part: press once at the start (A), again at the end (B)">A–B</button>
     <button class="icon-btn" id="npClose" aria-label="Stop and close player" title="Stop">✕</button>
   </div>
 </div>
@@ -426,6 +472,68 @@ function buildPairs(clips, mode) {
   else { let pend = []; for (const c of act) { if (c.type === 'lt') pend.push(c); else { pend.forEach(l => m.set(l.id, c)); pend = []; } } }
   return m;
 }
+
+/* ---- spaced repetition: Anki-style SM-2 with learning steps ---- */
+const SR = { learn: [1, 10], relearn: [10], grad: 1, easy: 4, ease0: 2.5, minEase: 1.3, easyBonus: 1.3, hardMul: 1.2, lapseMul: 0.3, maxIvl: 365, mature: 21 };
+const MINMS = 6e4, DAYMS = 864e5;
+function dayStartPlus(days, now = Date.now()) { const d = new Date(now); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + days); return d.getTime(); }
+// e: {state:'new'|'learn'|'review'|'relearn', step, ivl (days), ease, lapses, due (ms)}; r: 'again'|'hard'|'good'|'easy'
+// returns the new fields plus ivMs, the wait shown on the rating button
+function schedule(e, r, now = Date.now()) {
+  const state = e.state || 'new', step = e.step || 0, ivl = e.ivl || 0, ease = e.ease || SR.ease0, lapses = e.lapses || 0;
+  const out = { state, step, ivl, ease, lapses, due: now, ivMs: 0 };
+  const wait = (mins, st, stp) => { out.state = st; out.step = stp; out.due = now + mins * MINMS; out.ivMs = mins * MINMS; };
+  const grad = days => { days = Math.max(1, Math.min(SR.maxIvl, Math.round(days))); out.state = 'review'; out.step = 0; out.ivl = days; out.due = dayStartPlus(days, now); out.ivMs = days * DAYMS; };
+  if (state === 'new' || state === 'learn') {
+    const L = SR.learn, st = state === 'new' ? 0 : Math.min(step, L.length - 1);
+    if (r === 'again') wait(L[0], 'learn', 0);
+    else if (r === 'hard') wait(st === 0 && L.length > 1 ? Math.round((L[0] + L[1]) / 2) : L[st], 'learn', st);
+    else if (r === 'good') { if (st + 1 >= L.length) grad(SR.grad); else wait(L[st + 1], 'learn', st + 1); }
+    else grad(SR.easy);
+  } else if (state === 'relearn') {
+    if (r === 'again' || r === 'hard') wait(SR.relearn[0], 'relearn', 0);
+    else if (r === 'good') grad(Math.max(1, ivl));
+    else grad(Math.max(1, ivl) + 1);
+  } else {
+    const late = Math.max(0, Math.floor((dayStartPlus(0, now) - (e.due || now)) / DAYMS));
+    if (r === 'again') { out.lapses = lapses + 1; out.ease = Math.max(SR.minEase, ease - 0.2); out.ivl = Math.max(1, Math.round(ivl * SR.lapseMul)); wait(SR.relearn[0], 'relearn', 0); }
+    else {
+      const hard = Math.max(ivl + 1, Math.round((ivl + late / 4) * SR.hardMul)), good = Math.max(hard + 1, Math.round((ivl + late / 2) * ease)), easy = Math.max(good + 1, Math.round((ivl + late) * ease * SR.easyBonus));
+      if (r === 'hard') { out.ease = Math.max(SR.minEase, ease - 0.15); grad(hard); } else if (r === 'good') grad(good); else { out.ease = ease + 0.15; grad(easy); }
+    }
+  }
+  return out;
+}
+
+/* ---- typing practice: judge an answer, ignoring case/punctuation, and tell diacritic slips apart from real mistakes ---- */
+const tnorm = s => stripStress(String(s || '')).normalize('NFC').toLowerCase().replace(/[.,!?;:"“”„‘’'()\[\]…–—\-]/g, ' ').replace(/\s+/g, ' ').trim();
+function lev(a, b) { const m = a.length, n = b.length; if (!m) return n; if (!n) return m; let prev = Array.from({ length: n + 1 }, (_, j) => j); for (let i = 1; i <= m; i++) { const cur = [i]; for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = cur; } return prev[n]; }
+function answerVariants(lt) {
+  const raw = String(lt || ''), out = new Set([tnorm(raw.replace(/\([^)]*\)/g, ' '))]);
+  raw.split(/\s*[\/;]\s*/).forEach(v => { const t = tnorm(v.replace(/\([^)]*\)/g, ' ')); if (t) out.add(t); }); out.delete(''); return [...out];
+}
+function judgeTyped(typed, target) {
+  const a = tnorm(typed); if (!a) return { kind: 'empty', suggest: 'again', typed: a, target: answerVariants(target)[0] || '' };
+  let best = null; for (const v of answerVariants(target)) { const d = lev(a, v); if (!best || d < best.d) best = { v, d }; }
+  const v = best ? best.v : '', ab = norm(a), vb = norm(v);
+  const kind = a === v ? 'exact' : ab === vb ? 'diacritics' : (vb.length >= 4 && lev(ab, vb) <= (vb.length >= 8 ? 2 : 1)) ? 'close' : 'wrong';
+  return { kind, suggest: kind === 'exact' ? 'good' : kind === 'wrong' ? 'again' : 'hard', typed: a, target: v };
+}
+function diffParts(a, b) {            // character-level diff; returns HTML for the typed line and the correct line
+  const A = [...a], B = [...b], m = A.length, n = B.length, h = c => c === '&' ? '&amp;' : c === '<' ? '&lt;' : c === '>' ? '&gt;' : c === '"' ? '&quot;' : c === "'" ? '&#39;' : c;
+  const d = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) d[i][0] = i; for (let j = 0; j <= n; j++) d[0][j] = j;
+  for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (A[i - 1] === B[j - 1] ? 0 : 1));
+  const ta = [], tb = [], mk = (c, cls) => cls ? `<span class="dx ${cls}">${c === ' ' ? '·' : h(c)}</span>` : h(c); let i = m, j = n;
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && d[i][j] === d[i - 1][j - 1] + (A[i - 1] === B[j - 1] ? 0 : 1)) {
+      const same = A[i - 1] === B[j - 1], dia = !same && norm(A[i - 1]) === norm(B[j - 1]);
+      ta.push(mk(A[i - 1], same ? '' : dia ? 'dia' : 'bad')); tb.push(mk(B[j - 1], same ? '' : dia ? 'dia' : 'miss')); i--; j--;
+    } else if (i > 0 && d[i][j] === d[i - 1][j] + 1) { ta.push(mk(A[i - 1], 'bad')); i--; }
+    else { tb.push(mk(B[j - 1], 'miss')); ta.push('<span class="dx gap">_</span>'); j--; }
+  }
+  return { typed: ta.reverse().join(''), target: tb.reverse().join('') };
+}
 /*PURE-END*/
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -439,7 +547,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const todayStr = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 const fmtT = t => { t = Math.max(0, +t || 0); const m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ':' + String(s).padStart(2, '0'); };
 const fmtBytes = b => b < 1024 ? b + ' B' : b < 1048576 ? (b / 1024).toFixed(1) + ' KB' : b < 1073741824 ? (b / 1048576).toFixed(1) + ' MB' : (b / 1073741824).toFixed(2) + ' GB';
-const fmtIv = ms => ms < 36e5 ? Math.max(1, Math.round(ms / 6e4)) + 'm' : ms < DAY ? Math.round(ms / 36e5) + 'h' : Math.round(ms / DAY) + 'd';
+const fmtIv = ms => ms < 36e5 ? Math.max(1, Math.round(ms / 6e4)) + 'm' : ms < DAY ? Math.round(ms / 36e5) + 'h' : ms < 30 * DAY ? Math.round(ms / DAY) + 'd' : ms < 365 * DAY ? (ms / DAY / 30).toFixed(1).replace(/\.0$/, '') + 'mo' : (ms / DAY / 365).toFixed(1).replace(/\.0$/, '') + 'y';
 const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -454,15 +562,22 @@ function toast(msg, type = '') {
    State
 =================================================================== */
 const numOrNull = v => (v === null || v === undefined || v === '' || !isFinite(+v)) ? null : +v;
+function sched0(o) {      // reads the new scheduling fields, or converts an old Leitner-box card
+  if (['new', 'learn', 'review', 'relearn'].includes(o.state)) return { state: o.state, ivl: Math.max(0, +o.ivl || 0), ease: +o.ease >= SR.minEase ? +o.ease : SR.ease0, step: Math.max(0, +o.step || 0), lapses: Math.max(0, +o.lapses || 0) };
+  const box = Math.max(0, Math.min(6, +o.box || 0)), base = { ease: SR.ease0, step: 0, lapses: 0 };
+  if (+o.status === 2) return Object.assign(base, { state: 'review', ivl: Math.max(INT[box] || 1, SR.mature) });
+  if ((+o.reviews || 0) > 0) return box >= 1 ? Object.assign(base, { state: 'review', ivl: INT[box] }) : Object.assign(base, { state: 'learn', ivl: 0 });
+  return Object.assign(base, { state: 'new', ivl: 0 });
+}
 function mkEntry(o = {}) {
-  return {
+  return Object.assign(sched0(o), {
     id: o.id || uid(), lt: o.lt || '', stress: o.stress || '', en: o.en || '', cat: o.cat || 'General',
     ph: o.ph || '', note: o.note || '', status: [0, 1, 2].includes(+o.status) ? +o.status : 0, fav: !!o.fav,
     audioId: o.audioId || null, audioName: o.audioName || '', t0: numOrNull(o.t0), t1: numOrNull(o.t1), lessonId: o.lessonId || null,
     clip: !!o.clip, s0: numOrNull(o.s0), s1: numOrNull(o.s1),   // clip=true: audioId is this phrase's own cut file (s0..s1 = where it came from in the lesson)
-    box: +o.box || 0, due: +o.due || 0, reviews: +o.reviews || 0, correct: +o.correct || 0, lastReview: +o.lastReview || 0,
+    due: +o.due || 0, reviews: +o.reviews || 0, correct: +o.correct || 0, lastReview: +o.lastReview || 0,
     plays: +o.plays || 0, order: Number.isFinite(+o.order) ? +o.order : 0, created: +o.created || Date.now()
-  };
+  });
 }
 function mkLesson(o = {}) {
   return {
@@ -471,7 +586,14 @@ function mkLesson(o = {}) {
     params: Object.assign({ pause: 0.6, thr: 0.25 }, o.params || {}), pairMode: o.pairMode || 'en-lt', analyzed: !!o.analyzed, created: +o.created || Date.now()
   };
 }
-let state = { entries: [], lessons: [], days: {}, settings: { theme: null, view: 'list', asr: 'base' }, lastExport: 0 };
+const DEF_SETTINGS = { theme: null, view: 'list', asr: 'base', newPerDay: 20, maxReviews: 200, dailyGoal: 20 };
+let state = { entries: [], lessons: [], days: {}, counts: { d: '', n: 0, r: 0 }, settings: Object.assign({}, DEF_SETTINGS), lastExport: 0 };
+function setManualStatus(e, st) {      // dictionary buttons: keep the scheduler consistent with the status chosen by hand
+  e.status = st;
+  if (st === 2) { if (e.state !== 'review' || e.ivl < SR.mature) { e.state = 'review'; e.ivl = Math.max(e.ivl || 0, SR.mature); e.step = 0; e.due = dayStartPlus(e.ivl); } }
+  else if (st === 1) { if (e.state === 'new') { e.state = 'learn'; e.step = 0; e.due = Date.now(); } }
+  else { e.state = 'new'; e.ivl = 0; e.ease = SR.ease0; e.step = 0; e.lapses = 0; e.due = 0; }
+}
 let loadWarning = '';
 function loadState() {
   let raw = null;
@@ -480,7 +602,7 @@ function loadState() {
     if (raw) {
       const o = JSON.parse(raw);
       state.entries = (o.entries || []).map(mkEntry); state.lessons = (o.lessons || []).map(mkLesson);
-      state.days = o.days || {}; state.settings = Object.assign(state.settings, o.settings || {}); state.lastExport = o.lastExport || 0;
+      state.days = o.days || {}; state.counts = o.counts && typeof o.counts === 'object' ? o.counts : { d: '', n: 0, r: 0 }; state.settings = Object.assign(state.settings, o.settings || {}); state.lastExport = o.lastExport || 0;
     }
   } catch (e) {
     console.warn('Could not read saved data', e);
@@ -491,7 +613,7 @@ function loadState() {
 }
 let lastSaved = null;
 const saveNow = () => {
-  try { const str = JSON.stringify({ v: 2, entries: state.entries, lessons: state.lessons, days: state.days, settings: state.settings, lastExport: state.lastExport }); localStorage.setItem(LS_KEY, str); lastSaved = str; }
+  try { const str = JSON.stringify({ v: 2, entries: state.entries, lessons: state.lessons, days: state.days, counts: state.counts, settings: state.settings, lastExport: state.lastExport }); localStorage.setItem(LS_KEY, str); lastSaved = str; }
   catch (e) { toast('Could not save to localStorage (storage full or blocked).', 'err'); }
 };
 const save = debounce(saveNow, 250);
@@ -631,12 +753,17 @@ function loadAudio(url) {
   });
 }
 function stopClipTimer() { if (clipTimer) { clearInterval(clipTimer); clipTimer = null; } }
+function abOn() { return !!(play.ab && play.ab.b != null); }
 function startClipTimer() {
-  stopClipTimer(); if (!play.src || play.src.t1 == null) return;
-  clipTimer = setInterval(() => { if (!audio.paused && play.src && audio.currentTime >= play.src.t1) onSrcEnd(); }, 30);
+  stopClipTimer(); if (!play.src || (play.src.t1 == null && !abOn())) return;
+  clipTimer = setInterval(() => {
+    if (audio.paused || !play.src) return; const t = audio.currentTime;
+    if (abOn() && t >= play.ab.b) { audio.currentTime = play.ab.a; return; }                // A–B loop: jump back to A
+    if (play.src.t1 != null && t >= play.src.t1) onSrcEnd();
+  }, 30);
 }
 function stopAudio() {
-  stopClipTimer(); audio.pause(); play.key = null; play.src = null; play.queue = null; play.token++;
+  stopClipTimer(); audio.pause(); play.key = null; play.src = null; play.queue = null; play.ab = null; play.token++;
   audio.removeAttribute('src'); audio.dataset.url = ''; try { audio.load(); } catch (e) {}
   if ('speechSynthesis' in window) speechSynthesis.cancel(); syncUI();
 }
@@ -651,6 +778,7 @@ async function playSrc(src, opts = {}) {
     if (!audio.paused) { audio.pause(); stopClipTimer(); syncUI(); return; }
     const end = src.t1 != null ? src.t1 : (audio.duration || 1e9);
     if (audio.currentTime >= end - 0.08 || audio.currentTime < (src.t0 || 0) - 0.05) audio.currentTime = src.t0 || 0;
+    if (abOn() && (audio.currentTime >= play.ab.b || audio.currentTime < play.ab.a - 0.05)) audio.currentTime = play.ab.a;
     try { await audio.play(); startClipTimer(); } catch (e) {} syncUI(); return;
   }
   const tok = ++play.token;
@@ -659,8 +787,9 @@ async function playSrc(src, opts = {}) {
   try { await loadAudio(url); } catch (err) { toast('This audio file could not be decoded.', 'err'); return; }
   if (tok !== play.token) return;
   if (!opts.fromQueue) play.queue = null;
+  if (play.key !== src.key) play.ab = null;
   play.key = src.key; play.src = src; audio.loop = false;
-  audio.currentTime = src.t0 || 0; audio.playbackRate = rateOf(src.key);
+  audio.currentTime = abOn() ? play.ab.a : (src.t0 || 0); audio.playbackRate = rateOf(src.key);
   try {
     await audio.play(); startClipTimer();
     if (src.entry) { const e = byId(src.entry); if (e) { e.plays++; save(); } }
@@ -670,6 +799,7 @@ async function playSrc(src, opts = {}) {
 const replay = id => playEntry(id, { restart: true });
 function onSrcEnd() {
   const s = play.src; if (!s) return;
+  if (abOn()) { audio.currentTime = play.ab.a; if (audio.paused) audio.play().catch(() => {}); return; }
   if (loopOn[s.key]) { audio.currentTime = s.t0 || 0; if (audio.paused) audio.play().catch(() => {}); return; }
   stopClipTimer(); audio.pause(); if (s.t1 != null) audio.currentTime = s.t0 || 0;
   if (play.queue) {
@@ -682,11 +812,53 @@ function onSrcEnd() {
 function setRate(k, r) { rate[k] = r; if (play.key === k) audio.playbackRate = r; syncUI(); }
 function cycleSpeed(k) { const i = SPEEDS.indexOf(rateOf(k)); setRate(k, SPEEDS[(i + 1) % SPEEDS.length]); }
 function toggleLoop(k) { loopOn[k] = !loopOn[k]; syncUI(); }
+const fmtS = t => Math.max(0, t).toFixed(1) + 's';
+function cycleAB() {      // press 1: mark A · press 2: mark B and loop A→B · press 3: clear
+  const s = play.src; if (!s) return; const t0 = s.t0 || 0, t = audio.currentTime;
+  if (!play.ab) { play.ab = { a: t, b: null }; toast('Start A set at ' + fmtS(t - t0) + ' — press A–B again where the repeated part should end.'); }
+  else if (play.ab.b == null) {
+    if (t < play.ab.a + 0.15) { toast('Let it play a little further, then press A–B again to set the end.', 'warn'); return; }
+    play.ab.b = t; audio.currentTime = play.ab.a; if (audio.paused) audio.play().catch(() => {}); startClipTimer(); toast('Looping ' + fmtS(play.ab.a - t0) + ' → ' + fmtS(t - t0) + '. Press A–B again to stop looping.');
+  } else { play.ab = null; startClipTimer(); }
+  syncUI();
+}
 
 audio.addEventListener('ended', onSrcEnd);
 ['play', 'pause', 'emptied'].forEach(ev => audio.addEventListener(ev, syncUI));
 audio.addEventListener('timeupdate', updateNP);
 audio.addEventListener('error', () => { const src = audio.getAttribute('src'); if (src && src !== SILENT) toast('This audio file could not be played.', 'err'); });
+
+/* ---- lock-screen, headset and keyboard media keys (Media Session API) ---- */
+var msKey = '', msPosAt = 0;
+function getMS() { return ('mediaSession' in navigator) ? navigator.mediaSession : null; }
+function msMeta() {
+  const MS = getMS(), s = play.src; if (!MS || !s || typeof MediaMetadata === 'undefined') return;
+  const k = s.key + '|' + s.title + '|' + s.sub; if (k === msKey) return; msKey = k;
+  try { MS.metadata = new MediaMetadata({ title: s.title || 'Kalbėk', artist: s.sub || 'Kalbėk', album: 'Kalbėk', artwork: [{ src: 'icon-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icon-512.png', sizes: '512x512', type: 'image/png' }] }); } catch (e) {}
+}
+function msState() {
+  const MS = getMS(); if (!MS) return;
+  try { MS.playbackState = !play.src ? 'none' : audio.paused ? 'paused' : 'playing'; if (!play.src) { MS.metadata = null; msKey = ''; } } catch (e) {}
+  try { MS.setActionHandler('previoustrack', play.queue ? () => queueStep(-1) : null); MS.setActionHandler('nexttrack', play.queue ? () => queueStep(1) : null); } catch (e) {}
+}
+function msPos() {
+  const MS = getMS(), s = play.src; if (!MS || !MS.setPositionState || !s) return; const now = Date.now(); if (now - msPosAt < 500) return; msPosAt = now;
+  const t0 = s.t0 || 0, d = s.t1 != null ? s.t1 - t0 : audio.duration; if (!isFinite(d) || d <= 0) return;
+  try { MS.setPositionState({ duration: d, playbackRate: audio.playbackRate || 1, position: Math.min(d, Math.max(0, audio.currentTime - t0)) }); } catch (e) {}
+}
+function seekBy(sec) { const s = play.src; if (!s) return; const lo = s.t0 || 0, hi = s.t1 != null ? s.t1 : (audio.duration || 1e9); audio.currentTime = Math.min(hi - 0.05, Math.max(lo, audio.currentTime + sec)); }
+function queueStep(d) {
+  if (!(play.queue && play.queue.length)) return; const i = Math.max(0, Math.min(play.queue.length - 1, play.qi + d)); play.qi = i; playEntry(play.queue[i], { restart: true, fromQueue: true });
+}
+(function msInit() {
+  const MS = getMS(); if (!MS) return; const h = (a, f) => { try { MS.setActionHandler(a, f); } catch (e) {} };
+  h('play', () => { const s = play.src; if (s && audio.paused) playSrc(s); });
+  h('pause', () => { if (!audio.paused) audio.pause(); });
+  h('stop', () => stopAudio());
+  h('seekbackward', d => seekBy(-((d && d.seekOffset) || 3)));
+  h('seekforward', d => seekBy((d && d.seekOffset) || 3));
+  h('seekto', d => { const s = play.src; if (s && d && d.seekTime != null) audio.currentTime = (s.t0 || 0) + d.seekTime; });
+})();
 
 function playAll() {
   if (play.queue) { play.queue = null; audio.pause(); syncUI(); return; }
@@ -713,20 +885,23 @@ function syncUI() {
     $('#npTitle').textContent = s.title; $('#npSub').textContent = s.sub || '';
     $('#npPlay').textContent = playing ? '❚❚' : '▶'; $('#npSpeed').textContent = rateOf(s.key) + '×';
     $('#npLoop').setAttribute('aria-pressed', !!loopOn[s.key]);
+    const ab = $('#npAB'); if (ab) { ab.setAttribute('aria-pressed', !!play.ab); ab.textContent = !play.ab ? 'A–B' : play.ab.b == null ? 'A…' : 'A–B ✓'; ab.title = !play.ab ? 'Repeat just a part: press once at the start (A), again at the end (B)' : play.ab.b == null ? 'Start marked. Press again at the end of the part to repeat.' : 'Looping A→B. Press to stop.'; }
+    msMeta();
   }
-  updateNP();
+  msState(); updateNP();
   if (pr.active) { const b = $('.pr-big-play'); if (b) b.classList.toggle('playing', playing); }
 }
 function updateNP() {
   const s = play.src; if (!s || $('#np').hidden) return;
   const t0 = s.t0 || 0, d = s.t1 != null ? s.t1 - t0 : (audio.duration || 0), t = Math.min(d, Math.max(0, (audio.currentTime || 0) - t0));
   if (document.activeElement !== $('#npSeek')) $('#npSeek').value = d ? Math.round(t / d * 1000) : 0;
-  $('#npTime').textContent = fmtT(t) + ' / ' + fmtT(d);
+  $('#npTime').textContent = fmtT(t) + ' / ' + fmtT(d); msPos();
 }
 $('#npPlay').onclick = () => { const s = play.src; if (s) playSrc(s); };
 $('#npReplay').onclick = () => { const s = play.src; if (s) playSrc(s, { restart: true }); };
 $('#npSpeed').onclick = () => play.key && cycleSpeed(play.key);
 $('#npLoop').onclick = () => play.key && toggleLoop(play.key);
+$('#npAB').onclick = cycleAB;
 $('#npClose').onclick = () => stopAudio();
 $('#npSeek').addEventListener('input', e => {
   const s = play.src; if (!s) return; const t0 = s.t0 || 0, d = s.t1 != null ? s.t1 - t0 : audio.duration;
@@ -747,10 +922,10 @@ function calcStreak() {
 function renderStats() {
   const E = state.entries, n = E.length, m = E.filter(e => e.status === 2).length, l = E.filter(e => e.status === 1).length, nw = n - m - l;
   const pct = n ? Math.round(m / n * 100) : 0, now = Date.now();
-  const due = E.filter(e => e.reviews > 0 && e.due <= now).length, withA = E.filter(e => e.audioId).length;
+  const due = E.filter(e => e.state !== 'new' && e.due <= now).length, goal = Math.max(0, +state.settings.dailyGoal || 0), today = state.days[todayStr()] || 0, withA = E.filter(e => e.audioId).length;
   $('#stats').innerHTML = `<span><b>${n}</b> phrases</span><span style="color:var(--green)"><b>${m}</b> mastered</span><span style="color:var(--gold-text)"><b>${l}</b> learning</span>
     <span class="bar" role="img" aria-label="${m} mastered, ${l} learning, ${nw} new"><i class="m" style="width:${n ? m / n * 100 : 0}%"></i><i class="l" style="width:${n ? l / n * 100 : 0}%"></i><i class="n" style="width:${n ? nw / n * 100 : 0}%"></i></span>
-    <span><b>${pct}%</b> done</span><span>🔥 <b>${calcStreak()}</b> day streak</span><span>Today <b>${state.days[todayStr()] || 0}</b></span><span>Due <b>${due}</b></span><span>♪ <b>${withA}</b>/${n}</span>`;
+    <span><b>${pct}%</b> done</span><span>🔥 <b>${calcStreak()}</b> day streak</span><span title="Reviews done today${goal ? ' (daily goal ' + goal + ')' : ''}">Today <b>${today}</b>${goal ? '/' + goal : ''}${goal && today >= goal ? ' ✓' : ''}</span><span>Due <b>${due}</b></span><span>♪ <b>${withA}</b>/${n}</span>`;
 }
 const bumpReview = () => { const k = todayStr(); state.days[k] = (state.days[k] || 0) + 1; };
 
@@ -854,7 +1029,7 @@ function refresh() {
   if (tab === 'lessons' && !(lv.open && !wb)) renderLessons(); if (tab === 'backup') renderBackup(); if (tab === 'practice' && !pr.active && !pr.done) renderPractice();
 }
 function cycleStatus(e) {
-  e.status = (e.status + 1) % 3; if (e.status === 2 && e.box < 4) e.box = 4; if (e.status === 0) e.box = 0;
+  setManualStatus(e, (e.status + 1) % 3);
   save(); renderStats(); renderChips();
   if (ui.filter === 'all' || ui.filter === 'favorites') replaceItem(e); else renderList();
 }
@@ -896,7 +1071,7 @@ $('#bulk').addEventListener('click', async ev => {
 });
 $('#bulk').addEventListener('change', ev => {
   if (ev.target.dataset.bulk !== 'status' || ev.target.value === '') return;
-  const s = +ev.target.value; ui.picked.forEach(id => { const e = byId(id); if (e) { e.status = s; if (s === 2 && e.box < 4) e.box = 4; if (s === 0) e.box = 0; } });
+  const s = +ev.target.value; ui.picked.forEach(id => { const e = byId(id); if (e) setManualStatus(e, s); });
   save(); refresh(); toast('Status updated.');
 });
 $('#btnSelect').onclick = () => { ui.selMode = !ui.selMode; if (!ui.selMode) ui.picked.clear(); renderList(); };
@@ -1013,8 +1188,8 @@ function openEdit(id, preset = {}) {
   const doSave = async () => {
     let lt = q('#f-lt').value.trim(); const stress = q('#f-stress').value.trim(); if (!lt && stress) lt = stripStress(stress);
     if (!lt) { toast('Please enter the Lithuanian text.', 'warn'); q('#f-lt').focus(); return; }
-    Object.assign(e, { lt, stress, en: q('#f-en').value.trim(), cat: q('#f-cat').value.trim() || 'General', ph: q('#f-ph').value.trim(), status: +q('#f-status').value, note: q('#f-note').value });
-    if (e.status === 2 && e.box < 4) e.box = 4;
+    Object.assign(e, { lt, stress, en: q('#f-en').value.trim(), cat: q('#f-cat').value.trim() || 'General', ph: q('#f-ph').value.trim(), note: q('#f-note').value });
+    { const st = +q('#f-status').value; if (isNew || e.status !== st) setManualStatus(e, st); }
     if (isNew) { e.order = maxOrder() + 1; state.entries.push(e); }
     if (removeAudio && e.audioId) { const old = e.audioId; if (play.key === e.id) stopAudio(); e.audioId = null; e.audioName = ''; e.t0 = e.t1 = null; e.clip = false; e.s0 = e.s1 = null; await releaseAudio(old); }
     if (pendingFile) await setEntryAudio(e, pendingFile);
@@ -1194,7 +1369,7 @@ async function decodeAudio(blob) {
 async function openLesson(id) {
   const l = lessonById(id); if (!l) return;
   if (!l.audioId) { toast('This lesson has no audio file attached.', 'warn'); return; }
-  wvFlushRecuts(); if (wb) wb.abort = true; wb = null; lv.open = id; showTab('lessons', true);
+  wvFlushRecuts(); if (wb) wb.abort = true; if (!(wb && wb.busy)) asrKill(); wb = null; lv.open = id; showTab('lessons', true);
   try {
     const blob = await getBlob(l.audioId); if (!blob) throw new Error('audio file missing');
     const dec = await decodeAudio(blob), fr = frameDB(dec.samples, dec.sr);
@@ -1204,7 +1379,7 @@ async function openLesson(id) {
   if (!l.analyzed) autoSplit(l);
   renderLessons();
 }
-function closeLesson() { wvFlushRecuts(); if (wb && wb.wv && wb.wv.ro) wb.wv.ro.disconnect(); if (wb) wb.abort = true; if (play.key && String(play.key).startsWith('clip:')) stopAudio(); wb = null; lv.open = null; renderLessons(); }
+function closeLesson() { document.documentElement.style.setProperty('--wv-h', '0px'); document.body.classList.remove('wb-open'); updateTopH(); wvFlushRecuts(); if (!(wb && wb.busy)) asrKill(); if (wb && wb.wv && wb.wv.ro) wb.wv.ro.disconnect(); if (wb) wb.abort = true; if (play.key && String(play.key).startsWith('clip:')) stopAudio(); wb = null; lv.open = null; renderLessons(); }
 function autoSplit(l) {
   const segs = segmentAudio(wb.db, wb.hop, wb.duration, l.params);
   l.clips = segs.map(s => ({ id: uid(), t0: s.t0, t1: s.t1, text: '', type: (s.t1 - s.t0) > 9 ? 'skip' : 'lt', entryId: null })); l.analyzed = true; save();
@@ -1241,7 +1416,8 @@ function updateWbFoot() {
 }
 function renderWorkbench() {
   const l = lessonById(lv.open); if (!l || !wb) return;
-  const asr = state.settings.asr || 'base';
+  const bigOK = matchMedia('(pointer:fine)').matches && innerWidth >= 900 && (navigator.deviceMemory || 8) >= 8;   // the Medium model needs a desktop-class machine
+  const asr = (state.settings.asr === 'medium' && !bigOK) ? 'base' : (state.settings.asr || 'base');
   $('#lessonsRoot').innerHTML = `
     <div class="wb-head"><button class="btn" data-wb="back">← Lessons</button><input type="text" class="title" id="wbTitle" value="${esc(l.title)}" aria-label="Lesson title">
       <span class="muted">${fmtT(wb.duration)} total</span></div>
@@ -1251,8 +1427,9 @@ function renderWorkbench() {
         <div class="line"><label for="wbThr">Silence level</label><input type="range" id="wbThr" data-wb="thr" min="0.08" max="0.6" step="0.01" value="${l.params.thr}"><b id="wbThrV">${Math.round(l.params.thr * 100)}%</b></div>
         <div class="line"><button class="btn sm" data-wb="resplit">↻ Re-split</button><span class="muted" style="font-size:.82rem">Longer pause = fewer, longer clips.</span></div></div>
       <div class="panel"><h3>2 · Transcribe (optional)</h3>
-        <div class="line"><select id="wbModel" aria-label="Speech model"><option value="tiny" ${asr === 'tiny' ? 'selected' : ''}>Tiny · ~40 MB · fastest, rough</option><option value="base" ${asr === 'base' ? 'selected' : ''}>Base · ~75 MB · balanced</option><option value="small" ${asr === 'small' ? 'selected' : ''}>Small · ~250 MB · best, slow</option></select></div>
+        <div class="line"><select id="wbModel" aria-label="Speech model"><option value="tiny" ${asr === 'tiny' ? 'selected' : ''}>Tiny · ~40 MB · fastest, rough</option><option value="base" ${asr === 'base' ? 'selected' : ''}>Base · ~75 MB · balanced</option><option value="small" ${asr === 'small' ? 'selected' : ''}>Small · ~250 MB · good, slow</option>${bigOK ? `<option value="medium" ${asr === 'medium' ? 'selected' : ''}>Medium · ~770 MB · most accurate, desktop only, very slow without GPU</option>` : ''}</select></div>
         <div class="line"><button class="btn sm primary" data-wb="transcribe">✨ Transcribe all</button><button class="btn sm" data-wb="transcribe-empty">Only empty</button><button class="btn sm danger" data-wb="stop" id="wbStop" hidden>Stop</button></div>
+        ${navigator.gpu ? `<div class="line"><label style="display:flex;gap:6px;align-items:center;font-size:.84rem"><input type="checkbox" id="wbGpu" ${state.settings.asrGpu ? 'checked' : ''}> Use the graphics card (experimental, can be much faster)</label></div>` : ''}
         <div class="line"><label style="display:flex;gap:6px;align-items:center;font-size:.84rem"><input type="checkbox" id="wbUseMarks"> Use my LT/EN marks as the spoken language (more accurate on a 2nd pass)</label></div>
         <div id="wbStatus" class="muted" style="font-size:.82rem" aria-live="polite">Needs internet once to download the model; audio is processed on this device.</div><div class="prog"><i id="wbBar"></i></div></div>
       <div class="panel"><h3>3 · Mark &amp; pair</h3>
@@ -1263,18 +1440,62 @@ function renderWorkbench() {
     ${wvPanelHTML()}
     <div class="clips" id="clipRows" role="list"></div>
     <div class="wb-foot" id="wbFoot"><span id="wbFootInfo" class="grow"></span><button class="btn primary" id="wbAdd" data-wb="add">Add to dictionary →</button></div>`;
-  renderClipRows(); wvInit(); wvWire();
+  renderClipRows(); wvInit(); wvWire(); syncWbOpen();
 }
 const wbClip = el => { const l = lessonById(lv.open); const id = el.closest('.clip') && el.closest('.clip').dataset.clip; return l && l.clips.find(c => c.id === id); };
 
-/* ---- speech recognition (transformers.js Whisper, loaded on demand) ---- */
-const asrCache = {};
-async function loadASR(model, onProgress) {
-  if (asrCache[model]) return asrCache[model];
-  const T = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3');
-  T.env.allowLocalModels = false;
-  const p = await T.pipeline('automatic-speech-recognition', 'Xenova/whisper-' + model, { progress_callback: onProgress });
-  asrCache[model] = p; return p;
+/* ---- speech recognition: transformers.js Whisper running in a Web Worker, so the page never freezes ---- */
+const ASR_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.2';      // pinned on purpose: a new release can't break the app
+const ASR_WORKER_SRC = `
+let T = null; const pipes = new Map();
+const post = m => self.postMessage(m);
+self.onmessage = async ev => {
+  const m = ev.data;
+  try {
+    if (m.type === 'load') {
+      if (!T) { T = await import(m.url); T.env.allowLocalModels = false; }
+      const key = m.model + (m.gpu ? ':gpu' : ':cpu');
+      if (!pipes.has(key)) {
+        for (const k of [...pipes.keys()]) { try { await pipes.get(k).pipe.dispose(); } catch (e) {} pipes.delete(k); }
+        const id = 'Xenova/whisper-' + m.model, progress_callback = p => post({ id: m.id, type: 'progress', p });
+        let pipe = null, device = 'wasm';
+        if (m.gpu) {
+          try { pipe = await T.pipeline('automatic-speech-recognition', id, { device: 'webgpu', dtype: { encoder_model: 'fp32', decoder_model_merged: 'q4' }, progress_callback }); device = 'webgpu'; }
+          catch (e) { post({ id: m.id, type: 'note', text: 'The GPU could not be used, so the CPU is used instead.' }); }
+        }
+        if (!pipe) pipe = await T.pipeline('automatic-speech-recognition', id, { progress_callback });
+        pipes.set(key, { pipe, device });
+      }
+      post({ id: m.id, type: 'done', key, device: pipes.get(key).device });
+    } else if (m.type === 'run') {
+      const e = pipes.get(m.key); if (!e) throw new Error('The speech model is not loaded.');
+      const out = await e.pipe(m.audio, Object.assign({ chunk_length_s: 30 }, m.opts));
+      post({ id: m.id, type: 'done', text: (out && out.text) || '' });
+    }
+  } catch (err) { post({ id: m.id, type: 'error', message: String((err && err.message) || err) }); }
+};`;
+const asr = { worker: null, seq: 0, pending: new Map(), key: null, device: '', state: 'idle' };
+function asrWorker() {
+  if (asr.worker) return asr.worker;
+  const w = new Worker(URL.createObjectURL(new Blob([ASR_WORKER_SRC], { type: 'text/javascript' })), { type: 'module' });
+  w.onmessage = ev => {
+    const m = ev.data, r = asr.pending.get(m.id); if (!r) return;
+    if (m.type === 'progress') { if (r.onProgress) r.onProgress(m.p); } else if (m.type === 'note') { if (r.onNote) r.onNote(m.text); }
+    else { asr.pending.delete(m.id); if (m.type === 'error') r.rej(new Error(m.message)); else r.res(m); }
+  };
+  w.onerror = ev => { if (ev.preventDefault) ev.preventDefault(); asrKill(new Error(ev.message || 'The speech engine stopped unexpectedly.')); };
+  asr.worker = w; return w;
+}
+function asrKill(err) {                               // stop the worker, free its memory, fail anything still waiting
+  if (asr.worker) { asr.worker.terminate(); asr.worker = null; }
+  asr.key = null; asr.device = ''; asr.state = 'idle';
+  const e = err || new Error('stopped'); asr.pending.forEach(r => r.rej(e)); asr.pending.clear();
+}
+function asrCall(msg, { transfer = [], onProgress, onNote } = {}) {
+  return new Promise((res, rej) => {
+    const id = ++asr.seq; asr.pending.set(id, { res, rej, onProgress, onNote });
+    try { asrWorker().postMessage(Object.assign({ id }, msg), transfer); } catch (e) { asr.pending.delete(id); rej(e); }
+  });
 }
 function resample(data, from, to) {
   if (from === to) return data; const ratio = from / to, n = Math.floor(data.length / ratio), out = new Float32Array(n);
@@ -1286,30 +1507,40 @@ function sliceClip(c) {
 }
 async function transcribeClips(onlyEmpty) {
   const l = lessonById(lv.open); if (!l || !wb || wb.busy) return;
-  const model = $('#wbModel').value, useMarks = $('#wbUseMarks').checked; state.settings.asr = model; save();
+  const model = $('#wbModel').value, useMarks = $('#wbUseMarks').checked, gpu = !!($('#wbGpu') && $('#wbGpu').checked); state.settings.asr = model; state.settings.asrGpu = gpu; save();
   const status = t => { const s = $('#wbStatus'); if (s) s.textContent = t; }, bar = p => { const b = $('#wbBar'); if (b) b.style.width = Math.round(p * 100) + '%'; };
   const todo = l.clips.filter(c => c.type !== 'skip' && (!onlyEmpty || !c.text.trim()));
   if (!todo.length) { toast('No clips to transcribe.', 'warn'); return; }
   wb.busy = true; wb.abort = false; $('#wbStop').hidden = false; const myWb = wb;
   try {
     status('Loading speech model… (first time downloads it)');
-    let asr;
-    try { asr = await loadASR(model, p => { if (p.status === 'progress' && p.total) { status(`Downloading model: ${(p.file || '').split('/').pop()} ${Math.round(p.progress)}%`); bar(p.progress / 100); } }); }
-    catch (err) { console.error(err); status('Could not load the speech model.'); toast('Could not load the speech model — it needs an internet connection the first time (' + (err.message || err) + ').', 'err'); return; }
+    asr.state = 'loading';
+    try {
+      const r = await asrCall({ type: 'load', model, gpu, url: ASR_URL }, {
+        onProgress: p => { if (p.status === 'progress' && p.total) { status(`Downloading model: ${(p.file || '').split('/').pop()} ${Math.round(p.progress)}%`); bar(p.progress / 100); } },
+        onNote: t => toast(t, 'warn') });
+      asr.key = r.key; asr.device = r.device; asr.state = 'ready';
+    } catch (err) {
+      asr.state = 'idle'; if (myWb.abort) { status('Stopped.'); return; }
+      console.error(err); asrKill(); status('Could not load the speech model.'); toast('Could not load the speech model — it needs an internet connection the first time (' + (err.message || err) + ').', 'err'); return;
+    }
     bar(0);
     for (let i = 0; i < todo.length; i++) {
-      if (myWb.abort || wb !== myWb) break; const c = todo[i]; status(`Transcribing clip ${i + 1} of ${todo.length}…`); bar(i / todo.length);
+      if (myWb.abort || wb !== myWb) break; const c = todo[i]; status(`Transcribing clip ${i + 1} of ${todo.length}… (${asr.device === 'webgpu' ? 'GPU' : 'CPU'})`); bar(i / todo.length);
       const opts = { task: 'transcribe' }; if (useMarks && c.type === 'lt') opts.language = 'lithuanian'; if (useMarks && c.type === 'en') opts.language = 'english';
       try {
-        const out = await asr(sliceClip(c), opts); let text = cleanText(out && out.text);
+        const audio = sliceClip(c), out = await asrCall({ type: 'run', key: asr.key, audio, opts }, { transfer: [audio.buffer] }); let text = cleanText(out && out.text);
         if (!useMarks) c.type = guessLang(text); if (c.type === 'lt') text = cap(text); c.text = text;
-      } catch (err) { console.error(err); }
+      } catch (err) {
+        console.error(err);
+        if (!asr.worker) { status('The speech engine stopped unexpectedly.'); toast('The speech engine ran out of memory or crashed. Try the Tiny model, and close other tabs.', 'err'); break; }
+      }
       const row = $(`#clipRows .clip[data-clip="${CSS.escape(c.id)}"]`);
       if (row) { row.className = 'clip ' + c.type; $('[data-wb=text]', row).value = c.text; $('[data-wb=type]', row).value = c.type; }
       await sleep(0);
     }
     save(); if (wb === myWb) { bar(1); status(myWb.abort ? 'Stopped.' : 'Done — play each clip and correct the text.'); renderClipRows(); }
-  } finally { myWb.busy = false; const s = $('#wbStop'); if (s) s.hidden = true; }
+  } finally { myWb.busy = false; if (asr.state === 'loading') asr.state = 'idle'; if (wb !== myWb) asrKill(); const s = $('#wbStop'); if (s) s.hidden = true; }
 }
 async function addClipsToDictionary() {
   const l = lessonById(lv.open), myWb = wb; if (!l || !myWb || myWb.adding) return; myWb.adding = true;
@@ -1424,7 +1655,7 @@ function wvMiniDraw() {
 function wvBar() {
   const v = wb && wb.wv, l = lessonById(lv.open), info = $('#wvInfo'); if (!v || !l || !info) return;
   const c = wvSelClip(), i = c ? l.clips.indexOf(c) : -1;
-  info.textContent = (c ? `Clip ${i + 1} of ${l.clips.length} · ${wvFmt(c.t0)} → ${wvFmt(c.t1)} · ${(c.t1 - c.t0).toFixed(2)}s` : 'No clip selected — tap a clip, or tap an empty gap and use “New clip”') + (v.cursor != null ? ` · cursor ${wvFmt(v.cursor)}` : '');
+  info.title = info.textContent = (c ? `Clip ${i + 1} of ${l.clips.length} · ${wvFmt(c.t0)} → ${wvFmt(c.t1)} · ${(c.t1 - c.t0).toFixed(2)}s` : 'No clip selected — tap a clip, or tap an empty gap and use “New clip”') + (v.cursor != null ? ` · cursor ${wvFmt(v.cursor)}` : '');
   $$('#wvPanel [data-wv]').forEach(b => {
     const a = b.dataset.wv, need = ['play', 'merge', 'del', 'text', 'fitclip', 'ns-', 'ns+', 'ne-', 'ne+'].includes(a);
     b.disabled = (need && !c) || (a === 'undo' && !wb.undo.length) || (a === 'redo' && !wb.redo.length);
@@ -1433,6 +1664,7 @@ function wvBar() {
 }
 function wvResize() {
   const v = wb && wb.wv; if (!v || !v.main || !v.main.isConnected) return; v.dpr = Math.min(window.devicePixelRatio || 1, 3);
+  { const pn = $('#wvPanel'); document.documentElement.style.setProperty('--wv-h', pn && pn.offsetParent && getComputedStyle(pn).position === 'sticky' ? pn.offsetHeight + 'px' : '0px'); }
   [v.main, v.mini].forEach(cv => { const w = Math.max(10, Math.round(cv.clientWidth * v.dpr)), h = Math.max(10, Math.round(cv.clientHeight * v.dpr)); if (cv.width !== w) cv.width = w; if (cv.height !== h) cv.height = h; });
   v.miniCols = null; wvRedraw();
 }
@@ -1442,7 +1674,7 @@ function wvInit() {
   if (!wb.peaks) wvBuildPeaks();
   wvClampView(v);
   if (!v.fitted) { v.fitted = true; const l = lessonById(lv.open), first = l && l.clips[0]; if (first) v.t0 = Math.max(0, first.t0 - 1); wvClampView(v); }
-  v.ro = new ResizeObserver(wvResize); v.ro.observe(v.main);
+  v.ro = new ResizeObserver(wvResize); v.ro.observe(v.main); v.ro.observe($('#wvPanel'));
   wvResize(); wvBar();
 }
 function wvSelect(id, { reveal = true } = {}) {
@@ -1570,18 +1802,22 @@ function wvAction(a) {
     case 'zin': wvZoom(0.5); break; case 'zout': wvZoom(2); break;
     case 'fitall': v.t0 = 0; v.dur = wb.duration; wvClampView(v); wvRedraw(); break;
     case 'fitclip': if (c) { v.dur = Math.max(1, (c.t1 - c.t0) * 1.6); v.t0 = (c.t0 + c.t1) / 2 - v.dur / 2; wvClampView(v); wvRedraw(); } break;
-    case 'text': if (c) { const r = $(`#clipRows .clip[data-clip="${CSS.escape(c.id)}"]`); if (r) { r.scrollIntoView({ block: 'center', behavior: 'smooth' }); const i = $('input[data-wb=text]', r); if (i) setTimeout(() => i.focus({ preventScroll: true }), 250); } } break;
+    case 'pin': { const pn = $('#wvPanel'), on = pn.classList.contains('unpinned'); pn.classList.toggle('unpinned', !on); wvSetPref('pin', on ? '1' : '0'); $('[data-wv=pin]', pn).setAttribute('aria-pressed', on); wvResize(); break; }
+    case 'tools': { const pn = $('#wvPanel'), on = pn.classList.contains('tools-off'); pn.classList.toggle('tools-off', !on); wvSetPref('tools', on ? '1' : '0'); $('[data-wv=tools]', pn).setAttribute('aria-pressed', on); wvResize(); break; }
+    case 'text': if (c) { const r = $(`#clipRows .clip[data-clip="${CSS.escape(c.id)}"]`); if (r) { r.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); const i = $('input[data-wb=text]', r); if (i) setTimeout(() => i.focus({ preventScroll: true }), 250); } } break;
   }
   wvBar();
 }
+const wvPref = k => { try { return localStorage.getItem('kalbek.wv.' + k); } catch (e) { return null; } };
+const wvSetPref = (k, v) => { try { localStorage.setItem('kalbek.wv.' + k, v); } catch (e) {} };
 function wvPanelHTML() {
-  const b = (a, label, title, extra = '') => `<button class="btn sm" data-wv="${a}" title="${title}" ${extra}>${label}</button>`;
-  return `<div class="panel wvp" id="wvPanel"><div class="wv-top"><h3>Waveform editor <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:500">· drag the gold/green handles to fix where a clip starts and ends</span></h3></div>
+  const b = (a, label, title, extra = '') => `<button class="btn sm" data-wv="${a}" title="${title}" ${extra}>${label}</button>`, pin = wvPref('pin') !== '0', tools = wvPref('tools') !== '0';
+  return `<div class="panel wvp${pin ? '' : ' unpinned'}${tools ? '' : ' tools-off'}" id="wvPanel"><div class="wv-top"><h3>Waveform editor</h3><div class="wv-info" id="wvInfo" aria-live="polite"></div>
+      <button class="btn sm" data-wv="tools" aria-pressed="${tools}" title="Show or hide the editing buttons">🛠 Tools</button><button class="btn sm" data-wv="pin" aria-pressed="${pin}" title="Keep the editor on screen while you scroll the clip list">📌 Pinned</button></div>
     <div class="wv-canvas"><canvas id="wvMain" tabindex="0" role="application" aria-label="Lesson waveform. Left and right arrows select the previous or next clip, Space plays it, S splits it at the cursor, plus and minus zoom."></canvas></div>
     <canvas id="wvMini" aria-hidden="true" title="Overview — drag to move"></canvas>
-    <div class="wv-info" id="wvInfo" aria-live="polite"></div>
-    <div class="wv-bar">${b('play', '▶ Play', 'Play the selected clip (Space)')}<span class="sep"></span>${b('split', '✂ Split', 'Split the selected clip at the cursor (S)')}${b('new', '＋ New clip', 'Create a clip in the empty gap at the cursor')}${b('merge', '⤵ Merge', 'Merge with the next clip')}${b('del', '✕ Delete', 'Delete the selected clip (Delete)')}<span class="sep"></span>${b('undo', '↶', 'Undo (Ctrl+Z)', 'aria-label="Undo"')}${b('redo', '↷', 'Redo (Ctrl+Shift+Z)', 'aria-label="Redo"')}<span class="sep"></span>${b('text', '✎ Text', 'Jump to this clip’s text box')}</div>
-    <div class="wv-bar scroll"><span class="muted" style="font-size:.8rem">Start</span>${b('ns-', '−50 ms', 'Start 50 ms earlier')}${b('ns+', '+50 ms', 'Start 50 ms later')}<span class="muted" style="font-size:.8rem;margin-left:4px">End</span>${b('ne-', '−50 ms', 'End 50 ms earlier')}${b('ne+', '+50 ms', 'End 50 ms later')}<span class="sep"></span>${b('zout', '−', 'Zoom out', 'aria-label="Zoom out"')}${b('zin', '＋', 'Zoom in', 'aria-label="Zoom in"')}${b('fitclip', 'Zoom to clip', 'Zoom to the selected clip')}${b('fitall', 'Whole lesson', 'Show the whole lesson')}</div></div>`;
+    <div class="wv-tools" id="wvTools"><div class="wv-bar">${b('play', '▶ Play', 'Play the selected clip (Space)')}<span class="sep"></span>${b('split', '✂ Split', 'Split the selected clip at the cursor (S)')}${b('new', '＋ New clip', 'Create a clip in the empty gap at the cursor')}${b('merge', '⤵ Merge', 'Merge with the next clip')}${b('del', '✕ Delete', 'Delete the selected clip (Delete)')}<span class="sep"></span>${b('undo', '↶', 'Undo (Ctrl+Z)', 'aria-label="Undo"')}${b('redo', '↷', 'Redo (Ctrl+Shift+Z)', 'aria-label="Redo"')}<span class="sep"></span>${b('text', '✎ Text', 'Jump to this clip’s text box')}</div>
+      <div class="wv-bar"><span class="muted lbl-s">Start</span>${b('ns-', '−50 ms', 'Start 50 ms earlier')}${b('ns+', '+50 ms', 'Start 50 ms later')}<span class="muted lbl-s">End</span>${b('ne-', '−50 ms', 'End 50 ms earlier')}${b('ne+', '+50 ms', 'End 50 ms later')}<span class="sep"></span>${b('zout', '−', 'Zoom out', 'aria-label="Zoom out"')}${b('zin', '＋', 'Zoom in', 'aria-label="Zoom in"')}${b('fitclip', 'Zoom to clip', 'Zoom to the selected clip')}${b('fitall', 'Whole lesson', 'Show the whole lesson')}</div></div></div>`;
 }
 function wvWire() {
   const v = wb.wv, cv = v.main; if (!cv || cv.dataset.wired) return; cv.dataset.wired = 1;
@@ -1605,6 +1841,14 @@ function wvWire() {
   ['pointerup', 'pointercancel'].forEach(ev => mini.addEventListener(ev, () => { mdrag = false; }));
 }
 /* keep the playhead moving while a clip plays */
+function wvEnsureVisible(row) {
+  const pn = $('#wvPanel'), hd = $('.top'), pinned = pn && getComputedStyle(pn).position === 'sticky';
+  let top = hd && getComputedStyle(hd).position === 'sticky' ? hd.getBoundingClientRect().bottom : 0; if (pinned) top = pn.getBoundingClientRect().bottom;
+  const foot = $('#wbFoot'), np = $('#np'), lows = [innerHeight]; if (foot) lows.push(foot.getBoundingClientRect().top); if (np && !np.hidden) lows.push(np.getBoundingClientRect().top);
+  const low = Math.min(...lows.filter(v => v > 0)), r = row.getBoundingClientRect(); let dy = 0;
+  if (r.top < top + 6) dy = r.top - top - 10; else if (r.bottom > low - 6) dy = r.bottom - low + 10;
+  if (dy) window.scrollBy({ top: dy, behavior: 'instant' });
+}
 function wvTick() {
   const v = wb && wb.wv; if (!v || !v.main || !v.main.isConnected) return;
   if (wvPlaying()) { const ph = audio.currentTime; if (!v.drag && (ph > v.t0 + v.dur * 0.97 || ph < v.t0)) { v.t0 = ph - v.dur * 0.1; wvClampView(v); } wvDraw(); wvMiniDraw(); requestAnimationFrame(wvTick); }
@@ -1678,7 +1922,7 @@ lroot.addEventListener('click', async ev => {
   }
   if (a === 'transcribe') return transcribeClips(false);
   if (a === 'transcribe-empty') return transcribeClips(true);
-  if (a === 'stop') { if (wb) wb.abort = true; return; }
+  if (a === 'stop') { if (wb) wb.abort = true; if (asr.state === 'loading') asrKill(new Error('stopped')); else $('#wbStatus').textContent = 'Stopping after this clip…'; return; }
   if (a === 'add') return addClipsToDictionary();
   if (a === 'alt-en' || a === 'alt-lt') { wvPushUndo(); l.clips.forEach((c, i) => { c.type = (i % 2 === 0) === (a === 'alt-en') ? 'en' : 'lt'; }); save(); return renderClipRows(); }
   if (a === 'all-lt') { wvPushUndo(); l.clips.forEach(c => { c.type = 'lt'; }); save(); return renderClipRows(); }
@@ -1706,7 +1950,7 @@ lroot.addEventListener('click', ev => {
   const b = ev.target.closest('[data-wv]'); if (b && wb && wb.wv && !b.disabled) { wvAction(b.dataset.wv); return; }
   const row = ev.target.closest('.clip'); if (row && wb && wb.wv && !ev.target.closest('[data-wb=del],[data-wb=merge]')) wvSelect(row.dataset.clip);
 });
-lroot.addEventListener('focusin', ev => { const row = ev.target.closest && ev.target.closest('.clip'); if (row && wb && wb.wv && wb.wv.sel !== row.dataset.clip) wvSelect(row.dataset.clip); });
+lroot.addEventListener('focusin', ev => { const row = ev.target.closest && ev.target.closest('.clip'); if (row && wb && wb.wv) { if (wb.wv.sel !== row.dataset.clip) wvSelect(row.dataset.clip); requestAnimationFrame(() => wvEnsureVisible(row)); } });
 lroot.addEventListener('keydown', ev => {
   if (ev.key !== 'Enter' || !ev.target.matches('input[data-wb=text]')) return; ev.preventDefault();
   const row = ev.target.closest('.clip'), next = ev.shiftKey ? row.previousElementSibling : row.nextElementSibling;
@@ -1733,72 +1977,211 @@ async function removeLesson(id) {
 /* ===================================================================
    Practice
 =================================================================== */
-const pr = { active: false, done: false, queue: [], i: 0, revealed: false, mode: 'listen', requeued: new Set(), tally: { again: 0, hard: 0, good: 0, easy: 0 }, cfg: { scope: 'due', mode: 'listen', count: 20, audioOnly: false, cat: 'all' } };
-function simRate(e, r) {
-  const now = Date.now(); let box = e.box || 0, due;
-  if (r === 'again') { box = 0; due = now + 10 * 60e3; } else if (r === 'hard') due = now + Math.max(.5, INT[box] * .5) * DAY;
-  else if (r === 'good') { box = Math.min(box + 1, 6); due = now + INT[box] * DAY; } else { box = Math.min(box + 2, 6); due = now + INT[box] * DAY; }
-  return { box, due, iv: due - now };
+const pr = { active: false, done: false, queue: [], i: 0, revealed: false, mode: 'listen', result: null, t0: 0, tally: { again: 0, hard: 0, good: 0, easy: 0 }, cfg: { scope: 'due', mode: 'listen', count: 20, audioOnly: false, cat: 'all' } };
+const PR_MODES = [['listen', '🎧 Listen first → recall'], ['en2lt', '🇬🇧 English → Lithuanian (in your head)'], ['type', '⌨ English → type the Lithuanian'], ['dictation', '🎧⌨ Dictation: listen → type it'], ['shadow', '🗣 Shadowing: listen → repeat → compare']];
+const isTyped = m => m === 'type' || m === 'dictation';
+const LEARN_AHEAD = 20 * MINMS;
+const lim = () => { const n = (v, d) => Number.isFinite(+v) && +v >= 0 ? Math.floor(+v) : d; return { newPerDay: n(state.settings.newPerDay, 20), maxRev: n(state.settings.maxReviews, 200), goal: n(state.settings.dailyGoal, 20) }; };
+function dayCounts() { const d = todayStr(); if (!state.counts || state.counts.d !== d) state.counts = { d, n: 0, r: 0 }; return state.counts; }
+const modeOK = (e, m) => m === 'type' ? !!e.en : (m === 'dictation' || m === 'shadow') ? !!e.audioId : true;
+function queueInfo(c, now = Date.now()) {
+  const base = state.entries.filter(e => (c.cat === 'all' || e.cat === c.cat) && (!c.audioOnly || e.audioId) && modeOK(e, c.mode));
+  if (c.scope === 'due') {
+    const k = dayCounts(), L = lim();
+    const learn = base.filter(e => (e.state === 'learn' || e.state === 'relearn') && e.due <= now + LEARN_AHEAD).sort((x, y) => x.due - y.due);
+    const revAll = base.filter(e => e.state === 'review' && e.due <= now).sort((x, y) => x.due - y.due), rev = revAll.slice(0, Math.max(0, L.maxRev - k.r));
+    const newAll = base.filter(e => e.state === 'new').sort(cmpCourse), newLeft = Math.max(0, L.newPerDay - k.n), nw = newAll.slice(0, newLeft);
+    const mixed = [], every = nw.length ? Math.max(1, Math.floor((rev.length + 1) / (nw.length + 1))) : 0; let ni = 0;      // spread new cards between the reviews
+    rev.forEach((e, i) => { mixed.push(e); if (every && (i + 1) % every === 0 && ni < nw.length) mixed.push(nw[ni++]); }); while (ni < nw.length) mixed.push(nw[ni++]);
+    const waiting = base.filter(e => e.state !== 'new' && !learn.includes(e) && !revAll.includes(e)).map(e => e.due).sort((x, y) => x - y);
+    return { list: learn.concat(mixed), k: { learn: learn.length, review: rev.length, reviewAll: revAll.length, nw: nw.length, newAll: newAll.length, newLeft }, nextDue: waiting[0] || 0 };
+  }
+  let l = base.slice();
+  if (c.scope === 'unmastered') l = l.filter(e => e.status < 2); else if (c.scope === 'learning') l = l.filter(e => e.status === 1); else if (c.scope === 'favorites') l = l.filter(e => e.fav);
+  l.sort((x, y) => ((x.state === 'new') - (y.state === 'new')) || (x.state === 'new' ? cmpCourse(x, y) : x.due - y.due));
+  return { list: l, k: null, nextDue: 0 };
 }
-function scopeList(c) {
-  const now = Date.now(); let l = state.entries.slice();
-  if (c.cat !== 'all') l = l.filter(e => e.cat === c.cat);
-  if (c.scope === 'due') l = l.filter(e => e.reviews === 0 || e.due <= now); else if (c.scope === 'unmastered') l = l.filter(e => e.status < 2);
-  else if (c.scope === 'learning') l = l.filter(e => e.status === 1); else if (c.scope === 'favorites') l = l.filter(e => e.fav);
-  if (c.audioOnly) l = l.filter(e => e.audioId); return l;
+function todayGoalHTML() {
+  const g = lim().goal, n = state.days[todayStr()] || 0; if (!g) return `<div class="goal"><span>Today <b>${n}</b> review${n === 1 ? '' : 's'}</span></div>`;
+  return `<div class="goal" role="img" aria-label="Daily goal: ${n} of ${g} reviews"><div class="goalbar"><i style="width:${Math.min(100, Math.round(n / g * 100))}%"></i></div><span>Today <b>${n}</b> / ${g}${n >= g ? ' ✓ goal reached' : ''}</span></div>`;
+}
+function prStatusHTML(info) {
+  const L = lim(), k = info.k, avail = info.list.length, now = Date.now();
+  const status = k ? `<b>${k.review}</b> due · <b>${k.learn}</b> learning · <b>${k.nw}</b> new today <span class="muted">(${k.newAll} waiting, limit ${L.newPerDay}/day)</span>` : `<b>${avail}</b> phrase${avail === 1 ? '' : 's'} available`;
+  return status + (k && !avail && info.nextDue ? ` Next review in <b>${fmtIv(Math.max(0, info.nextDue - now))}</b>.` : '');
+}
+function prRefreshStatus() {       // after a limit changes: refresh the numbers without rebuilding the form (a rebuild would swallow the click on "Start")
+  const sp = $('#prStatus'), st = $('#prStart'); if (!sp || !st || pr.active) return; const info = queueInfo(pr.cfg);
+  sp.innerHTML = prStatusHTML(info); st.disabled = !info.list.length; const g = $('#goalWrap'); if (g) g.innerHTML = todayGoalHTML();
 }
 function renderPractice() {
   const root = $('#practiceRoot');
   if (pr.done) {
     const t = pr.tally, n = t.again + t.hard + t.good + t.easy, ok = t.good + t.easy;
     root.innerHTML = `<div class="pr-card"><div style="font-size:2.6rem">🎉</div><h2 style="margin:0">Session complete</h2><p class="muted" style="margin:0">${n} review${n === 1 ? '' : 's'} · ${n ? Math.round(ok / n * 100) : 0}% recalled</p>
-      <div class="stat-mini"><div><b style="color:var(--red)">${t.again}</b>Again</div><div><b style="color:var(--gold-text)">${t.hard}</b>Hard</div><div><b style="color:var(--green)">${t.good}</b>Good</div><div><b style="color:var(--green)">${t.easy}</b>Easy</div></div>
+      <div class="stat-mini"><div><b style="color:var(--red)">${t.again}</b>Again</div><div><b style="color:var(--gold-text)">${t.hard}</b>Hard</div><div><b style="color:var(--green)">${t.good}</b>Good</div><div><b style="color:var(--green)">${t.easy}</b>Easy</div></div>${todayGoalHTML()}
       <div style="display:flex;gap:10px"><button class="btn primary" id="prAgain">New session</button><button class="btn" id="prBack">Dictionary</button></div></div>`;
     $('#prAgain').onclick = () => { pr.done = false; renderPractice(); }; $('#prBack').onclick = () => { pr.done = false; showTab('dict'); }; return;
   }
   if (!pr.active) {
-    const c = pr.cfg, avail = scopeList(c).length, cs = cats();
-    root.innerHTML = `<div class="panel"><h2 class="sec">🧠 Quick practice</h2><p class="muted" style="margin-top:0">Listen first, try to recall the phrase and meaning, reveal, then rate yourself. Ratings schedule the next review automatically.</p>
+    const c = pr.cfg, info = queueInfo(c), avail = info.list.length, cs = cats(), L = lim();
+    root.innerHTML = `<div class="panel"><h2 class="sec">🧠 Quick practice</h2><p class="muted" style="margin-top:0">Rate how well you knew each phrase. New phrases go through short learning steps, then come back after longer and longer gaps — the better you know a phrase, the longer the gap (like Anki).</p><div id="goalWrap">${todayGoalHTML()}</div>
       <div class="pr-form">
-        <div><label class="lbl" for="prMode">Mode</label><select id="prMode"><option value="listen" ${c.mode === 'listen' ? 'selected' : ''}>🎧 Listen first → recall</option><option value="en2lt" ${c.mode === 'en2lt' ? 'selected' : ''}>🇬🇧 English → Lithuanian</option></select></div>
+        <div><label class="lbl" for="prMode">Mode</label><select id="prMode">${PR_MODES.map(([v, t]) => `<option value="${v}" ${c.mode === v ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
         <div><label class="lbl" for="prCat">Lesson</label><select id="prCat"><option value="all">All lessons</option>${cs.map(x => `<option value="${esc(x)}" ${x === c.cat ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div>
-        <div><label class="lbl" for="prScope">Phrases</label><select id="prScope"><option value="due" ${c.scope === 'due' ? 'selected' : ''}>Due + new</option><option value="unmastered" ${c.scope === 'unmastered' ? 'selected' : ''}>All unmastered</option><option value="learning" ${c.scope === 'learning' ? 'selected' : ''}>Learning only</option><option value="favorites" ${c.scope === 'favorites' ? 'selected' : ''}>Favorites</option><option value="all" ${c.scope === 'all' ? 'selected' : ''}>Everything</option></select></div>
+        <div><label class="lbl" for="prScope">Phrases</label><select id="prScope"><option value="due" ${c.scope === 'due' ? 'selected' : ''}>Due + new (follows your daily limits)</option><option value="unmastered" ${c.scope === 'unmastered' ? 'selected' : ''}>All unmastered</option><option value="learning" ${c.scope === 'learning' ? 'selected' : ''}>Learning only</option><option value="favorites" ${c.scope === 'favorites' ? 'selected' : ''}>Favorites</option><option value="all" ${c.scope === 'all' ? 'selected' : ''}>Everything</option></select></div>
         <div><label class="lbl" for="prCount">Cards per session</label><select id="prCount">${[10, 20, 50, 0].map(n => `<option value="${n}" ${c.count === n ? 'selected' : ''}>${n || 'All available'}</option>`).join('')}</select></div>
-        <div class="full"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="prAudioOnly" ${c.audioOnly ? 'checked' : ''}> Only phrases with audio</label></div>
-        <div class="full" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button class="btn primary" id="prStart" ${avail ? '' : 'disabled'}>Start session</button><span class="muted"><b>${avail}</b> phrase${avail === 1 ? '' : 's'} available</span></div></div></div>`;
+        <div class="full"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="prAudioOnly" ${c.audioOnly ? 'checked' : ''}> Only phrases with audio</label>${c.mode === 'type' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">Typing mode uses phrases that have an English translation.</p>' : ''}${c.mode === 'dictation' || c.mode === 'shadow' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">This mode uses phrases that have audio.</p>' : ''}</div>
+        <div class="full" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button class="btn primary" id="prStart" ${avail ? '' : 'disabled'}>Start session</button><span id="prStatus">${prStatusHTML(info)}</span></div></div>
+      <details class="pr-limits" ${state.settings._limitsOpen ? 'open' : ''}><summary>⚙ Daily limits &amp; goal</summary><div class="pr-form" style="margin-top:10px">
+        <div><label class="lbl" for="stNew">New phrases per day</label><input type="number" id="stNew" min="0" max="500" inputmode="numeric" value="${L.newPerDay}"></div>
+        <div><label class="lbl" for="stRev">Max reviews per day</label><input type="number" id="stRev" min="0" max="2000" inputmode="numeric" value="${L.maxRev}"></div>
+        <div><label class="lbl" for="stGoal">Daily goal (reviews, 0 = off)</label><input type="number" id="stGoal" min="0" max="2000" inputmode="numeric" value="${L.goal}"></div>
+        <p class="muted full" style="margin:0;font-size:.84rem">The limits only apply to “Due + new”. New phrases are introduced in course order. Studied today: <b>${dayCounts().n}</b> new, <b>${dayCounts().r}</b> older reviews.</p></div></details></div>`;
     const sync = () => { pr.cfg = { mode: $('#prMode').value, scope: $('#prScope').value, count: +$('#prCount').value, audioOnly: $('#prAudioOnly').checked, cat: $('#prCat').value }; renderPractice(); };
-    ['prMode', 'prScope', 'prCount', 'prAudioOnly', 'prCat'].forEach(id => $('#' + id).onchange = sync); $('#prStart').onclick = startSession; return;
+    ['prMode', 'prScope', 'prCount', 'prAudioOnly', 'prCat'].forEach(id => $('#' + id).onchange = sync); $('#prStart').onclick = startSession;
+    const lm = (id, key, max) => { $('#' + id).onchange = ev => { const v = Math.max(0, Math.min(max, Math.floor(+ev.target.value) || 0)); ev.target.value = v; state.settings[key] = v; state.settings._limitsOpen = true; save(); prRefreshStatus(); renderStats(); }; };
+    const dl = $('.pr-limits'); if (dl) dl.addEventListener('toggle', () => { state.settings._limitsOpen = dl.open; });   // stays open when you change another option
+    lm('stNew', 'newPerDay', 500); lm('stRev', 'maxReviews', 2000); lm('stGoal', 'dailyGoal', 2000); return;
   }
   const e = byId(pr.queue[pr.i]); if (!e) { endSession(); return; }
-  const total = pr.queue.length, listen = pr.mode === 'listen';
-  const rb = ['again', 'hard', 'good', 'easy'].map((r, k) => `<button class="r-${r}" data-rate="${r}"><span>${cap(r)}</span><small>${r === 'again' ? '< 10m' : fmtIv(simRate(e, r).iv)} · <kbd>${k + 1}</kbd></small></button>`).join('');
+  const total = pr.queue.length, m = pr.mode, typed = isTyped(m), res = pr.result;
+  const rb = ['again', 'hard', 'good', 'easy'].map((r, k) => `<button class="r-${r}${res && res.suggest === r ? ' suggested' : ''}" data-rate="${r}"><span>${cap(r)}</span><small>${fmtIv(schedule(e, r).ivMs)} · <kbd>${k + 1}</kbd></small></button>`).join('');
+  const typeForm = `<form class="pr-type" id="prForm" autocomplete="off"><input type="text" id="prInput" lang="lt" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done" aria-label="Your answer in Lithuanian" placeholder="Type in Lithuanian…">
+      <div class="charpad" role="group" aria-label="Lithuanian letters">${[...'ąčęėįšųūž'].map(ch => `<button type="button" data-ch="${ch}" tabindex="-1" aria-label="Insert ${ch}">${ch}</button>`).join('')}</div>
+      <div class="row"><button class="btn primary" type="submit">Check <kbd style="color:inherit">Enter</kbd></button><button class="btn" type="button" id="prDunno">I don’t know</button></div></form>`;
+  let front = '';
+  if (!pr.revealed) {
+    if (m === 'listen') front = `<button class="pr-big-play" id="prPlay" aria-label="Play audio">🔊</button><p class="muted" style="margin:0">${e.audioId ? 'Listen, then say it out loud.' : 'No audio for this phrase — using your browser voice.'}<br><kbd>Space</kbd> replays</p><button class="btn primary" id="prReveal" style="margin-top:8px">Reveal answer <kbd style="color:#000">Enter</kbd></button>`;
+    else if (m === 'en2lt') front = `<div class="pr-en">${esc(e.en || '(no translation)')}</div><p class="muted" style="margin:0">How do you say this in Lithuanian?</p><button class="btn primary" id="prReveal" style="margin-top:8px">Reveal answer <kbd style="color:#000">Enter</kbd></button>`;
+    else if (m === 'type') front = `<div class="pr-en">${esc(e.en)}</div><p class="muted" style="margin:0">Type it in Lithuanian — letters like <b>ą č ę ė į š ų ū ž</b> count.</p>${typeForm}`;
+    else if (m === 'dictation') front = `<button class="pr-big-play" id="prPlay" aria-label="Play audio">🔊</button><p class="muted" style="margin:0">Type what you hear. <kbd>Ctrl</kbd>+<kbd>Space</kbd> replays</p>${typeForm}`;
+  } else {
+    const banner = res ? { exact: '✓ Perfect', diacritics: '≈ Right letters — check the diacritics', close: '≈ Almost there', wrong: '✗ Not quite', skip: 'Here is the answer', empty: 'Here is the answer' }[res.kind] : '';
+    front = `${res ? `<div class="pr-res ${res.kind}" role="status">${banner}</div>` : ''}${res && res.diff ? `<div class="pr-diff" lang="lt"><small>You typed</small><span>${res.diff.typed || '—'}</span><small>Correct</small><span>${res.diff.target}</span></div>` : ''}
+      <div class="pr-lt" lang="lt">${esc(e.stress || e.lt)}</div><div class="pr-en">${esc(e.en)}</div><div class="muted" style="font-style:italic">/ ${esc(e.ph || autoPhon(stripStress(e.lt)))} /</div><span class="tag">${esc(e.cat)}</span>
+      ${e.note ? `<p class="muted" style="margin:0;max-width:520px">${esc(e.note)}</p>` : ''}<button class="btn sm" id="prPlay2">🔊 Play again <kbd>Space</kbd></button>${shadowHTML(e, m === 'shadow')}<div class="rate">${rb}</div>`;
+  }
   root.innerHTML = `<div class="pr-prog" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${pr.i}"><i style="width:${pr.i / total * 100}%"></i></div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px" class="muted"><span>Card ${pr.i + 1} / ${total}</span><button class="btn sm ghost" id="prEnd">End session <kbd>Esc</kbd></button></div>
-    <div class="pr-card" aria-live="polite">
-      ${listen && !pr.revealed ? `<button class="pr-big-play" id="prPlay" aria-label="Play audio">🔊</button><p class="muted" style="margin:0">${e.audioId ? 'Listen, then say it out loud.' : 'No audio for this phrase — using your browser voice.'}<br><kbd>Space</kbd> replays</p>` : ''}
-      ${!listen && !pr.revealed ? `<div class="pr-en">${esc(e.en || '(no translation)')}</div><p class="muted" style="margin:0">How do you say this in Lithuanian?</p>` : ''}
-      ${pr.revealed ? `<div class="pr-lt" lang="lt">${esc(e.stress || e.lt)}</div><div class="pr-en">${esc(e.en)}</div><div class="muted" style="font-style:italic">/ ${esc(e.ph || autoPhon(stripStress(e.lt)))} /</div><span class="tag">${esc(e.cat)}</span>
-        ${e.note ? `<p class="muted" style="margin:0;max-width:520px">${esc(e.note)}</p>` : ''}<button class="btn sm" id="prPlay2">🔊 Play again <kbd>Space</kbd></button><div class="rate">${rb}</div>` :
-      `<button class="btn primary" id="prReveal" style="margin-top:8px">Reveal answer <kbd style="color:#000">Enter</kbd></button>`}</div>`;
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px" class="muted"><span>Card ${pr.i + 1} / ${total} · ${esc((PR_MODES.find(x => x[0] === m) || [0, ''])[1].replace(/^\S+\s/, ''))}</span><button class="btn sm ghost" id="prEnd">End session <kbd>Esc</kbd></button></div>
+    <div class="pr-card" aria-live="polite">${front}</div>`;
   const pb = $('#prPlay') || $('#prPlay2'); if (pb) pb.onclick = () => replay(e.id);
   const rv = $('#prReveal'); if (rv) rv.onclick = reveal; $$('[data-rate]').forEach(b => b.onclick = () => rateCard(b.dataset.rate)); $('#prEnd').onclick = () => endSession();
+  const f = $('#prForm'); if (f) {
+    const inp = $('#prInput'); f.onsubmit = ev => { ev.preventDefault(); checkTyped(false); }; $('#prDunno').onclick = () => checkTyped(true);
+    inp.addEventListener('keydown', ev => { if (ev.ctrlKey && ev.code === 'Space') { ev.preventDefault(); replay(e.id); } });
+    $$('.charpad button', f).forEach(b => { b.addEventListener('pointerdown', ev => ev.preventDefault()); b.onclick = () => { const st = inp.selectionStart ?? inp.value.length, en = inp.selectionEnd ?? st; inp.value = inp.value.slice(0, st) + b.dataset.ch + inp.value.slice(en); inp.focus(); inp.setSelectionRange(st + 1, st + 1); }; });
+  }
+  shadowWire(e);
 }
 function startSession() {
-  const c = pr.cfg; let l = scopeList(c); if (!l.length) { toast('Nothing to practise with those settings.', 'warn'); return; }
-  const now = Date.now(); l = shuffle(l).sort((a, b) => (a.reviews === 0 ? now : a.due) - (b.reviews === 0 ? now : b.due)); if (c.count) l = l.slice(0, c.count);
-  Object.assign(pr, { active: true, done: false, queue: l.map(e => e.id), i: 0, revealed: false, mode: c.mode, requeued: new Set(), tally: { again: 0, hard: 0, good: 0, easy: 0 } }); showCardAudio();
+  const c = pr.cfg; let ids = queueInfo(c).list.map(e => e.id); if (!ids.length) { toast('Nothing to practise with those settings.', 'warn'); return; }
+  if (c.count) ids = ids.slice(0, c.count);
+  Object.assign(pr, { active: true, done: false, queue: ids, i: 0, mode: c.mode, tally: { again: 0, hard: 0, good: 0, easy: 0 } }); showCardAudio();
 }
-function showCardAudio() { renderPractice(); const e = byId(pr.queue[pr.i]); if (e && pr.mode === 'listen') playEntry(e.id, { restart: true }); }
-function reveal() { if (!pr.active || pr.revealed) return; pr.revealed = true; renderPractice(); const e = byId(pr.queue[pr.i]); if (e && pr.mode === 'en2lt') playEntry(e.id, { restart: true }); }
+function showCardAudio() {
+  shadowReset(); pr.revealed = pr.mode === 'shadow'; pr.result = null; pr.t0 = Date.now(); renderPractice();
+  const e = byId(pr.queue[pr.i]); if (e && (pr.mode === 'listen' || pr.mode === 'dictation' || pr.mode === 'shadow')) playEntry(e.id, { restart: true });
+  if (isTyped(pr.mode)) { const i = $('#prInput'); if (i) setTimeout(() => i.focus({ preventScroll: true }), 40); }
+}
+function reveal() { if (!pr.active || pr.revealed || isTyped(pr.mode)) return; pr.revealed = true; renderPractice(); const e = byId(pr.queue[pr.i]); if (e && pr.mode === 'en2lt') playEntry(e.id, { restart: true }); }
+function checkTyped(skip) {
+  if (!pr.active || pr.revealed || !isTyped(pr.mode)) return; const e = byId(pr.queue[pr.i]); if (!e) return;
+  const typed = skip ? '' : ($('#prInput') ? $('#prInput').value : '');
+  if (!skip && !typed.trim()) { toast('Type your answer first, or press “I don’t know”.', 'warn'); return; }
+  const j = skip ? { kind: 'skip', suggest: 'again', typed: '', target: '' } : judgeTyped(typed, e.lt);
+  j.diff = (j.kind === 'exact' || j.kind === 'skip') ? null : diffParts(j.typed, j.target); j.ms = Date.now() - pr.t0;
+  pr.result = j; pr.revealed = true; renderPractice(); if (pr.mode === 'type') playEntry(e.id, { restart: true });
+}
 function rateCard(r) {
-  if (!pr.active || !pr.revealed) return; const e = byId(pr.queue[pr.i]); if (!e) return; const s = simRate(e, r);
-  e.box = s.box; e.due = s.due; e.reviews++; if (r === 'good' || r === 'easy') e.correct++; e.lastReview = Date.now(); e.status = e.box >= 4 ? 2 : (e.reviews > 0 ? 1 : 0);
-  bumpReview(); pr.tally[r]++;
-  if (r === 'again' && !pr.requeued.has(e.id)) { pr.requeued.add(e.id); pr.queue.push(e.id); }
-  save(); renderStats(); renderChips(); pr.i++; pr.revealed = false;
+  if (!pr.active || !pr.revealed) return; const e = byId(pr.queue[pr.i]); if (!e) return;
+  const wasNew = e.state === 'new', wasReview = e.state === 'review', now = Date.now(), sc = schedule(e, r, now);
+  Object.assign(e, { state: sc.state, step: sc.step, ivl: sc.ivl, ease: sc.ease, lapses: sc.lapses, due: sc.due, reviews: e.reviews + 1, lastReview: now });
+  if (r === 'good' || r === 'easy') e.correct++;
+  e.status = e.state === 'review' && e.ivl >= SR.mature ? 2 : 1;
+  const k = dayCounts(); if (wasNew) k.n++; else if (wasReview) k.r++;
+  const before = state.days[todayStr()] || 0, goal = lim().goal; bumpReview(); pr.tally[r]++;
+  if (goal && before < goal && before + 1 >= goal) toast('🎉 Daily goal reached — ' + goal + ' reviews today!');
+  if ((sc.state === 'learn' || sc.state === 'relearn') && sc.due - now <= LEARN_AHEAD) pr.queue.splice(Math.min(pr.queue.length, pr.i + 1 + (sc.ivMs >= 5 * MINMS ? 6 : 3)), 0, e.id);   // learning cards come back in this session
+  save(); renderStats(); renderChips(); pr.i++;
   if (pr.i >= pr.queue.length) endSession(true); else showCardAudio();
 }
-function endSession(finished) { const any = Object.values(pr.tally).some(v => v > 0); pr.active = false; pr.done = finished === true && any; stopAudio(); renderPractice(); renderList(); }
+function endSession(finished) { const any = Object.values(pr.tally).some(v => v > 0); shadowReset(); pr.active = false; pr.done = finished === true && any; stopAudio(); renderPractice(); renderList(); }
+
+/* ---- shadowing: record yourself and compare with the original ---- */
+const shadow = { rec: null, stream: null, chunks: [], blob: null, url: null, player: null, peaksO: null, peaksM: null, timer: 0, stopTimer: 0, token: 0 };
+const shMime = () => { if (!window.MediaRecorder) return ''; for (const m of ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus']) { try { if (MediaRecorder.isTypeSupported(m)) return m; } catch (err) {} } return ''; };
+function shadowReset() {
+  shadow.token++; clearInterval(shadow.timer); clearTimeout(shadow.stopTimer);
+  try { if (shadow.rec && shadow.rec.state !== 'inactive') { shadow.rec.onstop = null; shadow.rec.stop(); } } catch (err) {}
+  if (shadow.stream) shadow.stream.getTracks().forEach(t => t.stop());
+  if (shadow.player) { try { shadow.player.pause(); } catch (err) {} }
+  if (shadow.url) URL.revokeObjectURL(shadow.url);
+  Object.assign(shadow, { rec: null, stream: null, chunks: [], blob: null, url: null, player: null, peaksO: null, peaksM: null });
+}
+function shadowHTML(e, open) {
+  if (!e.audioId) return ''; const can = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+  const body = `<div class="sh"><div class="sh-row"><button class="btn sm" type="button" data-sh="orig">▶ Original</button><button class="btn sm rec" type="button" data-sh="rec" ${can ? '' : 'disabled'}>🎤 Record</button><button class="btn sm" type="button" data-sh="mine" disabled>▶ Mine</button><button class="btn sm" type="button" data-sh="both" disabled>⇄ Original, then mine</button></div>
+    <canvas class="sh-wave" id="shWave" hidden aria-label="Waveforms of the original (top) and your recording (bottom), same time scale"></canvas><div class="muted sh-msg" id="shMsg" aria-live="polite">${can ? 'Wear headphones so the microphone does not pick up the original.' : 'Recording is not supported in this browser.'}</div></div>`;
+  return open ? `<div class="sh-box">${body}</div>` : `<details class="sh-box"><summary>🎤 Repeat it &amp; compare</summary>${body}</details>`;
+}
+async function shPeaks(blob, t0, t1, n = 360) {
+  const AC = window.AudioContext || window.webkitAudioContext, ctx = new AC();
+  try {
+    const buf = await ctx.decodeAudioData(await blob.arrayBuffer()), sr = buf.sampleRate, ch = buf.getChannelData(0);
+    const a = Math.max(0, Math.floor((t0 || 0) * sr)), z = Math.min(ch.length, t1 != null ? Math.ceil(t1 * sr) : ch.length), len = Math.max(1, z - a), pk = new Float32Array(n);
+    for (let i = 0; i < n; i++) { let mx = 0; const s0 = a + Math.floor(i * len / n), s1 = a + Math.floor((i + 1) * len / n); for (let j = s0; j < Math.max(s1, s0 + 1) && j < ch.length; j++) { const v = Math.abs(ch[j]); if (v > mx) mx = v; } pk[i] = mx; }
+    return { pk, dur: len / sr };
+  } finally { try { ctx.close(); } catch (err) {} }
+}
+async function shOriginalPeaks(e) {
+  const blob = await getBlob(e.audioId); if (!blob) return null;
+  if (!e.clip && e.t0 != null && blob.size > 6e6) return null;                 // a whole lesson file: too big to decode just for a picture
+  return shPeaks(blob, e.clip ? 0 : e.t0, e.clip ? null : e.t1);
+}
+function shDraw() {
+  const cv = $('#shWave'); if (!cv || !shadow.peaksM) return; cv.hidden = false;
+  const dpr = Math.min(window.devicePixelRatio || 1, 3), W = Math.max(10, Math.round(cv.clientWidth * dpr)), H = Math.max(10, Math.round(cv.clientHeight * dpr)); cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d'), cs = getComputedStyle(document.documentElement), col = n => cs.getPropertyValue(n).trim(), O = shadow.peaksO, M = shadow.peaksM, maxD = Math.max(O ? O.dur : 0, M.dur, 0.2), lane = H / 2;
+  ctx.clearRect(0, 0, W, H); ctx.font = `${11 * dpr}px system-ui,sans-serif`; ctx.textBaseline = 'top';
+  const gain = p => 0.9 / Math.max(0.05, Math.max(...p.pk)), draw = (p, y0, color, label) => {
+    if (!p) { ctx.fillStyle = col('--muted'); ctx.fillText(label + ' · waveform not available', 6 * dpr, y0 + 4 * dpr); return; }
+    const w = W * p.dur / maxD, g = gain(p), mid = y0 + lane / 2; ctx.fillStyle = color; ctx.globalAlpha = .85;
+    for (let i = 0; i < p.pk.length; i++) { const x = i / p.pk.length * w, h = Math.max(1, p.pk[i] * g * (lane / 2 - 8 * dpr)); ctx.fillRect(x, mid - h, Math.max(1, w / p.pk.length), h * 2); }
+    ctx.globalAlpha = 1; ctx.fillStyle = col('--muted'); ctx.fillText(`${label} · ${p.dur.toFixed(1)} s`, 6 * dpr, y0 + 3 * dpr);
+  };
+  draw(O, 0, col('--green'), 'Original'); draw(M, lane, col('--gold'), 'Mine'); ctx.strokeStyle = col('--line'); ctx.beginPath(); ctx.moveTo(0, lane); ctx.lineTo(W, lane); ctx.stroke();
+}
+const shMsg = t => { const m = $('#shMsg'); if (m) m.textContent = t; };
+function shEnable() { $$('[data-sh=mine],[data-sh=both]').forEach(b => b.disabled = !shadow.url); }
+async function shRecord(e) {
+  const btn = $('[data-sh=rec]'); if (shadow.rec && shadow.rec.state === 'recording') { shadow.rec.stop(); return; }
+  if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder)) { toast('Recording is not supported in this browser.', 'warn'); return; }
+  stopAudio(); const tok = ++shadow.token; let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+  catch (err) { toast(err && err.name === 'NotAllowedError' ? 'Microphone access is blocked. Allow it in your browser’s site settings, then try again.' : 'No microphone was found.', 'err'); return; }
+  if (tok !== shadow.token) { stream.getTracks().forEach(t => t.stop()); return; }
+  const mime = shMime(); let rec; try { rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined); } catch (err) { stream.getTracks().forEach(t => t.stop()); toast('This browser could not start recording.', 'err'); return; }
+  if (shadow.url) { URL.revokeObjectURL(shadow.url); shadow.url = null; shadow.blob = null; shadow.peaksM = null; } shEnable();
+  shadow.stream = stream; shadow.rec = rec; shadow.chunks = [];
+  rec.ondataavailable = ev => { if (ev.data && ev.data.size) shadow.chunks.push(ev.data); };
+  rec.onstop = async () => {
+    clearInterval(shadow.timer); clearTimeout(shadow.stopTimer); stream.getTracks().forEach(t => t.stop()); const b = $('[data-sh=rec]'); if (b) { b.textContent = '🎤 Record again'; b.classList.remove('on'); }
+    if (tok !== shadow.token) return; const blob = new Blob(shadow.chunks, { type: rec.mimeType || mime || 'audio/webm' });
+    if (!blob.size) { shMsg('Nothing was recorded.'); return; }
+    shadow.blob = blob; shadow.url = URL.createObjectURL(blob); shEnable(); shMsg('Recorded. Listen to the original and yours, or both one after the other.');
+    try { shadow.peaksM = await shPeaks(blob); shadow.peaksO = await shOriginalPeaks(e).catch(() => null); if (tok === shadow.token) shDraw(); } catch (err) { console.warn('waveform', err); }
+  };
+  rec.start(); const t0 = Date.now(), maxS = e.clip || e.t0 == null ? 15 : Math.max(4, Math.min(15, (e.t1 - e.t0) * 3 + 2));
+  if (btn) { btn.classList.add('on'); btn.textContent = '⏹ Stop 0:00'; }
+  shadow.timer = setInterval(() => { const sec = (Date.now() - t0) / 1000, b = $('[data-sh=rec]'); if (b) b.textContent = '⏹ Stop ' + fmtT(sec); }, 250);
+  shadow.stopTimer = setTimeout(() => { if (rec.state === 'recording') rec.stop(); }, maxS * 1000); shMsg('Recording… say it now.');
+}
+function shPlayMine() { if (!shadow.url) return Promise.resolve(); stopAudio(); if (shadow.player) try { shadow.player.pause(); } catch (err) {} const a = new Audio(shadow.url); shadow.player = a; return a.play().then(() => new Promise(res => { a.onended = a.onpause = res; })).catch(() => {}); }
+async function shBoth(e) { await playEntry(e.id, { restart: true }); await new Promise(res => { const f = () => { audio.removeEventListener('pause', f); res(); }; audio.addEventListener('pause', f); }); await sleep(250); await shPlayMine(); }
+function shadowWire(e) {
+  $$('[data-sh]').forEach(b => b.onclick = () => { const a = b.dataset.sh; if (a === 'orig') { if (shadow.player) try { shadow.player.pause(); } catch (err) {} playEntry(e.id, { restart: true }); } else if (a === 'rec') shRecord(e); else if (a === 'mine') shPlayMine(); else if (a === 'both') shBoth(e); });
+}
 
 /* ===================================================================
    Backup
@@ -1811,13 +2194,17 @@ function renderBackup() {
       <label style="display:flex;gap:8px;align-items:center;margin:0 0 6px 24px"><input type="checkbox" id="expLessons" disabled> Also the full lesson MP3s</label>
       <p class="muted" style="font-size:.84rem;margin:0 0 12px">Cut phrase clips are small. Full lesson MP3s make the file very large and are only needed to re-edit clips — without them, just re-add the same MP3s after importing and everything reconnects.</p><button class="btn primary" id="btnExport">Download backup</button></div>
     <div class="panel"><h2 class="sec">⤓ Import</h2><p class="muted" style="margin-top:0">Restore from a backup file — merge it into what you have, or replace everything.</p><button class="btn" id="btnJson">Choose backup file…</button></div>
+    <div class="panel"><h2 class="sec">📚 Export to Anki</h2><p class="muted" style="margin-top:0">Makes a .zip with an Anki import file and the phrase audio, so you can also study these phrases in Anki or AnkiDroid. A README inside explains the two import steps.</p>
+      <div class="pr-form"><div><label class="lbl" for="ankiScope">Phrases</label><select id="ankiScope"><option value="all">All lessons (${state.entries.length})</option>${cats().map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('')}</select></div>
+        <div><label class="lbl" for="ankiStyle">Cards</label><select id="ankiStyle"><option value="both">Both kinds (listen + English → Lithuanian)</option><option value="listen">Listen &amp; recall (audio on the front)</option><option value="en2lt">English → Lithuanian (audio on the back)</option></select></div></div>
+      <label style="display:flex;gap:8px;align-items:center;margin:10px 0"><input type="checkbox" id="ankiAudio" checked> Include audio</label><button class="btn primary" id="btnAnki">Download Anki package</button></div>
     <div class="panel"><h2 class="sec">📲 Install &amp; storage</h2><p class="muted" style="margin-top:0">Installing the app works offline and makes the browser much less likely to delete your MP3s.</p>
       <div id="storeInfo" class="muted" style="margin-bottom:10px">Checking storage…</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="btnInstall2" hidden>Install app</button><button class="btn" id="btnPersist" hidden>Ask browser to keep my data</button></div>
       <p class="muted" style="font-size:.84rem;margin:10px 0 0"><b>iPhone / iPad:</b> Share → <i>Add to Home Screen</i>. <b>Android / desktop Chrome &amp; Edge:</b> use Install.</p></div>
     <div class="panel"><h2 class="sec">Delete all phrases</h2><p class="muted" style="margin-top:0">Empties the dictionary but keeps your lesson audio and clip splits, so you can re-add phrases from the Lessons tab.</p><button class="btn danger" id="btnWipePhrases">Delete all phrases…</button></div>
     <div class="panel"><h2 class="sec">Erase everything</h2><p class="muted" style="margin-top:0">Deletes all phrases, lessons, stored audio and progress from this browser.</p><button class="btn danger" id="btnWipe">Erase everything…</button></div></div>`;
-  $('#btnExport').onclick = exportJSON; $('#btnJson').onclick = () => $('#fileJson').click();
+  $('#btnAnki').onclick = exportAnki; $('#btnExport').onclick = exportJSON; $('#btnJson').onclick = () => $('#fileJson').click();
   $('#expAudio').onchange = () => { const x = $('#expLessons'); x.disabled = !$('#expAudio').checked; if (x.disabled) x.checked = false; };
   renderStorageInfo();
   $('#btnWipePhrases').onclick = async () => {
@@ -1849,6 +2236,72 @@ async function exportJSON() {
   } catch (err) { toast('Export failed: ' + err.message, 'err'); }
   btn.disabled = false; btn.textContent = 'Download backup'; renderBackup();
 }
+/* ---- Anki export: a .zip with import file(s) and the phrase audio ---- */
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(u8) { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC_T[(c ^ u8[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+async function makeZip(files) {           // "stored" zip (no compression): audio is already small and WAV/MP3 barely compress
+  if (files.length > 65000) throw new Error('too many files for one zip');
+  const enc = new TextEncoder(), parts = [], central = []; let offset = 0, cd = 0; const d = new Date();
+  const dt = ((d.getFullYear() - 1980) << 9 | (d.getMonth() + 1) << 5 | d.getDate()) & 0xffff, tm = (d.getHours() << 11 | d.getMinutes() << 5 | (d.getSeconds() >> 1)) & 0xffff;
+  for (const f of files) {
+    const nameB = enc.encode(f.name); let data = f.data;
+    const buf = typeof data === 'string' ? enc.encode(data) : data instanceof Blob ? new Uint8Array(await data.arrayBuffer()) : data; if (typeof data === 'string') data = buf; else if (!(data instanceof Blob)) data = buf;
+    const crc = crc32(buf), size = buf.length; if (size > 0xFFFFFFF0 || offset > 0xFFFFFFF0) throw new Error('the package is too large for one zip');
+    const lh = new DataView(new ArrayBuffer(30)); lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(10, tm, true); lh.setUint16(12, dt, true); lh.setUint32(14, crc, true); lh.setUint32(18, size, true); lh.setUint32(22, size, true); lh.setUint16(26, nameB.length, true);
+    parts.push(lh.buffer, nameB, data);
+    const ch = new DataView(new ArrayBuffer(46)); ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(12, tm, true); ch.setUint16(14, dt, true); ch.setUint32(16, crc, true); ch.setUint32(20, size, true); ch.setUint32(24, size, true); ch.setUint16(28, nameB.length, true); ch.setUint32(42, offset, true);
+    central.push(ch.buffer, nameB); cd += 46 + nameB.length; offset += 30 + nameB.length + size;
+  }
+  const end = new DataView(new ArrayBuffer(22)); end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, cd, true); end.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, end.buffer], { type: 'application/zip' });
+}
+function mediaExt(blob, name) {
+  const t = ((blob && blob.type) || '').toLowerCase();
+  if (t.includes('wav')) return 'wav'; if (t.includes('mpeg') || t.includes('mp3')) return 'mp3'; if (t.includes('mp4') || t.includes('m4a') || t.includes('aac')) return 'm4a'; if (t.includes('ogg')) return 'ogg'; if (t.includes('webm')) return 'webm';
+  const m = /\.([a-z0-9]{2,4})$/i.exec(name || ''); return m ? m[1].toLowerCase() : 'mp3';
+}
+const tsvCell = v => String(v == null ? '' : v).replace(/\t/g, ' ').replace(/\r?\n/g, '<br>');
+async function exportAnki() {
+  const btn = $('#btnAnki'), scope = $('#ankiScope').value, style = $('#ankiStyle').value, withAudio = $('#ankiAudio').checked;
+  const list = state.entries.filter(e => scope === 'all' || e.cat === scope).sort(cmpCourse);
+  if (!list.length) { toast('There are no phrases to export.', 'warn'); return; }
+  if (style === 'listen' && !withAudio) { toast('Listening cards need audio — tick “Include audio”.', 'warn'); return; }
+  const label = btn.textContent; btn.disabled = true;
+  try {
+    const media = [], names = new Map(); let n = 0, failed = 0, cache = { id: null, d: null };
+    if (withAudio) for (const e of list) {
+      n++; btn.textContent = `Preparing audio ${n}/${list.length}…`; if (n % 4 === 0) await sleep(0); if (!e.audioId) continue;
+      try {
+        const blob = await getBlob(e.audioId); if (!blob) { failed++; continue; }
+        const base = 'kalbek_' + (String(e.id).replace(/[^a-z0-9_-]/gi, '') || n);
+        if (!e.clip && e.t0 != null && e.t1 != null) {            // older phrase that still points into the full lesson file: cut it now
+          if (cache.id !== e.audioId) cache = { id: e.audioId, d: await decodeAudio(blob).catch(() => null) };
+          if (!cache.d) { failed++; continue; }
+          media.push({ name: `collection.media/${base}.wav`, data: cutClipBlob({ t0: e.t0, t1: e.t1 }, { sr: cache.d.sr, samples: cache.d.samples }) }); names.set(e.id, base + '.wav');
+        } else { const nm = base + '.' + mediaExt(blob, e.audioName); media.push({ name: 'collection.media/' + nm, data: blob }); names.set(e.id, nm); }
+      } catch (err) { console.error(err); failed++; }
+    }
+    cache = null;
+    const tag = e => String(e.cat || 'Kalbek').replace(/[\s,]+/g, '_'), ltH = e => esc(e.stress || e.lt), phH = e => esc(e.ph || autoPhon(stripStress(e.lt))), noteH = e => e.note ? '<br><small>' + esc(e.note) + '</small>' : '';
+    const listen = [], en2lt = [];
+    for (const e of list) {
+      const snd = names.has(e.id) ? `[sound:${names.get(e.id)}]` : '';
+      if (snd) listen.push([snd, `<b>${ltH(e)}</b>${e.en ? '<br>' + esc(e.en) : ''}<br><i>/ ${phH(e)} /</i>${noteH(e)}`, tag(e)]);
+      if (e.en) en2lt.push([esc(e.en), `<b>${ltH(e)}</b><br><i>/ ${phH(e)} /</i>${noteH(e)}${snd ? '<br>' + snd : ''}`, tag(e)]);
+    }
+    const head = '#separator:tab\n#html:true\n#tags column:3\n', toTxt = rows => head + rows.map(r => r.map(tsvCell).join('\t')).join('\n') + '\n';
+    const files = [], want = k => style === 'both' || style === k; let readme = '';
+    if (want('listen') && listen.length) files.push({ name: 'anki-listen-cards.txt', data: toTxt(listen) });
+    if (want('en2lt') && en2lt.length) files.push({ name: 'anki-english-to-lithuanian-cards.txt', data: toTxt(en2lt) });
+    if (!files.length) { toast('Nothing to export with those settings (no phrases with audio / English).', 'warn'); return; }
+    readme = `Kalbėk → Anki\n=============\nThis package has ${files.length} import file(s) and ${media.length} audio file(s).\n\nSTEP 1 — copy the audio\n  Copy everything inside the "collection.media" folder of this zip into Anki's media folder:\n    Windows : %APPDATA%\\Anki2\\<your profile>\\collection.media\n    Mac     : ~/Library/Application Support/Anki2/<your profile>/collection.media\n    Linux   : ~/.local/share/Anki2/<your profile>/collection.media\n    AnkiDroid: AnkiDroid/collection.media (on the phone's storage)\n  (iPhone AnkiMobile has no media folder: import on a computer, then sync.)\n\nSTEP 2 — import the cards\n  Anki: File → Import → pick an "anki-…txt" file → Type "Basic" → Import.\n  Do this once per file. Each file makes its own set of cards:\n    anki-listen-cards.txt               front = the audio, back = Lithuanian, English, pronunciation\n    anki-english-to-lithuanian-cards.txt front = English, back = Lithuanian, pronunciation, audio\n\nThe lesson name is added as a tag. Your progress in Kalbėk is not copied: cards start as new in Anki.\n`;
+    files.unshift({ name: 'README.txt', data: readme });
+    btn.textContent = 'Building zip…'; const zip = await makeZip(files.concat(media));
+    const a = document.createElement('a'); a.href = URL.createObjectURL(zip); a.download = 'kalbek-anki-' + todayStr() + '.zip'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 8000);
+    toast(`Anki package ready: ${listen.length && want('listen') ? listen.length + ' listening' : ''}${listen.length && want('listen') && en2lt.length && want('en2lt') ? ' + ' : ''}${en2lt.length && want('en2lt') ? en2lt.length + ' English→Lithuanian' : ''} cards, ${media.length} audio files${failed ? ` (${failed} could not be prepared)` : ''}.`);
+  } catch (err) { console.error(err); toast('Anki export failed: ' + (err.message || err), 'err'); }
+  btn.disabled = false; btn.textContent = label;
+}
 $('#fileJson').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) importJSONFile(f); };
 async function importJSONFile(file) {
   let data; try { data = JSON.parse(await file.text()); } catch (e) { toast('That file is not valid JSON.', 'err'); return; }
@@ -1872,7 +2325,7 @@ async function applyImport(data, mode) {
     if (t) { const keep = { id: t.id, audioId: t.audioId || inc.audioId, audioName: t.audioName || inc.audioName }; if (t.audioId) Object.assign(keep, { clip: t.clip, s0: t.s0, s1: t.s1, t0: t.t0, t1: t.t1 }); Object.assign(t, inc, keep); } else state.entries.push(inc);
   }
   for (const [k, v] of Object.entries(data.days || {})) state.days[k] = Math.max(state.days[k] || 0, +v || 0);
-  if (mode === 'replace' && data.settings) state.settings = Object.assign({ theme: null, view: 'list', asr: 'base' }, data.settings);
+  if (mode === 'replace' && data.settings) state.settings = Object.assign({}, DEF_SETTINGS, data.settings);
   await verifyAudioRefs(); applyTheme(); save(); refresh();
 }
 async function verifyAudioRefs() {
@@ -1893,13 +2346,13 @@ async function verifyAudioRefs() {
    Tabs, theme, help, keyboard
 =================================================================== */
 function showTab(name, keepLesson) {
-  if (pr.active && name !== 'practice') { pr.active = false; stopAudio(); }
+  if (pr.active && name !== 'practice') { pr.active = false; shadowReset(); stopAudio(); }
   if (name !== 'lessons' && wb) { /* keep decoded audio while browsing other tabs */ }
   tab = name; $$('.tab').forEach(s => s.hidden = s.id !== 'tab-' + name);
   $$('nav.tabs button').forEach(b => b.setAttribute('aria-current', b.dataset.tab === name ? 'page' : 'false'));
   if (name === 'practice') renderPractice(); if (name === 'lessons') { if (!keepLesson && !wb) lv.open = null; renderLessons(); }
   if (name === 'backup') renderBackup(); if (name === 'dict') { renderStats(); renderChips(); renderList(); }
-  window.scrollTo({ top: 0 });
+  window.scrollTo({ top: 0 }); syncWbOpen();
 }
 $$('nav.tabs button').forEach(b => b.onclick = () => showTab(b.dataset.tab, b.dataset.tab === 'lessons' && !!wb));
 function applyTheme() {
@@ -1916,18 +2369,22 @@ function openHelp() {
     <span><kbd>N</kbd></span><span>New phrase</span><span><kbd>/</kbd></span><span>Search</span></div>
     <h3 style="margin:14px 0 6px">Lesson workbench</h3><div class="help-grid"><span><kbd>Enter</kbd> in a text box</span><span>Next clip + play it (<kbd>Shift</kbd>+<kbd>Enter</kbd> = previous)</span></div>
     <h3 style="margin:14px 0 6px">Waveform editor (Lessons)</h3><div class="help-grid"><span>Drag a handle</span><span>Move where a clip starts / ends</span><span><kbd>←</kbd> <kbd>→</kbd></span><span>Previous / next clip</span><span><kbd>Space</kbd></span><span>Play the selected clip</span><span><kbd>S</kbd></span><span>Split at the cursor</span><span><kbd>Del</kbd></span><span>Delete the clip</span><span><kbd>Ctrl</kbd>+<kbd>Z</kbd></span><span>Undo (add <kbd>Shift</kbd> to redo)</span><span><kbd>Ctrl</kbd>+scroll</span><span>Zoom</span></div>
-    <h3 style="margin:14px 0 6px">Practice</h3><div class="help-grid"><span><kbd>Space</kbd></span><span>Play / replay</span><span><kbd>Enter</kbd></span><span>Reveal</span><span><kbd>1</kbd>–<kbd>4</kbd></span><span>Again · Hard · Good · Easy</span><span><kbd>Esc</kbd></span><span>End session</span></div></div>
+    <h3 style="margin:14px 0 6px">Practice</h3><div class="help-grid"><span><kbd>Space</kbd></span><span>Play / replay</span><span><kbd>Enter</kbd></span><span>Reveal · check typed answer · accept the suggested rating</span><span><kbd>1</kbd>–<kbd>4</kbd></span><span>Again · Hard · Good · Easy</span><span><kbd>Ctrl</kbd>+<kbd>Space</kbd></span><span>Replay while typing (dictation)</span><span><kbd>Esc</kbd></span><span>End session</span></div></div>
     <div class="modal-foot"><button class="btn primary" data-x>Got it</button></div>`);
   m.el.addEventListener('click', ev => { if (ev.target.closest('[data-x]')) m.close(); });
 }
 $('#btnHelp').onclick = openHelp;
+function updateTopH() { const h = $('.top'); if (h) document.documentElement.style.setProperty('--top-h', (getComputedStyle(h).position === 'sticky' ? h.offsetHeight : 0) + 'px'); }
+function syncWbOpen() { document.body.classList.toggle('wb-open', tab === 'lessons' && !!lv.open && !!wb); updateTopH(); }
+(() => { const h = $('.top'); if (!h) return; updateTopH(); if (window.ResizeObserver) new ResizeObserver(updateTopH).observe(h); matchMedia('(max-width:700px)').addEventListener('change', updateTopH); })();
 document.addEventListener('keydown', ev => {
   if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
   const t = ev.target, typing = t.matches && t.matches('input:not([type=checkbox]):not([type=range]),textarea,select,[contenteditable]');
   if (modals.length) { if (ev.key === 'Escape') { ev.preventDefault(); closeTopModal(); } return; }
   if (tab === 'practice' && pr.active) {
-    if (typing) return; const k = ev.key;
-    if (k === ' ') { ev.preventDefault(); const e = byId(pr.queue[pr.i]); if (e) replay(e.id); } else if (k === 'Enter') { ev.preventDefault(); reveal(); }
+    const k = ev.key; if (typing) { if (k === 'Escape') t.blur(); return; }
+    if (k === ' ') { ev.preventDefault(); const e = byId(pr.queue[pr.i]); if (e) replay(e.id); }
+    else if (k === 'Enter') { ev.preventDefault(); if (pr.revealed) { if (pr.result && pr.result.suggest) rateCard(pr.result.suggest); } else if (isTyped(pr.mode)) { const i = $('#prInput'); if (i) i.focus(); } else reveal(); }
     else if (['1', '2', '3', '4'].includes(k)) { ev.preventDefault(); rateCard(['again', 'hard', 'good', 'easy'][+k - 1]); } else if (k === 'Escape') { ev.preventDefault(); endSession(); } return;
   }
   if (typing) { if (ev.key === 'Escape') t.blur(); return; }
