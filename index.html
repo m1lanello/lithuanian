@@ -1131,7 +1131,7 @@ function tagPicker(box, tags) {          // toggle chips (grouped) + a field for
   };
   box.addEventListener('click', ev => { const b = ev.target.closest('.tg'); if (!b) return; const t = b.dataset.t, i = tags.indexOf(t); if (i >= 0) tags.splice(i, 1); else if (tags.length < 12) tags.push(t); draw(); });
   box.addEventListener('keydown', ev => { if (ev.key === 'Enter' && ev.target.matches('.tg-new')) { ev.preventDefault(); ev.stopPropagation(); const v = ev.target.value.trim(); if (v && !tags.includes(v) && tags.length < 12) tags.push(v); draw(); const n = box.querySelector('.tg-new'); n && n.focus(); } });
-  draw();
+  draw(); return draw;
 }
 const ACC = ['', '́', '̀', '̃'];                         // none, acute, grave, tilde
 const STRESSY = /^[aąeęėiįyouūųlmnr]/i;
@@ -1170,6 +1170,39 @@ function openTagBulk() {                 // add or remove grammar tags on all se
   $('#tbNew', m.el).addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); const v = ev.target.value.trim(); if (v) { used.add(v); add.add(v); ev.target.value = ''; draw(); } } });
   $('#tbGo', m.el).onclick = () => { const v = $('#tbNew', m.el).value.trim(); if (v) add.add(v); let n = 0; ui.picked.forEach(id => { const e = byId(id); if (!e) return; const t = new Set(e.tags || []); add.forEach(x => t.add(x)); rem.forEach(x => t.delete(x)); const arr = [...t].slice(0, 12); if (arr.join() !== (e.tags || []).join()) { e.tags = arr; n++; } }); save(); m.close(); refresh(); toast(n ? n + ' phrase' + (n === 1 ? '' : 's') + ' updated.' : 'Nothing changed.'); };
   draw();
+}
+
+const SUG = {
+  greet: new Set(['labas', 'laba', 'sveiki', 'sveikas', 'sveika', 'sudie', 'ačiū', 'prašau', 'atsiprašau', 'atleiskite', 'viso', 'gero', 'geros', 'naktis', 'nakties', 'rytas', 'diena', 'vakaras', 'iki', 'pasimatymo', 'sveikinu']),
+  pron: new Set(['aš', 'tu', 'jis', 'ji', 'mes', 'jūs', 'jie', 'jos', 'tai', 'kas', 'šis', 'ši', 'tas', 'ta', 'kuris', 'kokia', 'koks']),
+  prep: new Set(['į', 'iš', 'su', 'be', 'ant', 'po', 'prie', 'per', 'už', 'apie', 'nuo', 'iki', 'pas', 'link', 'virš', 'po']),
+  adv: new Set(['labai', 'gerai', 'blogai', 'čia', 'ten', 'dabar', 'šiandien', 'vakar', 'rytoj', 'visada', 'niekada', 'dažnai', 'jau', 'dar', 'tik', 'kartais', 'greitai', 'lėtai']),
+  num: new Set(['vienas', 'viena', 'du', 'dvi', 'trys', 'keturi', 'keturios', 'penki', 'šeši', 'septyni', 'aštuoni', 'devyni', 'dešimt', 'šimtas', 'tūkstantis']),
+  neg: new Set(['ne', 'nėra', 'nebėra', 'niekada', 'niekas', 'niekur', 'nieko', 'nesu', 'nebuvo', 'negaliu', 'nenoriu', 'nežinau', 'nesuprantu', 'neturiu']),
+  pres: new Set(['esu', 'esi', 'yra', 'esame', 'esate', 'turiu', 'noriu', 'galiu', 'žinau', 'suprantu']),
+  past: new Set(['buvau', 'buvai', 'buvo', 'buvome', 'buvom', 'buvote']),
+  fut: new Set(['būsiu', 'būsi', 'bus', 'būsime', 'būsite']),
+  cond: new Set(['būčiau', 'būtum', 'būtų', 'norėčiau', 'galėčiau'])
+};
+function suggestTags(e) {                // conservative guesses from the text: only obvious cases, never the grammatical case itself
+  const lt = String(e.lt || '').toLowerCase(), en = String(e.en || ''), out = new Set();
+  const toks = lt.match(/[\p{L}]+/gu) || [], has = k => toks.some(t => SUG[k].has(t.normalize('NFC')));
+  if (/\?/.test(lt) || /\?/.test(en) || /^(kas|kur|kada|kodėl|kaip|kiek|ar|kuris|kokia|koks)\b/.test(lt)) out.add('q');
+  if (has('neg')) out.add('neg'); if (has('pres')) out.add('pres'); if (has('past')) out.add('past'); if (has('fut')) out.add('fut'); if (has('cond')) out.add('cond');
+  if (toks.length && toks.every(t => SUG.greet.has(t))) out.add('pol');
+  if (toks.length === 1) {
+    const w = toks[0]; if (SUG.pron.has(w)) out.add('pron'); if (SUG.prep.has(w)) out.add('prep'); if (SUG.adv.has(w)) out.add('adv'); if (SUG.num.has(w)) out.add('num');
+    if (/ti$/.test(w) && w.length > 4) out.add('inf'); if (/tis$/.test(w) && w.length > 5) { out.add('inf'); out.add('refl'); }
+  }
+  if (/\b(plural|them|those|these|we|you all|they)\b/i.test(en) && toks.length <= 4) { /* too vague to tag */ }
+  (e.tags || []).forEach(t => out.delete(t)); return [...out];
+}
+function openSuggest() {                 // review guessed tags for the selected phrases (or every untagged phrase in view) before applying
+  const pool = (ui.picked.size ? [...ui.picked].map(byId).filter(Boolean) : getFiltered().filter(e => !(e.tags || []).length));
+  const rows = pool.map(e => ({ e, add: suggestTags(e) })).filter(r => r.add.length);
+  if (!rows.length) { toast('No confident suggestions here. Cases (nominative, genitive…) can’t be guessed reliably — tag those yourself.'); return; }
+  const m = openModal(`<div class="modal-head"><h2>Suggested tags</h2><button class="icon-btn" data-x aria-label="Close">✕</button></div><div class="modal-body"><p class="muted" style="margin-top:0">Guessed from obvious words and endings (question marks, “ne”, greetings, pronouns, …). Untick anything wrong. Cases are never guessed.</p><div id="sgList" style="max-height:52vh;overflow:auto;display:flex;flex-direction:column;gap:10px">${rows.slice(0, 200).map((r, i) => `<div><div lang="lt"><b>${esc(r.e.lt)}</b> <span class="muted">${esc(r.e.en || '')}</span></div><div class="tg-grp">${r.add.map(t => `<label class="chip" style="cursor:pointer"><input type="checkbox" data-r="${i}" value="${esc(t)}" checked> ${esc(tagName(t))}</label>`).join('')}</div></div>`).join('')}</div></div><div class="modal-foot"><button class="btn" data-x>Cancel</button><button class="btn primary" id="sgGo">Apply</button></div>`);
+  $('#sgGo', m.el).onclick = () => { let n = 0; $$('#sgList input:checked', m.el).forEach(c => { const e = rows[+c.dataset.r].e; e.tags = [...(e.tags || []), c.value].slice(0, 12); n++; }); save(); m.close(); refresh(); toast(n + ' tag' + (n === 1 ? '' : 's') + ' added.'); };
 }
 const tagSelHTML = (cur, label = 'All grammar tags') => `<option value="all">${label}</option>` + tagsInUse().map(([t, n]) => `<option value="${esc(t)}" ${t === cur ? 'selected' : ''}>${esc(tagName(t))} (${n})</option>`).join('');
 const ekey = e => key(stripStress(e.lt)) + '|' + (e.cat || '');
@@ -1280,7 +1313,7 @@ function renderBulk() {
   const b = $('#bulk'); b.hidden = !ui.selMode; if (!ui.selMode) return;
   b.innerHTML = `<b>${ui.picked.size} selected</b><button class="btn sm" data-bulk="all">Select all visible</button><button class="btn sm" data-bulk="none">Clear</button>
     <select data-bulk="status" aria-label="Set status"><option value="">Set status…</option><option value="0">🔴 New</option><option value="1">🟡 Learning</option><option value="2">🟢 Mastered</option></select>
-    <button class="btn sm" data-bulk="move">Move to lesson…</button><button class="btn sm" data-bulk="tags">🏷 Tags…</button><button class="btn sm danger" data-bulk="del" ${ui.picked.size ? '' : 'disabled'}>Delete</button><span class="grow"></span><button class="btn sm" data-bulk="done">Done</button>`;
+    <button class="btn sm" data-bulk="move">Move to lesson…</button><button class="btn sm" data-bulk="tags">🏷 Tags…</button><button class="btn sm" data-bulk="suggest">✨ Suggest tags</button><button class="btn sm danger" data-bulk="del" ${ui.picked.size ? '' : 'disabled'}>Delete</button><span class="grow"></span><button class="btn sm" data-bulk="done">Done</button>`;
 }
 async function deleteEntries(ids, noTomb) {
   const set = new Set(ids), audioIds = new Set(); if (!noTomb) addTomb(state.entries.filter(e => set.has(e.id)));
@@ -1302,6 +1335,7 @@ $('#bulk').addEventListener('click', async ev => {
     if (!await confirmBox('Delete phrases?', `Delete <b>${n}</b> selected phrase${n > 1 ? 's' : ''}? Lesson audio stays; this cannot be undone.`, 'Delete', true)) return;
     await deleteEntries([...ui.picked]); toast(`${n} phrase${n > 1 ? 's' : ''} deleted.`);
   } else if (a === 'tags') { if (ui.picked.size) openTagBulk(); }
+  else if (a === 'suggest') openSuggest();
   else if (a === 'move') {
     if (!ui.picked.size) return;
     const m = openModal(`<div class="modal-head"><h2>Move ${ui.picked.size} phrase(s)</h2></div><div class="modal-body"><label class="lbl" for="mvCat">Lesson / category</label><input type="text" id="mvCat" list="mvList" autofocus><datalist id="mvList">${cats().map(c => `<option value="${esc(c)}">`).join('')}</datalist></div><div class="modal-foot"><button class="btn" data-x>Cancel</button><button class="btn primary" id="mvGo">Move</button></div>`);
@@ -1362,7 +1396,7 @@ function wordChipsHTML(e) {
 function openWord(word, ctx = {}) {
   const { k, exact, similar } = wordMatches(word), forms = new Set([k]); similar.forEach(x => forms.add(x.form));
   const row = (e, mark) => `<div class="wrow" data-id="${esc(e.id)}"><button class="pbtn" data-wp aria-label="Play">${e.audioId ? '▶' : '🗣'}</button>
-    <div class="txt"><span class="lt" lang="lt">${hiWords(e.lt, mark)}</span><span class="en">${esc(e.en)}</span></div><button class="btn sm" data-wg title="Show in the dictionary">Open</button></div>`;
+    <div class="txt"><span class="lt" lang="lt">${hiWords(e.stress || e.lt, mark)}</span><span class="en">${esc(e.en)}${(e.tags || []).length ? ' · ' + e.tags.map(t => '🏷 ' + esc(tagName(t))).join(' ') : ''}</span></div><button class="btn sm" data-wg title="Show in the dictionary">Open</button></div>`;
   const others = exact.filter(e => e.id !== ctx.exclude), simO = similar.filter(x => x.e.id !== ctx.exclude);
   const m = openModal(`<div class="modal-head"><h2>Word: <i lang="lt">${esc(word)}</i></h2><button class="icon-btn" data-x aria-label="Close">✕</button></div>
     <div class="modal-body">
@@ -1379,11 +1413,16 @@ function openWord(word, ctx = {}) {
   });
   $('#wSay', m.el).onclick = () => speak(word);
   $('#wSearch', m.el).onclick = () => { m.close(); ui.q = word; $('#q').value = word; showTab('dict'); };
-  if (ctx.add) $('#wAdd', m.el).onclick = () => { m.close(); openEdit(null, { lt: ctx.add.lt, cat: ctx.add.cat, note: ctx.add.note || '' }); };
+  if (ctx.add) $('#wAdd', m.el).onclick = () => { m.close(); openEdit(null, { lt: ctx.add.lt, cat: ctx.add.cat, note: ctx.add.note || '', tags: suggestTags({ lt: ctx.add.lt }) }); };
 }
 
 /* ---------- Reader ---------- */
-const rd = { open: null, hl: true };
+const rd = { open: null, hl: true, st: true };
+function stressWordMap() {               // word -> stress-marked form, learned from phrases whose stress you marked
+  const m = new Map();
+  for (const e of state.entries) { if (!e.stress) continue; const a = String(e.lt).match(WORD_RE) || [], b = String(e.stress).match(WORD_RE) || []; if (a.length !== b.length) continue; a.forEach((w, i) => { const k = wkey(w); if (!m.has(k) && stripStress(b[i]).toLowerCase() === k && b[i] !== w) m.set(k, b[i].normalize('NFC').toLowerCase()); }); }
+  return m;
+}
 const rdSentences = body => { const out = []; String(body).split(/\n+/).forEach(par => { const t = par.trim(); if (!t) return; (t.match(/[^.!?…]+(?:[.!?…]+["”»)’']*|$)/g) || [t]).forEach(x => { x = x.trim(); if (x && /\p{L}/u.test(x)) out.push(x); }); }); return out; };
 function rdStats(body) {
   const c = { m: 0, l: 0, n: 0, s: 0, u: 0 }, unk = new Map(); let total = 0;
@@ -1402,16 +1441,16 @@ function renderReader() {
         : '<div class="empty"><b>No texts yet</b>Paste something you want to be able to read — it takes a few seconds.</div>'}</div>`;
     return;
   }
-  const st = rdStats(t.body), tt = st.total, c = st.c, sents = rdSentences(t.body), have = new Set(state.entries.map(e => tnorm(e.lt)));
+  const st = rdStats(t.body), tt = st.total, c = st.c, sents = rdSentences(t.body), have = new Set(state.entries.map(e => tnorm(e.lt))), sm = stressWordMap();
   root.innerHTML = `<div class="rd-wrap"><div class="rd-head"><button class="btn sm" data-rd="back">← Texts</button><h2>${esc(t.title)}</h2>
-      <button class="btn sm" data-rd="hl" aria-pressed="${rd.hl}">${rd.hl ? '◉' : '○'} Highlight</button><button class="btn sm" data-rd="edit">✎ Edit</button><button class="btn sm danger" data-rd="del">Delete</button></div>
+      <button class="btn sm" data-rd="hl" aria-pressed="${rd.hl}">${rd.hl ? '◉' : '○'} Highlight</button>${sm.size ? `<button class="btn sm" data-rd="st" aria-pressed="${rd.st}" title="Show stress marks you have saved">${rd.st ? '◉' : '○'} Stress</button>` : ''}<button class="btn sm" data-rd="edit">✎ Edit</button><button class="btn sm danger" data-rd="del">Delete</button></div>
     <div class="rd-cov"><div><b>${pct(c.m + c.l + c.n, tt)}%</b> of the words are in your dictionary${c.s ? ` · <b>${pct(c.s, tt)}%</b> more as other forms` : ''} <span class="muted">(${tt} words, ${st.unk.length} new)</span></div>
       <div class="rd-bar" role="img" aria-label="Word coverage"><i style="width:${pct(c.m, tt)}%;background:var(--green)"></i><i style="width:${pct(c.l, tt)}%;background:var(--gold)"></i><i style="width:${pct(c.n, tt)}%;background:color-mix(in srgb,var(--gold) 45%,transparent)"></i><i style="width:${pct(c.s, tt)}%;background:color-mix(in srgb,var(--gold) 25%,transparent)"></i></div>
       <div class="rd-leg"><span style="--c:var(--green)">Mastered ${c.m}</span><span style="--c:var(--gold)">Learning ${c.l}</span><span style="--c:color-mix(in srgb,var(--gold) 45%,transparent)">Not started ${c.n}</span><span style="--c:color-mix(in srgb,var(--gold) 25%,transparent)">Other form ${c.s}</span><span style="--c:var(--red)">New ${c.u}</span></div>
       ${st.unk.length ? `<details style="margin-top:8px"><summary style="cursor:pointer;font-weight:600">New words (${st.unk.length}) — tap to look up or add</summary><div class="rd-new">${st.unk.slice(0, 80).map(x => `<button class="chip" data-rd="word" data-w="${esc(x.w)}">${esc(x.w)}${x.n > 1 ? ` ×${x.n}` : ''}</button>`).join('')}</div></details>` : ''}</div>
-    <div class="${rd.hl ? 'hl' : ''}" id="rdBody">${sents.map((s, i) => `<div class="rs" data-i="${i}"><div class="st" lang="lt">${rdHTML(s)}</div><div class="sb"><button class="pbtn" data-rd="say" aria-label="Say this sentence" title="Say it">🗣</button>${have.has(tnorm(s)) ? '<button class="pbtn" disabled title="Already in your dictionary" style="background:var(--surface2);color:var(--muted)">✓</button>' : '<button class="pbtn" data-rd="addS" aria-label="Add this sentence as a phrase" title="Add as a phrase">＋</button>'}</div></div>`).join('')}</div></div>`;
+    <div class="${rd.hl ? 'hl' : ''}" id="rdBody">${sents.map((s, i) => `<div class="rs" data-i="${i}"><div class="st" lang="lt">${rdHTML(s, sm)}</div><div class="sb"><button class="pbtn" data-rd="say" aria-label="Say this sentence" title="Say it">🗣</button>${have.has(tnorm(s)) ? '<button class="pbtn" disabled title="Already in your dictionary" style="background:var(--surface2);color:var(--muted)">✓</button>' : '<button class="pbtn" data-rd="addS" aria-label="Add this sentence as a phrase" title="Add as a phrase">＋</button>'}</div></div>`).join('')}</div></div>`;
 }
-function rdHTML(s) { let out = '', last = 0; s.replace(WORD_RE, (w, i) => { out += esc(s.slice(last, i)) + `<span class="rw ${wordClass(w)}" data-rd="word" data-w="${esc(w)}" tabindex="0" role="button">${esc(w)}</span>`; last = i + w.length; return w; }); return out + esc(s.slice(last)); }
+function rdHTML(s, sm) { let out = '', last = 0; s.replace(WORD_RE, (w, i) => { let shown = w; const f = rd.st && sm && sm.get(wkey(w)); if (f) shown = w[0] !== w[0].toLowerCase() ? f.charAt(0).toUpperCase() + f.slice(1) : f; out += esc(s.slice(last, i)) + `<span class="rw ${wordClass(w)}" data-rd="word" data-w="${esc(w)}" tabindex="0" role="button">${esc(shown)}</span>`; last = i + w.length; return w; }); return out + esc(s.slice(last)); }
 function rdEditor(t) {
   const isNew = !t, m = openModal(`<div class="modal-head"><h2>${isNew ? 'New text' : 'Edit text'}</h2><button class="icon-btn" data-x aria-label="Close">✕</button></div>
     <div class="modal-body"><label class="lbl" for="rdT">Title</label><input type="text" id="rdT" value="${esc(t ? t.title : '')}" placeholder="e.g. LRT news — weather">
@@ -1437,6 +1476,7 @@ function rdAction(b) {
   else if (a === 'open') { rd.open = b.dataset.id; renderReader(); window.scrollTo({ top: 0 }); }
   else if (a === 'back') { rd.open = null; renderReader(); }
   else if (a === 'hl') { rd.hl = !rd.hl; renderReader(); }
+  else if (a === 'st') { rd.st = !rd.st; renderReader(); }
   else if (a === 'edit' && t) rdEditor(t);
   else if (a === 'del' && t) { if (confirm('Delete “' + t.title + '”? Your dictionary is not affected.')) { state.tomb['T' + t.id] = Date.now(); state.texts = state.texts.filter(x => x !== t); rd.open = null; save(); renderReader(); } }
   else if (a === 'say') speak($('.st', b.closest('.rs')).textContent);
@@ -1532,7 +1572,7 @@ function openEdit(id, preset = {}) {
       <div><label class="lbl" for="f-status">Mastery</label><select id="f-status">${STATUS.map((s, i) => `<option value="${i}" ${e.status === i ? 'selected' : ''}>${s.icon} ${s.label}</option>`).join('')}</select></div>
       <div class="full"><label class="lbl" for="f-ph">Pronunciation (blank = auto)</label><input type="text" id="f-ph" value="${esc(e.ph)}" placeholder="auto: ${esc(autoPhon(stripStress(e.lt)) || '…')}"></div>
       <div class="full"><label class="lbl">Lithuanian letters</label><div class="charpad">${LTPAD.map(c => `<button type="button" data-ins="${c}">${c}</button>`).join('')}</div></div>
-      <div class="full"><label class="lbl">Grammar tags</label><div id="tagPick" class="tg-wrap"></div></div>
+      <div class="full"><label class="lbl">Grammar tags <button type="button" class="btn sm" id="btnSuggest" style="margin-left:8px">✨ Suggest</button></label><div id="tagPick" class="tg-wrap"></div></div>
       <div class="full"><label class="lbl" for="f-note">Notes</label><textarea id="f-note" rows="2">${esc(e.note)}</textarea></div>
       <div class="full"><label class="lbl">Audio</label><div class="row"><b id="audName">${audLabel()}</b>
         <button type="button" class="btn sm" id="audPrev" ${e.audioId ? '' : 'hidden'}>▶ Preview</button><button type="button" class="btn sm" id="audPick">${e.audioId ? 'Replace…' : 'Attach MP3…'}</button><button type="button" class="btn sm danger" id="audRm" ${e.audioId ? '' : 'hidden'}>Remove</button></div>
@@ -1547,7 +1587,8 @@ function openEdit(id, preset = {}) {
     if (b) { const t = b.dataset.ins; insertAtCaret(/[̀́̃]/.test(t) ? q('#f-stress') : (lastField || q('#f-lt')), t); }
     if (ev.target.closest('[data-x]')) m.close();
   });
-  const tags = (e.tags || []).slice(); tagPicker(q('#tagPick'), tags);
+  const tags = (e.tags || []).slice(); const redrawTags = tagPicker(q('#tagPick'), tags);
+  q('#btnSuggest').onclick = () => { const add = suggestTags({ lt: q('#f-lt').value, en: q('#f-en') ? q('#f-en').value : e.en, tags }); if (!add.length) { toast('No confident suggestion for this phrase — pick the tags yourself.'); return; } add.forEach(t => tags.length < 12 && tags.push(t)); redrawTags(); toast('Added: ' + add.map(tagName).join(', ')); };
   const redrawStress = mountStress(q('#stressPick'), () => q('#f-lt').value, () => q('#f-stress').value, v => { q('#f-stress').value = v; });
   q('#f-lt').addEventListener('input', redrawStress); q('#f-stress').addEventListener('input', redrawStress); m.el.addEventListener('click', ev => { if (ev.target.closest('[data-ins]')) redrawStress(); });
   q('#audPick').onclick = () => q('#audFile').click();
@@ -2376,7 +2417,10 @@ async function removeLesson(id) {
    Practice
 =================================================================== */
 const pr = { active: false, done: false, queue: [], i: 0, revealed: false, mode: 'listen', result: null, t0: 0, tally: { again: 0, hard: 0, good: 0, easy: 0 }, cfg: { scope: 'due', mode: 'listen', count: 20, audioOnly: false, cat: 'all' } };
-const PR_MODES = [['listen', '🎧 Listen first → recall'], ['en2lt', '🇬🇧 English → Lithuanian (in your head)'], ['type', '⌨ English → type the Lithuanian'], ['dictation', '🎧⌨ Dictation: listen → type it'], ['shadow', '🗣 Shadowing: listen → repeat → compare'], ['cloze', '🧩 Fill the gap: type the missing word']];
+const PR_MODES = [['listen', '🎧 Listen first → recall'], ['en2lt', '🇬🇧 English → Lithuanian (in your head)'], ['type', '⌨ English → type the Lithuanian'], ['dictation', '🎧⌨ Dictation: listen → type it'], ['shadow', '🗣 Shadowing: listen → repeat → compare'], ['cloze', '🧩 Fill the gap: type the missing word'], ['stress', '🎯 Stress: tap the stressed vowel'], ['case', '🧭 Grammar: which case or form?']];
+const isPick = m => m === 'stress' || m === 'case';
+const CASE_IDS = GTAGS[0][1].map(x => x[0]), VERB_IDS = GTAGS[1][1].map(x => x[0]);
+const caseGroup = e => (e.tags || []).some(t => CASE_IDS.includes(t)) ? CASE_IDS : (e.tags || []).some(t => VERB_IDS.includes(t)) ? VERB_IDS : null;
 const isTyped = m => m === 'type' || m === 'dictation' || m === 'cloze';
 const clozeToks = lt => { const out = []; String(lt).replace(WORD_RE, (w, i) => { out.push({ s: i, e: i + w.length, word: w }); return w; }); return out; };
 function clozePick(e) {              // hide one word of the phrase (prefer words of 3+ letters)
@@ -2386,7 +2430,7 @@ function clozePick(e) {              // hide one word of the phrase (prefer word
 const LEARN_AHEAD = 20 * MINMS;
 const lim = () => { const n = (v, d) => Number.isFinite(+v) && +v >= 0 ? Math.floor(+v) : d; return { newPerDay: n(state.settings.newPerDay, 20), maxRev: n(state.settings.maxReviews, 200), goal: n(state.settings.dailyGoal, 20) }; };
 function dayCounts() { const d = todayStr(); if (!state.counts || state.counts.d !== d) state.counts = { d, n: 0, r: 0 }; return state.counts; }
-const modeOK = (e, m) => m === 'cloze' ? clozeToks(e.lt).length >= 2 : m === 'type' ? !!e.en : (m === 'dictation' || m === 'shadow') ? !!e.audioId : true;
+const modeOK = (e, m) => m === 'stress' ? !!e.stress && stressMarks(e.lt, e.stress).marks.some(Boolean) : m === 'case' ? !!caseGroup(e) : m === 'cloze' ? clozeToks(e.lt).length >= 2 : m === 'type' ? !!e.en : (m === 'dictation' || m === 'shadow') ? !!e.audioId : true;
 const accOf = e => e.reviews ? e.correct / e.reviews : 1;
 const isWeak = e => e.reviews >= 2 && ((e.lapses || 0) >= 2 || (e.reviews >= 4 && accOf(e) < 0.6) || (e.reviews >= 3 && (e.ease || SR.ease0) <= 1.8));
 const weakScore = e => (e.lapses || 0) * 2 + (1 - accOf(e)) * 6 + (SR.ease0 - (e.ease || SR.ease0)) * 2;
@@ -2440,7 +2484,7 @@ function renderPractice() {
         <div><label class="lbl" for="prScope">Phrases</label><select id="prScope"><option value="due" ${c.scope === 'due' ? 'selected' : ''}>Due + new (follows your daily limits)</option><option value="unmastered" ${c.scope === 'unmastered' ? 'selected' : ''}>All unmastered</option><option value="learning" ${c.scope === 'learning' ? 'selected' : ''}>Learning only</option><option value="favorites" ${c.scope === 'favorites' ? 'selected' : ''}>Favorites</option><option value="weak" ${c.scope === 'weak' ? 'selected' : ''}>⚠ Weak spots (most-missed)</option><option value="all" ${c.scope === 'all' ? 'selected' : ''}>Everything</option></select></div>
         ${tagsInUse().length ? `<div><label class="lbl" for="prTag">Grammar tag</label><select id="prTag">${tagSelHTML(c.tag || 'all', 'All tags')}</select></div>` : ''}
         <div><label class="lbl" for="prCount">Cards per session</label><select id="prCount">${[10, 20, 50, 0].map(n => `<option value="${n}" ${c.count === n ? 'selected' : ''}>${n || 'All available'}</option>`).join('')}</select></div>
-        <div class="full"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="prAudioOnly" ${c.audioOnly ? 'checked' : ''}> Only phrases with audio</label>${c.mode === 'cloze' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">Fill-the-gap uses phrases with two or more words.</p>' : ''}${c.mode === 'type' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">Typing mode uses phrases that have an English translation.</p>' : ''}${c.mode === 'dictation' || c.mode === 'shadow' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">This mode uses phrases that have audio.</p>' : ''}</div>
+        <div class="full"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="prAudioOnly" ${c.audioOnly ? 'checked' : ''}> Only phrases with audio</label>${c.mode === 'cloze' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">Fill-the-gap uses phrases with two or more words.</p>' : ''}${c.mode === 'type' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">Typing mode uses phrases that have an English translation.</p>' : ''}${c.mode === 'stress' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">Uses phrases where you have marked the stress (✎ Stress in the dictionary).</p>' : ''}${c.mode === 'case' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">Uses phrases tagged with a case or a verb form.</p>' : ''}${c.mode === 'dictation' || c.mode === 'shadow' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">This mode uses phrases that have audio.</p>' : ''}</div>
         <div class="full" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button class="btn primary" id="prStart" ${avail ? '' : 'disabled'}>Start session</button><span id="prStatus">${prStatusHTML(info)}</span></div></div>
       <details class="pr-limits" ${state.settings._limitsOpen ? 'open' : ''}><summary>⚙ Daily limits &amp; goal</summary><div class="pr-form" style="margin-top:10px">
         <div><label class="lbl" for="stNew">New phrases per day</label><input type="number" id="stNew" min="0" max="500" inputmode="numeric" value="${L.newPerDay}"></div>
@@ -2465,6 +2509,8 @@ function renderPractice() {
     else if (m === 'en2lt') front = `<div class="pr-en">${esc(e.en || '(no translation)')}</div><p class="muted" style="margin:0">How do you say this in Lithuanian?</p><button class="btn primary" id="prReveal" style="margin-top:8px">Reveal answer <kbd style="color:#000">Enter</kbd></button>`;
     else if (m === 'type') front = `<div class="pr-en">${esc(e.en)}</div><p class="muted" style="margin:0">Type it in Lithuanian — letters like <b>ą č ę ė į š ų ū ž</b> count.</p>${typeForm}`;
     else if (m === 'cloze' && pr.cz) front = `<div class="pr-lt" lang="lt">${esc(e.lt.slice(0, pr.cz.s))}<span class="gap" aria-label="missing word">${'＿'.repeat(Math.min(8, Math.max(3, [...pr.cz.word].length)))}</span>${esc(e.lt.slice(pr.cz.e))}</div>${e.en ? `<div class="pr-en">${esc(e.en)}</div>` : ''}<p class="muted" style="margin:0">Type the missing word — mind the ending, it changes with the sentence.</p>${typeForm}`;
+    else if (m === 'stress') { const { us } = stressMarks(e.lt, ''); front = `<div class="pr-en">${esc(e.en || '')}</div><div class="sp pk" lang="lt" style="justify-content:center;margin:8px 0">${us.map((u, i) => STRESSY.test(u) ? `<button type="button" class="sl" data-spick="${i}" aria-label="Stress on ${esc(u.normalize('NFC'))}">${esc(u.normalize('NFC'))}</button>` : `<span class="sx">${u === ' ' ? '&nbsp;' : esc(u.normalize('NFC'))}</span>`).join('')}</div><p class="muted" style="margin:0">Tap the vowel that carries the stress. <kbd>Space</kbd> plays it</p><button class="btn sm" id="prPlay" style="margin-top:8px">🔊 Hear it</button>`; }
+    else if (m === 'case') { const g = caseGroup(e); front = `<div class="pr-lt" lang="lt">${esc(stripStress(e.lt))}</div><div class="pr-en">${esc(e.en || '')}</div><p class="muted" style="margin:0">${g === CASE_IDS ? 'Which case is this phrase in?' : 'Which verb form is this?'}</p><div class="tg-grp" style="justify-content:center;margin-top:8px">${g.map(t => `<button type="button" class="chip tg pkc" data-pickt="${t}">${esc(tagName(t))}</button>`).join('')}</div>`; }
     else if (m === 'dictation') front = `<button class="pr-big-play" id="prPlay" aria-label="Play audio">🔊</button><p class="muted" style="margin:0">Type what you hear. <kbd>Ctrl</kbd>+<kbd>Space</kbd> replays</p>${typeForm}`;
   } else {
     const banner = res ? { exact: '✓ Perfect', diacritics: '≈ Right letters — check the diacritics', close: '≈ Almost there', wrong: '✗ Not quite', skip: 'Here is the answer', empty: 'Here is the answer' }[res.kind] : '';
@@ -2482,7 +2528,17 @@ function renderPractice() {
     inp.addEventListener('keydown', ev => { if (ev.ctrlKey && ev.code === 'Space') { ev.preventDefault(); replay(e.id); } });
     $$('.charpad button', f).forEach(b => { b.addEventListener('pointerdown', ev => ev.preventDefault()); b.onclick = () => { const st = inp.selectionStart ?? inp.value.length, en = inp.selectionEnd ?? st; inp.value = inp.value.slice(0, st) + b.dataset.ch + inp.value.slice(en); inp.focus(); inp.setSelectionRange(st + 1, st + 1); }; });
   }
+  $$('[data-spick]').forEach(b => b.onclick = () => answerPick(+b.dataset.spick));
+  $$('[data-pickt]').forEach(b => b.onclick = () => answerPick(b.dataset.pickt));
   shadowWire(e);
+}
+function answerPick(v) {
+  if (!pr.active || pr.revealed || !isPick(pr.mode)) return; const e = byId(pr.queue[pr.i]); if (!e) return;
+  let ok, shown;
+  if (pr.mode === 'stress') { const mk = stressMarks(e.lt, e.stress).marks; ok = !!mk[v]; shown = ok ? 'Right syllable' : 'Not that one'; }
+  else { ok = (e.tags || []).includes(v); shown = ok ? 'Right' : 'Not that one'; }
+  pr.result = { kind: ok ? 'exact' : 'wrong', suggest: ok ? 'good' : 'again', ms: Date.now() - pr.t0 }; pr.revealed = true; renderPractice(); playEntry(e.id, { restart: true });
+  if (pr.mode === 'case' && e.tags) { const root = $('#prRoot') || document; const t = e.tags.filter(x => CASE_IDS.includes(x) || VERB_IDS.includes(x)).map(tagName).join(' / '); const c = $('.pr-card'); if (c && t) c.insertAdjacentHTML('afterbegin', `<div class="muted">Answer: <b>${esc(t)}</b></div>`); }
 }
 
 /* ===================================================================
@@ -2684,10 +2740,10 @@ function showCardAudio() {
   shadowReset(); pr.revealed = pr.mode === 'shadow'; pr.result = null; pr.t0 = Date.now();
   { const ce = byId(pr.queue[pr.i]); pr.cz = pr.mode === 'cloze' && ce ? clozePick(ce) : null; }
   renderPractice();
-  const e = byId(pr.queue[pr.i]); if (e && (pr.mode === 'listen' || pr.mode === 'dictation' || pr.mode === 'shadow')) playEntry(e.id, { restart: true });
+  const e = byId(pr.queue[pr.i]); if (e && (pr.mode === 'listen' || pr.mode === 'dictation' || pr.mode === 'shadow' || pr.mode === 'stress')) playEntry(e.id, { restart: true });
   if (isTyped(pr.mode)) { const i = $('#prInput'); if (i) setTimeout(() => i.focus({ preventScroll: true }), 40); }
 }
-function reveal() { if (!pr.active || pr.revealed || isTyped(pr.mode)) return; pr.revealed = true; renderPractice(); const e = byId(pr.queue[pr.i]); if (e && pr.mode === 'en2lt') playEntry(e.id, { restart: true }); }
+function reveal() { if (!pr.active || pr.revealed || isTyped(pr.mode) || isPick(pr.mode)) return; pr.revealed = true; renderPractice(); const e = byId(pr.queue[pr.i]); if (e && pr.mode === 'en2lt') playEntry(e.id, { restart: true }); }
 function checkTyped(skip) {
   if (!pr.active || pr.revealed || !isTyped(pr.mode)) return; const e = byId(pr.queue[pr.i]); if (!e) return;
   const typed = skip ? '' : ($('#prInput') ? $('#prInput').value : '');
@@ -2793,6 +2849,7 @@ function renderBackup() {
   const last = state.lastExport ? new Date(state.lastExport).toLocaleString() : 'never';
   $('#backupRoot').innerHTML = `<div class="panel" style="margin-bottom:14px" id="syncPanel"><h2 class="sec">⇄ Sync your devices</h2>
     <p class="muted" style="margin-top:0">Use one backup file in a shared folder (for example Google Drive) for all your devices. Syncing keeps the <b>newer version of every phrase</b> and carries deletions, so an older file can’t overwrite newer practice.</p>
+    <label style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><input type="checkbox" id="autoSync" ${state.settings.autoSync ? 'checked' : ''}> Sync automatically in the background (needs a linked file; otherwise you get a weekly reminder)</label>
     <label style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><input type="checkbox" id="syncAudio" ${state.settings.syncAudio ? 'checked' : ''}> Include phrase audio in the sync file (much bigger)</label>
     <label style="display:flex;gap:8px;align-items:center;margin:0 0 6px 26px" class="${state.settings.syncAudio ? '' : 'muted'}"><input type="checkbox" id="syncLessons" ${state.settings.syncLessons ? 'checked' : ''} ${state.settings.syncAudio ? '' : 'disabled'}> Also include the full lesson MP3s</label>
     <p class="muted" style="font-size:.82rem;margin:0 0 10px 26px">With full MP3s the file can reach hundreds of MB. Phones with little memory may struggle to open it, so keep this on for the device you sync from most.</p>
@@ -2815,7 +2872,7 @@ function renderBackup() {
       <p class="muted" style="font-size:.84rem;margin:10px 0 0"><b>iPhone / iPad:</b> Share → <i>Add to Home Screen</i>. <b>Android / desktop Chrome &amp; Edge:</b> use Install.</p></div>
     <div class="panel"><h2 class="sec">Delete all phrases</h2><p class="muted" style="margin-top:0">Empties the dictionary but keeps your lesson audio and clip splits, so you can re-add phrases from the Lessons tab.</p><button class="btn danger" id="btnWipePhrases">Delete all phrases…</button></div>
     <div class="panel"><h2 class="sec">Erase everything</h2><p class="muted" style="margin-top:0">Deletes all phrases, lessons, stored audio and progress from this browser.</p><button class="btn danger" id="btnWipe">Erase everything…</button></div></div>`;
-  $('#btnSync').onclick = syncNow; $('#syncAudio').onchange = ev => { state.settings.syncAudio = ev.target.checked; save(); $('#syncLessons').disabled = !ev.target.checked; };
+  $('#autoSync').onchange = ev => { state.settings.autoSync = ev.target.checked; save(); if (ev.target.checked) autoSync('enabled'); }; $('#btnSync').onclick = () => syncNow(); $('#syncAudio').onchange = ev => { state.settings.syncAudio = ev.target.checked; save(); $('#syncLessons').disabled = !ev.target.checked; };
   $('#syncLessons').onchange = ev => { state.settings.syncLessons = ev.target.checked; save(); };
   const prevName = () => { $('#fileNamePrev').innerHTML = 'Files will be called <b>' + esc(fileBase()) + '-sync.json</b> and <b>' + esc(fileBase()) + '-' + todayStr() + '.json</b>'; };
   $('#fileName').oninput = ev => { state.settings.fileName = ev.target.value; save(); prevName(); }; prevName();
@@ -3022,17 +3079,17 @@ function fileBase() {                    // name used for exported / sync files 
 const syncBuild = () => buildBackup(!!state.settings.syncAudio, !!(state.settings.syncAudio && state.settings.syncLessons));
 async function syncWrite(handle) { const w = await handle.createWritable(); await w.write(await syncBuild()); await w.close(); state.lastSync = Date.now(); save(); }
 const syncSummary = S => { const bits = [S.add && S.add + ' added', S.upd && S.upd + ' updated', S.del && S.del + ' removed', S.lNew + S.lUpd && (S.lNew + S.lUpd) + ' lesson(s)'].filter(Boolean); return bits.length ? bits.join(', ') : 'already up to date'; };
-async function syncNow() {
+async function syncNow(silent) {
   const h = await syncH.get();
-  if (!h) { $('#fileSync').click(); return; }                                      // no linked file: pick one, merge, download
+  if (!h) { if (!silent) $('#fileSync').click(); return; }                                      // no linked file: pick one, merge, download
   const btn = $('#btnSync'); if (btn) { btn.disabled = true; btn.textContent = 'Syncing…'; }
   try {
-    if ((await h.requestPermission({ mode: 'readwrite' })) !== 'granted') { toast('Allow access to the file to sync.', 'warn'); return; }
+    if (silent ? (await h.queryPermission({ mode: 'readwrite' })) !== 'granted' : (await h.requestPermission({ mode: 'readwrite' })) !== 'granted') { if (!silent) toast('Allow access to the file to sync.', 'warn'); return false; }
     const f = await h.getFile(); let S = null;
     if (f.size > 2) { const data = await readBackup(f); if (!data) return; S = await applyImport(data, 'smart'); }
-    await syncWrite(h); toast('Synced — ' + (S ? syncSummary(S) : 'file created') + '.');
-  } catch (err) { console.error(err); toast('Sync failed: ' + (err.message || err), 'err'); }
-  finally { renderBackup(); }
+    await syncWrite(h); if (!silent || (S && (S.add || S.upd || S.del))) toast((silent ? 'Auto-synced — ' : 'Synced — ') + (S ? syncSummary(S) : 'file created') + '.'); return true;
+  } catch (err) { console.error(err); if (!silent) toast('Sync failed: ' + (err.message || err), 'err'); return false; }
+  finally { if (!silent || tab === 'backup') renderBackup(); }
 }
 async function syncPicked(file) {                                                   // phone / no linked file: preview, merge, then download the merged file
   const data = await readBackup(file); if (!data) return; const S = await mergeData(data, true, true);
@@ -3052,6 +3109,24 @@ async function linkSyncFile(create) {
     await syncH.set(h); toast('File linked. Press Sync to merge and update it.'); renderBackup();
   } catch (e) { if (e && e.name !== 'AbortError') toast('Could not link the file: ' + e.message, 'err'); }
 }
+
+let autoBusy = false;
+async function autoSync(why) {           // quiet background sync into the linked file; weekly reminder when that is not possible
+  if (!state.settings.autoSync || autoBusy || document.querySelector('.modal-back, .modal') && why !== 'enabled') return;
+  if (pr.active && why !== 'hidden') return;
+  autoBusy = true;
+  try {
+    const age = Date.now() - (state.lastSync || 0); let ok = false;
+    if (canLink() && (why === 'enabled' || age > 10 * MINMS)) { const h = await syncH.get(); if (h) ok = !!(await syncNow(true)); }
+    if (!ok) {
+      const last = Math.max(state.lastSync || 0, state.lastExport || 0), day = todayStr();
+      if (Date.now() - last > 7 * 864e5 && state.entries.length && state.settings._nagDay !== day && why !== 'hidden') { state.settings._nagDay = day; save(); toast('It has been ' + (last ? Math.floor((Date.now() - last) / 864e5) + ' days' : 'a while') + ' since your last backup — open the Backup tab and sync.', 'warn'); }
+      else if (why === 'enabled') toast('Link a sync file on this tab for silent syncing; otherwise you will get a weekly reminder.');
+    }
+  } catch (e) { console.error(e); } finally { autoBusy = false; }
+}
+setTimeout(() => autoSync('start'), 4000); setInterval(() => autoSync('timer'), 10 * MINMS);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') autoSync('hidden'); });
 $('#fileSync').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) syncPicked(f); };
 async function verifyAudioRefs() {
   if (!db) { state.entries.forEach(e => { if (!mem.has(e.audioId)) { e.audioId = null; } }); state.lessons.forEach(l => { if (!mem.has(l.audioId)) l.audioId = null; }); return; }
