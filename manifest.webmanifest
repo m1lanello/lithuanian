@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "Kalbėk · Lithuanian Audio Dashboard",
-  "short_name": "Kalbėk",
+  "name": "LitLingo · Lithuanian Audio Dashboard",
+  "short_name": "LitLingo",
   "description": "Turn your Lithuanian course MP3s into a searchable, practisable phrase library.",
   "start_url": "./",
   "scope": "./",
