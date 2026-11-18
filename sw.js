@@ -1,6 +1,6 @@
 /* Kalbėk service worker — offline app shell.
    Bump VERSION whenever you deploy changed files to force clients to refresh the shell cache. */
-const VERSION = 'v21';
+const VERSION = 'v24';
 const SHELL = 'kalbek-shell-' + VERSION;
 const CDN = 'kalbek-cdn-v1';
 const SHELL_FILES = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];

@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="dark light">
 <meta name="theme-color" content="#12141a" id="metaTheme">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="icon" id="favicon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -42,7 +42,7 @@ small{font-size:.8em}
 .top{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
 .top-in{max-width:1360px;margin:0 auto;padding:7px 14px;display:flex;align-items:center;gap:12px}
 .logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:1.05rem}
-.logo-mark{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:.9rem;background:linear-gradient(160deg,#fdb913 0 34%,#006a44 34% 67%,#c1272d 67%)}
+.logo-mark{width:32px;height:32px;display:grid;place-items:center;font-size:.9rem}.logo-mark svg{width:100%;height:100%}
 nav.tabs{display:flex;gap:2px;background:var(--surface);border:1px solid var(--line);padding:3px;border-radius:10px;margin-left:auto}
 nav.tabs button{border:0;background:transparent;padding:6px 12px;border-radius:7px;color:var(--muted);font-weight:600;font-size:.92rem}
 nav.tabs button[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
@@ -423,6 +423,19 @@ main{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env
 .rd-new .chip{cursor:pointer}
 .bd-ans{min-height:54px;border:2px dashed var(--line);border-radius:12px;padding:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;margin:10px 0}.bd-bank{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}.chip.bd{cursor:pointer;font-size:1.05rem;padding:8px 12px}.chip.bd.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .pp-opts{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:12px 0}.btn.pp{font-size:1.3rem;padding:14px 22px;flex-direction:column;gap:2px;min-width:140px}.btn.pp small{display:block;font-size:.78rem;opacity:.75;font-weight:400}
+.ai-steps{padding-left:20px;margin:8px 0}.ai-steps li{margin:4px 0}
+.ai-log{height:min(50vh,440px);overflow:auto;display:flex;flex-direction:column;gap:10px;padding:4px}
+.ai-b{max-width:88%;padding:10px 13px;border-radius:14px;line-height:1.4;word-wrap:break-word}.ai-b.me{align-self:flex-end;background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:4px}
+.ai-b.bot{align-self:flex-start;background:var(--surface2);border:1px solid var(--line);border-bottom-left-radius:4px}.ai-lt{font-size:1.1rem;font-weight:600}.ai-en{margin-top:6px;color:var(--muted);font-style:italic}
+.ai-fix{margin-top:8px;padding:8px 10px;border-left:3px solid var(--gold);background:color-mix(in srgb,var(--gold) 14%,transparent);border-radius:6px;font-size:.92rem}.ai-act{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.linkish{all:unset;cursor:pointer;color:var(--accent);text-decoration:underline}
+.mascot-bar{display:flex;gap:14px;align-items:center;padding:8px 14px;margin-bottom:12px;background:var(--surface);border:1px solid var(--line);border-radius:16px}
+.mascot-bar .mascot{width:84px;height:84px;flex:none}.mascot-bar .bub{position:relative;flex:1;background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:10px 14px;line-height:1.35}
+.mascot-bar .bub::before{content:"";position:absolute;left:-7px;top:50%;width:12px;height:12px;background:var(--surface2);border-left:1px solid var(--line);border-bottom:1px solid var(--line);transform:translateY(-50%) rotate(45deg)}
+.mascot-big{width:130px;height:130px}.mascot-xs{width:44px;height:44px;flex:none;animation:mpop .35s ease-out}@keyframes mpop{0%{transform:scale(.7)}60%{transform:scale(1.12)}100%{transform:scale(1)}}.mascot-sm{width:46px;height:46px;flex:none}
+@keyframes mbounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}@keyframes mshake{0%,100%{transform:rotate(0)}25%{transform:rotate(-2.5deg)}75%{transform:rotate(2.5deg)}}
+.mm-flex,.mascot-big{animation:mbounce 1.6s ease-in-out infinite}.mm-angry{animation:mshake .5s ease-in-out 3}
+@media (prefers-reduced-motion:reduce){.mm-flex,.mascot-big,.mm-angry,.mascot-xs{animation:none}}
 .stress-pick{margin-top:8px}.sp{display:flex;flex-wrap:wrap;align-items:center;gap:2px;font-size:1.5rem;line-height:1.2}
 .sp .sl{min-width:1.35em;height:1.7em;border:1px solid var(--line);border-radius:7px;background:var(--surface2);color:var(--text);font:inherit;font-weight:600;padding:0 3px;cursor:pointer}
 .sp .sl:hover{border-color:var(--accent)}.sp .sl.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}.sp .sx{padding:0 2px;color:var(--muted)}
@@ -2490,7 +2503,7 @@ function renderPractice() {
   if (ls.active) return lsScreen(root);
   if (pr.done) {
     const t = pr.tally, n = t.again + t.hard + t.good + t.easy, ok = t.good + t.easy;
-    root.innerHTML = `<div class="pr-card"><div style="font-size:2.6rem">🎉</div><h2 style="margin:0">Session complete</h2><p class="muted" style="margin:0">${n} review${n === 1 ? '' : 's'} · ${n ? Math.round(ok / n * 100) : 0}% recalled</p>
+    root.innerHTML = `<div class="pr-card">${mascotT(n && ok / n >= 0.8 ? 'flex' : n && ok / n < 0.4 ? 'neutral' : 'happy', { cls: 'mascot mascot-big' })}<h2 style="margin:0">Session complete</h2><p class="muted" style="margin:0">${n} review${n === 1 ? '' : 's'} · ${n ? Math.round(ok / n * 100) : 0}% recalled</p>
       <div class="stat-mini"><div><b style="color:var(--red)">${t.again}</b>Again</div><div><b style="color:var(--gold-text)">${t.hard}</b>Hard</div><div><b style="color:var(--green)">${t.good}</b>Good</div><div><b style="color:var(--green)">${t.easy}</b>Easy</div></div>${todayGoalHTML()}
       <div style="display:flex;gap:10px"><button class="btn primary" id="prAgain">New session</button><button class="btn" id="prBack">Dictionary</button></div></div>`;
     $('#prAgain').onclick = () => { pr.done = false; renderPractice(); }; $('#prBack').onclick = () => { pr.done = false; showTab('dict'); }; return;
@@ -2515,10 +2528,11 @@ function renderPractice() {
     ['prMode', 'prScope', 'prCount', 'prAudioOnly', 'prCat', 'prTag'].forEach(id => $('#' + id) && ($('#' + id).onchange = sync)); $('#prStart').onclick = startSession;
     const lm = (id, key, max) => { $('#' + id).onchange = ev => { const v = Math.max(0, Math.min(max, Math.floor(+ev.target.value) || 0)); ev.target.value = v; state.settings[key] = v; state.settings._limitsOpen = true; save(); prRefreshStatus(); renderStats(); }; };
     const dl = $('.pr-limits'); if (dl) dl.addEventListener('toggle', () => { state.settings._limitsOpen = dl.open; });   // stays open when you change another option
-    lm('stNew', 'newPerDay', 500); lm('stRev', 'maxReviews', 2000); lm('stGoal', 'dailyGoal', 2000); weakMount(root); focusMount(root); lsMount(root); return;
+    lm('stNew', 'newPerDay', 500); lm('stRev', 'maxReviews', 2000); lm('stGoal', 'dailyGoal', 2000); weakMount(root); mascotMount(root); focusMount(root); lsMount(root); aiMount(root); return;
   }
   const e = byId(pr.queue[pr.i]); if (!e) { endSession(); return; }
   const total = pr.queue.length, m = pr.mode, typed = isTyped(m), res = pr.result;
+  const pmood = res ? ({ exact: 'happy', diacritics: 'neutral', close: 'neutral' }[res.kind] || 'sad') : (pr.mood || 'happy');
   const rb = ['again', 'hard', 'good', 'easy'].map((r, k) => `<button class="r-${r}${res && res.suggest === r ? ' suggested' : ''}" data-rate="${r}"><span>${cap(r)}</span><small>${fmtIv(schedule(e, r).ivMs)} · <kbd>${k + 1}</kbd></small></button>`).join('');
   const typeForm = `<form class="pr-type" id="prForm" autocomplete="off"><input type="text" id="prInput" lang="lt" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done" aria-label="Your answer in Lithuanian" placeholder="Type in Lithuanian…">
       <div class="charpad" role="group" aria-label="Lithuanian letters">${[...'ąčęėįšųūž'].map(ch => `<button type="button" data-ch="${ch}" tabindex="-1" aria-label="Insert ${ch}">${ch}</button>`).join('')}</div>
@@ -2545,7 +2559,7 @@ function renderPractice() {
       ${e.note ? `<p class="muted" style="margin:0;max-width:520px">${esc(e.note)}</p>` : ''}<button class="btn sm" id="prPlay2">🔊 Play again <kbd>Space</kbd></button>${shadowHTML(e, m === 'shadow')}<div class="rate">${rb}</div>`;
   }
   root.innerHTML = `<div class="pr-prog" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${pr.i}"><i style="width:${pr.i / total * 100}%"></i></div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px" class="muted"><span>Card ${pr.i + 1} / ${total} · ${esc((PR_MODES.find(x => x[0] === m) || [0, ''])[1].replace(/^\S+\s/, ''))}</span><button class="btn sm ghost" id="prEnd">End session <kbd>Esc</kbd></button></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px" class="muted"><span style="display:inline-flex;align-items:center;gap:8px">${mascotT(pmood, { cls: 'mascot mascot-xs' })}Card ${pr.i + 1} / ${total} · ${esc((PR_MODES.find(x => x[0] === m) || [0, ''])[1].replace(/^\S+\s/, ''))}</span><button class="btn sm ghost" id="prEnd">End session <kbd>Esc</kbd></button></div>
     <div class="pr-card" aria-live="polite">${front}</div>`;
   const pb = $('#prPlay') || $('#prPlay2'); if (pb) pb.onclick = () => replay(e.id);
   const rv = $('#prReveal'); if (rv) rv.onclick = reveal; $$('[data-rate]').forEach(b => b.onclick = () => rateCard(b.dataset.rate)); $('#prEnd').onclick = () => endSession();
@@ -2634,6 +2648,171 @@ function lsMount(root) {
     else if (del) { P.splice(+del.dataset.lpx, 1); save(); drawPre(); }
     else if (ev.target.closest('#lsSaveP')) { if (P.length >= 12) { toast('You can keep up to 12 saved walks.', 'warn'); return; } const c = lsCfg(), def = [{ due: 'Due', unmastered: 'Unmastered', learning: 'Learning', favorites: 'Favorites', weak: 'Weak spots', all: 'Everything' }[c.scope], c.tag && c.tag !== 'all' ? tagName(c.tag) : '', c.cat !== 'all' ? c.cat : ''].filter(Boolean).join(' · '), name = (prompt('Name this walk', def) || '').trim().slice(0, 30); if (!name) return; P.push({ name, cfg: Object.assign({}, c) }); save(); drawPre(); toast('Saved. Tap its name to start it.'); }
   }); drawPre();
+}
+
+/* ===================================================================
+   AI conversation partner (optional: you bring your own Anthropic API key)
+   The key lives only in this browser (its own localStorage entry) — it is never put in the backup / sync file.
+=================================================================== */
+const AI_KEY = 'litlingo.aiKey', AI_CHAT = 'litlingo.aiChat';
+const aiKey = () => { try { return localStorage.getItem(AI_KEY) || ''; } catch (e) { return ''; } };
+const aiSetKey = k => { try { k ? localStorage.setItem(AI_KEY, k) : localStorage.removeItem(AI_KEY); } catch (e) {} };
+const AI_MODELS = [['claude-haiku-5-5', 'Haiku 5.5 — fast and cheapest (recommended)'], ['claude-sonnet-5-5', 'Sonnet 5.5 — smarter corrections, costs more']];
+const AI_TOPICS = [['free', 'Anything you like'], ['intro', 'Introducing yourself'], ['food', 'Ordering food and drink'], ['shop', 'Shopping'], ['travel', 'Travel and directions'], ['family', 'Family and daily life'], ['work', 'Work and hobbies']];
+const AI_LEVELS = [['A1', 'Beginner (A1) — very short and simple'], ['A2', 'Elementary (A2)'], ['B1', 'Intermediate (B1)']];
+const aiCfg = () => (state.settings.ai = Object.assign({ model: AI_MODELS[0][0], level: 'A1', topic: 'free', vocab: true, fix: true }, state.settings.ai || {}));
+const aiLoad = () => { try { const a = JSON.parse(localStorage.getItem(AI_CHAT) || '[]'); return Array.isArray(a) ? a.slice(-60) : []; } catch (e) { return []; } };
+const aiStore = a => { try { localStorage.setItem(AI_CHAT, JSON.stringify(a.slice(-60))); } catch (e) {} };
+function aiSystem() {
+  const c = aiCfg(), topic = (AI_TOPICS.find(x => x[0] === c.topic) || AI_TOPICS[0])[1];
+  const known = c.vocab ? shuffle(state.entries.filter(e => (e.status >= 1 || e.reviews > 0) && e.lt && e.lt.length <= 60).map(e => e.lt)).slice(0, 80) : [];
+  return `You are a warm, patient Lithuanian conversation partner for an English-speaking learner at CEFR level ${c.level}. Conversation topic: ${topic}.
+Keep your Lithuanian natural and correct, and short: ${c.level === 'A1' ? '1 or 2 very short sentences, present tense, common words' : c.level === 'A2' ? '1 to 3 short sentences' : '2 to 4 sentences'}. Always end with a simple question so the conversation continues.
+${known.length ? `The learner already knows these phrases, so reuse their words where it fits: ${known.join(' | ')}.\n` : ''}${c.fix ? `If the learner's last message contains Lithuanian mistakes, explain them briefly in English and give the corrected sentence. If they wrote English, tell them how to say it in Lithuanian.` : `Do not correct mistakes unless the message is hard to understand.`}
+Reply with ONE JSON object and nothing else: {"reply": "<your Lithuanian message>", "en": "<English translation of your reply>", "fix": "<short English feedback with the corrected sentence, or an empty string if nothing to fix>"}`;
+}
+async function aiCall(msgs) {
+  const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 60000);
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', signal: ctl.signal, headers: { 'content-type': 'application/json', 'x-api-key': aiKey(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' }, body: JSON.stringify({ model: aiCfg().model, max_tokens: 700, system: aiSystem(), messages: msgs }) });
+    if (!r.ok) { let m = ''; try { m = (await r.json()).error.message; } catch (e) {} const err = new Error(m || r.statusText || 'Request failed'); err.status = r.status; throw err; }
+    const d = await r.json(); return (d.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+  } finally { clearTimeout(to); }
+}
+function aiParse(t) {
+  const a = String(t).indexOf('{'), b = String(t).lastIndexOf('}');
+  if (a >= 0 && b > a) { try { const o = JSON.parse(t.slice(a, b + 1)); if (o && typeof o.reply === 'string') return { reply: o.reply.trim(), en: String(o.en || '').trim(), fix: String(o.fix || '').trim() }; } catch (e) {} }
+  return { reply: String(t).trim(), en: '', fix: '' };
+}
+const aiErrText = err => err.name === 'AbortError' ? 'The tutor took too long to answer — try again.' : err.status === 401 ? 'The API key was rejected. Check it in ⚙ Settings.' : err.status === 403 ? 'This key is not allowed to use that model.' : err.status === 429 ? 'Too many requests, or your credit balance is empty. Wait a moment, or check your balance in the Anthropic console.' : err.status === 400 && /credit/i.test(err.message) ? 'Your Anthropic credit balance is too low. Add credit in the console.' : err.status ? 'The tutor service said: ' + err.message : 'Could not reach the tutor — check your internet connection.';
+function openTutor() {
+  let msgs = aiLoad(), busy = false, rec = null;
+  const selHTML = (id, opts, cur) => `<select id="${id}">${opts.map(([v, t]) => `<option value="${v}" ${v === cur ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>`;
+  const m = openModal(`<div class="modal-head"><h2>💬 AI conversation partner</h2><button class="icon-btn" id="aiGear" aria-label="Settings" title="Settings">⚙</button><button class="icon-btn" data-x aria-label="Close">✕</button></div><div class="modal-body" id="aiBody"></div><div class="modal-foot" id="aiFoot" style="flex-wrap:nowrap;align-items:flex-end"></div>`, { wide: true });
+  const body = $('#aiBody', m.el), foot = $('#aiFoot', m.el);
+  const setup = () => {
+    foot.style.display = 'none'; const c = aiCfg();
+    body.innerHTML = `<p style="margin-top:0">Practise real conversation: the tutor writes in Lithuanian at your level, reuses words you already know, and corrects your mistakes. It uses <b>your own</b> Anthropic API key — the key stays in this browser and is never saved in your backup or sync file.</p>
+      <ol class="ai-steps"><li>Open <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com → API keys</a> and sign in (this is separate from a Claude chat subscription).</li><li>Add a few dollars of credit under <b>Billing</b> and, to be safe, set a low monthly spend limit.</li><li>Press <b>Create key</b>, copy it (it starts with <code>sk-ant-</code>) and paste it below.</li></ol>
+      <label class="lbl" for="aiKeyIn">Your API key</label><input type="password" id="aiKeyIn" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-…" value="${esc(aiKey())}">
+      <div class="pr-form" style="margin-top:10px"><div><label class="lbl" for="aiModel">Model</label>${selHTML('aiModel', AI_MODELS, c.model)}</div><div><label class="lbl" for="aiLevel">Your level</label>${selHTML('aiLevel', AI_LEVELS, c.level)}</div><div><label class="lbl" for="aiTopic">Topic</label>${selHTML('aiTopic', AI_TOPICS, c.topic)}</div></div>
+      <label style="display:flex;gap:8px;align-items:center;margin-top:8px"><input type="checkbox" id="aiVocab" ${c.vocab ? 'checked' : ''}> Use words from my dictionary (sends up to 80 of your known phrases with each message)</label>
+      <label style="display:flex;gap:8px;align-items:center;margin-top:6px"><input type="checkbox" id="aiFix" ${c.fix ? 'checked' : ''}> Correct my mistakes</label>
+      <p class="muted" style="font-size:.85rem">Cost: roughly a cent or two for a 15-minute chat with Haiku. Your messages go straight from this device to Anthropic. Tutor answers can contain mistakes — double-check anything important.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="aiSave">Save and start chatting</button>${aiKey() ? '<button class="btn danger" id="aiForget">Remove key from this device</button>' : ''}${msgs.length ? '<button class="btn" id="aiClear">Clear conversation</button>' : ''}</div>`;
+    $('#aiSave', m.el).onclick = () => {
+      const k = $('#aiKeyIn', m.el).value.trim(); if (!/^sk-ant-/.test(k)) { toast('That does not look like an Anthropic key (it starts with sk-ant-).', 'warn'); return; }
+      aiSetKey(k); Object.assign(aiCfg(), { model: $('#aiModel', m.el).value, level: $('#aiLevel', m.el).value, topic: $('#aiTopic', m.el).value, vocab: $('#aiVocab', m.el).checked, fix: $('#aiFix', m.el).checked }); save(); chat();
+    };
+    const f = $('#aiForget', m.el); if (f) f.onclick = () => { aiSetKey(''); toast('Key removed from this device.'); setup(); };
+    const cl = $('#aiClear', m.el); if (cl) cl.onclick = () => { msgs = []; aiStore(msgs); toast('Conversation cleared.'); setup(); };
+  };
+  const bubble = (x, i) => {
+    if (x.hidden) return '';
+    if (x.role === 'user') return `<div class="ai-b me" lang="lt">${esc(x.content)}</div>`;
+    const v = aiParse(x.content);
+    return `<div class="ai-b bot"><div lang="lt" class="ai-lt">${esc(v.reply)}</div>
+      <div class="ai-en" hidden>${esc(v.en || '(no translation given)')}</div>
+      ${v.fix ? `<div class="ai-fix">✎ ${esc(v.fix)}</div>` : ''}
+      <div class="ai-act"><button type="button" class="btn sm" data-ai="say" data-i="${i}">🔊</button><button type="button" class="btn sm" data-ai="en" data-i="${i}">EN</button><button type="button" class="btn sm" data-ai="save" data-i="${i}">＋ Save phrase</button></div></div>`;
+  };
+  const paint = () => { const log = $('#aiLog', m.el); if (!log) return; log.innerHTML = msgs.map(bubble).join('') + (busy ? '<div class="ai-b bot muted">…</div>' : ''); log.scrollTop = log.scrollHeight; $('#aiSend', m.el).disabled = busy; };
+  const ask = async () => {
+    if (busy) return; busy = true; paint();
+    let ctx = msgs.slice(-20); while (ctx.length && ctx[0].role !== 'user') ctx.shift();
+    try { const t = await aiCall(ctx.map(x => ({ role: x.role, content: x.content }))); msgs.push({ role: 'assistant', content: t }); aiStore(msgs); }
+    catch (err) { console.error(err); toast(aiErrText(err), 'err'); if (msgs.length && msgs[msgs.length - 1].role === 'user' && !msgs[msgs.length - 1].hidden) { const u = msgs.pop(); const inp = $('#aiIn', m.el); if (inp && !inp.value) inp.value = u.content; } else if (msgs.length === 1 && msgs[0].hidden) msgs = []; if (err.status === 401) setTimeout(setup, 600); }
+    busy = false; paint();
+  };
+  const send = () => { const inp = $('#aiIn', m.el), t = inp.value.trim(); if (!t || busy) return; inp.value = ''; msgs.push({ role: 'user', content: t }); aiStore(msgs); paint(); ask(); };
+  const chat = () => {
+    foot.style.display = ''; const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    body.innerHTML = `<div class="ai-log" id="aiLog" aria-live="polite"></div><div class="muted" style="font-size:.8rem;margin-top:6px">Topic: <b>${esc((AI_TOPICS.find(x => x[0] === aiCfg().topic) || [0, ''])[1])}</b> · Level ${esc(aiCfg().level)} · <button type="button" class="linkish" id="aiNew">New conversation</button></div>`;
+    foot.innerHTML = `<div style="flex:1;min-width:0"><div class="charpad" role="group" aria-label="Lithuanian letters">${[...'ąčęėįšųūž'].map(ch => `<button type="button" data-ch="${ch}" tabindex="-1" aria-label="Insert ${ch}">${ch}</button>`).join('')}</div><textarea id="aiIn" rows="2" lang="lt" placeholder="Write in Lithuanian… (Enter to send)" style="width:100%"></textarea></div>${SR ? '<button class="btn" id="aiMic" type="button" title="Dictate in Lithuanian (accuracy varies)" aria-label="Dictate">🎤</button>' : ''}<button class="btn primary" id="aiSend" type="button">Send</button>`;
+    $('#aiSend', m.el).onclick = send;
+    const inp = $('#aiIn', m.el); inp.addEventListener('keydown', ev => { if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); send(); } });
+    $$('.charpad button', foot).forEach(b => { b.addEventListener('pointerdown', ev => ev.preventDefault()); b.onclick = () => { const st = inp.selectionStart ?? inp.value.length, en = inp.selectionEnd ?? st; inp.value = inp.value.slice(0, st) + b.dataset.ch + inp.value.slice(en); inp.focus(); inp.setSelectionRange(st + 1, st + 1); }; });
+    const mic = $('#aiMic', m.el); if (mic) mic.onclick = () => {
+      if (rec) { rec.stop(); return; } rec = new SR(); rec.lang = 'lt-LT'; rec.interimResults = false; mic.textContent = '⏺';
+      rec.onresult = ev => { inp.value = (inp.value + ' ' + Array.from(ev.results).map(r => r[0].transcript).join(' ')).trim(); }; rec.onend = () => { rec = null; mic.textContent = '🎤'; }; rec.onerror = () => { toast('Dictation is not available for Lithuanian on this device.', 'warn'); };
+      try { rec.start(); } catch (e) { rec = null; mic.textContent = '🎤'; }
+    };
+    $('#aiNew', m.el).onclick = () => { msgs = []; aiStore(msgs); chat(); begin(); };
+    paint(); if (!msgs.length) begin(); inp.focus();
+  };
+  const begin = () => { msgs.push({ role: 'user', hidden: true, content: 'Please start the conversation: greet me briefly and ask a first simple question about the topic.' }); ask(); };
+  m.el.addEventListener('click', ev => {
+    const b = ev.target.closest('[data-ai]'); if (!b) return; const x = msgs[+b.dataset.i]; if (!x) return; const v = aiParse(x.content), a = b.dataset.ai;
+    if (a === 'say') speak(v.reply); else if (a === 'en') { const e = b.closest('.ai-b').querySelector('.ai-en'); e.hidden = !e.hidden; }
+    else if (a === 'save') { const first = v.reply.split(/\n+/)[0]; openEdit(null, { lt: first, en: v.en, cat: 'AI tutor', tags: suggestTags({ lt: first, en: v.en }) }); }
+  });
+  $('#aiGear', m.el).onclick = setup;
+  if (aiKey()) chat(); else setup();
+}
+function aiMount(root) {
+  root.insertAdjacentHTML('beforeend', `<div class="panel" style="margin-top:14px"><h2 class="sec">💬 AI conversation partner <span class="chip" style="font-size:.7rem;vertical-align:middle">optional</span></h2>
+    <p class="muted" style="margin-top:0">Chat in Lithuanian with a tutor that adapts to your level, reuses your own vocabulary and corrects you. ${aiKey() ? 'Your API key is saved on this device.' : 'You paste your own Anthropic API key — the setup screen explains how.'}</p><button class="btn primary" id="aiOpen">${aiKey() ? 'Open the tutor' : 'Set up the tutor'}</button></div>`);
+  $('#aiOpen').onclick = openTutor;
+}
+
+/* ===================================================================
+   Mascot: Gandriukas the little stork — mood follows your habit; the tab icon changes with it
+=================================================================== */
+const MASCOT_BG = { happy: '#1f9d6c', flex: '#f39c12', neutral: '#2e86c1', sad: '#6c7a9c', angry: '#d64545' };
+function mascotSVG(mood, o) {
+  o = o || {}; const D = '#2b2f38', W = '#fff', LN = '#c9d3dd', R = '#ff5a43', R2 = '#d93f2c';
+  const m = MASCOT_BG[mood] ? mood : 'happy';
+  const wing = '<path d="M52 112 Q26 126 38 158 Q54 152 62 134Z" fill="' + W + '" stroke="' + LN + '" stroke-width="3" stroke-linejoin="round"/><path d="M38 158 Q54 152 60 140 L56 164Z" fill="' + D + '"/>';
+  const relaxed = '<g>' + wing + '</g><g transform="translate(200 0) scale(-1 1)">' + wing + '</g>';
+  const armR = '<path d="M146 122 H176 V84" fill="none" stroke="' + LN + '" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/><path d="M146 122 H176 V84" fill="none" stroke="' + W + '" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/><circle cx="176" cy="78" r="11" fill="' + W + '" stroke="' + LN + '" stroke-width="3"/><circle cx="164" cy="108" r="9" fill="' + W + '" stroke="' + LN + '" stroke-width="3"/><path d="M146 122 H172" stroke="' + W + '" stroke-width="14" stroke-linecap="round"/>';
+  const flexArms = '<g>' + armR + '</g><g transform="translate(200 0) scale(-1 1)">' + armR + '</g>';
+  const sparkle = (x, y, s) => '<path transform="translate(' + x + ' ' + y + ') scale(' + s + ')" d="M0 -9 L2.4 -2.4 L9 0 L2.4 2.4 L0 9 L-2.4 2.4 L-9 0 L-2.4 -2.4Z" fill="#ffc83d"/>';
+  const eyeW = '<circle cx="80" cy="92" r="14" fill="#fff" stroke="' + D + '" stroke-width="3.5"/><circle cx="120" cy="92" r="14" fill="#fff" stroke="' + D + '" stroke-width="3.5"/>';
+  const pup = (dy, r) => '<circle cx="82" cy="' + (93 + dy) + '" r="' + r + '" fill="' + D + '"/><circle cx="118" cy="' + (93 + dy) + '" r="' + r + '" fill="' + D + '"/><circle cx="84.5" cy="' + (90 + dy) + '" r="2.6" fill="#fff"/><circle cx="120.5" cy="' + (90 + dy) + '" r="2.6" fill="#fff"/>';
+  const brow = d => '<path d="' + d + '" fill="none" stroke="' + D + '" stroke-width="5" stroke-linecap="round"/>';
+  const beakBase = '<path d="M86 101 Q100 95 114 101 Q108 126 100 140 Q92 126 86 101Z" fill="' + R + '"/>';
+  const mouth = d => '<path d="' + d + '" fill="none" stroke="' + R2 + '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>';
+  const beakShut = beakBase;
+  const beakOpen = '<path d="M87 101 Q100 95 113 101 Q109 113 100 115 Q91 113 87 101Z" fill="' + R + '"/><path d="M90 118 Q100 146 110 118 Q100 124 90 118Z" fill="' + R2 + '"/><path d="M95 127 Q100 138 105 127 Q100 131 95 127Z" fill="#ff8fa3"/>';
+  const cheeks = '<circle cx="62" cy="112" r="8" fill="#ffb3b8" opacity=".85"/><circle cx="138" cy="112" r="8" fill="#ffb3b8" opacity=".85"/>';
+  let face = '', arms = relaxed, extra = '';
+  if (m === 'happy') { face = eyeW + pup(0, 7) + brow('M68 74 Q80 66 92 74') + brow('M108 74 Q120 66 132 74') + cheeks + beakOpen; }
+  else if (m === 'neutral') { face = eyeW + pup(0, 7) + brow('M68 76 L92 76') + brow('M108 74 Q120 68 132 74') + beakShut + mouth('M92 113 L108 113'); }
+  else if (m === 'flex') { arms = flexArms; face = eyeW + pup(0, 7) + brow('M65 76 L94 84') + brow('M135 76 L106 84') + cheeks + beakOpen; extra = sparkle(24, 52, 1.1) + sparkle(178, 40, 1.3) + sparkle(36, 24, .8); }
+  else if (m === 'sad') { face = eyeW + pup(4, 8) + brow('M64 82 L92 70') + brow('M136 82 L108 70') + beakShut + mouth('M91 117 Q100 108 109 117') + '<path d="M68 108 Q61 120 68 126 Q75 120 68 108Z" fill="#5aa9ff"/>'; }
+  else { face = '<ellipse cx="100" cy="64" rx="38" ry="12" fill="' + R + '" opacity=".22"/>' + eyeW + pup(1, 6) + brow('M62 68 L95 87') + brow('M138 68 L105 87') + beakShut + mouth('M90 115 L95 109 L100 115 L105 109 L110 115'); extra = '<path d="M150 46 q7 2 7 9 M165 46 q-7 2 -7 9 M150 66 q7 -2 7 -9 M165 66 q-7 -2 -7 -9" fill="none" stroke="#e5383b" stroke-width="3.5" stroke-linecap="round"/><circle cx="46" cy="52" r="7" fill="#c9d3dd" opacity=".9"/><circle cx="34" cy="62" r="5" fill="#c9d3dd" opacity=".8"/>'; }
+  const body = '<ellipse cx="100" cy="124" rx="54" ry="52" fill="#e3e9ef"/><ellipse cx="100" cy="120" rx="54" ry="52" fill="' + W + '" stroke="' + LN + '" stroke-width="3"/>';
+  const legs = '<path d="M84 168 V190 M116 168 V190 M77 190 H91 M109 190 H123" stroke="' + R + '" stroke-width="6" stroke-linecap="round" fill="none"/>';
+  const tier = o.tier || 0, tufts = '<path d="M90 70 Q86 52 95 45 Q98 58 101 68 Q105 52 115 50 Q110 62 109 72Z" fill="' + W + '" stroke="' + LN + '" stroke-width="3" stroke-linejoin="round"/>';
+  const scarf = (tier === 1 || tier === 3) ? '<path d="M56 130 Q100 152 144 130 L144 144 Q100 166 56 144Z" fill="#e5383b"/><path d="M122 150 L134 178 L119 181 L112 153Z" fill="#c92a2d"/><path d="M70 138 l4 8 M92 146 l4 8 M114 146 l4 8" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".7"/>' : '';
+  const crown = tier >= 2 ? '<path d="M74 72 L78 44 L91 58 L100 38 L109 58 L122 44 L126 72Z" fill="#ffc83d" stroke="#d99a00" stroke-width="3" stroke-linejoin="round"/><circle cx="78" cy="44" r="3.5" fill="#ff5a43"/><circle cx="100" cy="38" r="3.5" fill="#ff5a43"/><circle cx="122" cy="44" r="3.5" fill="#ff5a43"/>' : '';
+  const inner = legs + body + (tier >= 2 ? '' : tufts) + scarf + arms + face + extra + crown, label = { happy: 'Happy', neutral: 'Waiting', flex: 'Flexing', sad: 'Sad', angry: 'Angry' }[m] + ' stork mascot';
+  if (o.icon) return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="' + label + '"><rect width="200" height="200" rx="' + (o.round ?? 44) + '" fill="' + MASCOT_BG[m] + '"/><g transform="translate(100 100) scale(' + (o.scale || (m === 'flex' ? 1.2 : 1.4)) + ') translate(-100 ' + (m === 'flex' ? -108 : -104) + ')">' + inner + '</g></svg>';
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="' + label + '"' + (o.cls ? ' class="' + o.cls + '"' : '') + '>' + inner + '</svg>';
+}
+
+const tierOf = n => n >= 100 ? 3 : n >= 30 ? 2 : n >= 7 ? 1 : 0;
+const mascotTier = () => { try { return tierOf(calcStreak()); } catch (e) { return 0; } };
+const mascotT = (mood, o) => mascotSVG(mood, Object.assign({ tier: mascotTier() }, o));
+const TIER_NAME = ['', 'a red scarf 🧣 for a 7-day streak', 'a golden crown 👑 for a 30-day streak', 'the scarf and the crown 🧣👑 for a 100-day streak'];
+function daysSinceStudy() { const d = new Date(); for (let i = 0; i < 60; i++) { const k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); if (state.days[k] > 0) return i; d.setDate(d.getDate() - 1); } return -1; }
+function mascotMood() {
+  const today = state.days[todayStr()] || 0, goal = lim().goal, gap = daysSinceStudy(), streak = calcStreak();
+  if (today > 0 && goal && today >= goal) return { mood: 'flex', msg: `Daily goal smashed — ${today} reviews today! 💪` };
+  if (today > 0) return { mood: 'happy', msg: goal ? `Nice work! ${today} of ${goal} reviews today.` : 'Nice work today!' };
+  if (!state.entries.length) return { mood: 'happy', msg: 'Hi, I’m Gandriukas! Add a lesson and we’ll learn Lithuanian together.' };
+  if (gap < 0) return { mood: 'happy', msg: 'Ready when you are — your first session is waiting.' };
+  if (gap <= 1) return { mood: 'neutral', msg: streak ? `Your ${streak}-day streak is waiting. Just a few cards?` : 'A few cards today keeps the words fresh.' };
+  if (gap === 2) return { mood: 'sad', msg: 'I missed you… two days without practice. Even 5 minutes helps.' };
+  return { mood: 'angry', msg: `${gap} days! My phrases are getting rusty. Let’s fix that — 5 minutes?` };
+}
+let favMood = '';
+function refreshMascot() {
+  try { const { mood } = mascotMood(), tr = mascotTier(), key = mood + tr; const was = state.settings.mtier || 0; if (tr !== was) { state.settings.mtier = tr; save(); if (tr > was && TIER_NAME[tr]) toast('Gandriukas earned ' + TIER_NAME[tr] + '!'); } if (key === favMood) return; favMood = key; const l = document.getElementById('favicon'); if (l) { l.type = 'image/svg+xml'; l.href = 'data:image/svg+xml,' + encodeURIComponent(mascotT(mood, { icon: 1, round: 100 })); } const lm = document.querySelector('.logo-mark'); if (lm) lm.innerHTML = mascotT(mood, { icon: 1, round: 44 }); } catch (e) {}
+}
+function mascotMount(root) {
+  const { mood, msg } = mascotMood();
+  const tr = mascotTier(); root.insertAdjacentHTML('afterbegin', `<div class="mascot-bar">${mascotT(mood, { cls: 'mascot mm-' + mood })}<div class="bub" role="status">${esc(msg)}${tr ? `<div class="muted" style="font-size:.8rem;margin-top:4px">${['', '🧣 Scarf', '👑 Crown', '🧣👑 Scarf and crown'][tr]} — earned by your streak. ${tr < 3 ? 'Next: ' + (tr === 0 ? '🧣 at 7 days' : tr === 1 ? '👑 at 30 days' : '🧣👑 at 100 days') + '.' : ''}</div>` : '<div class="muted" style="font-size:.8rem;margin-top:4px">Keep a 7-day streak to earn a scarf 🧣</div>'}</div></div>`);
 }
 const WEEKN = () => Math.floor(Date.now() / (7 * DAYMS));
 function focusTag() { const f = state.settings.focus || 'auto', used = tagsInUse().map(x => x[0]); if (f === 'off') return null; if (f !== 'auto') return used.includes(f) ? f : null; const cs = used.filter(t => CASE_IDS.includes(t)), pool = cs.length ? cs : used; return pool.length ? pool[WEEKN() % pool.length] : null; }
@@ -2779,7 +2958,7 @@ function renderProgress() {
   const catRows = [...byCat.keys()].sort(natCmp).map(c => { const o = byCat.get(c), t = o.m + o.l + o.n; return `<div class="pg-row" data-tip="${esc(c + ': ' + o.m + ' mastered, ' + o.l + ' learning, ' + o.n + ' new')}"><span class="nm">${esc(c)}</span>${seg(o)}<span class="fg">${o.m}/${t}</span></div>`; });
   const byTag = tagsInUse().map(([t, n]) => { const o = { m: 0, l: 0, n: 0 }; E.forEach(e => { if ((e.tags || []).includes(t)) o[e.status === 2 ? 'm' : e.status === 1 ? 'l' : 'n']++; }); return `<div class="pg-row" data-tip="${esc(tagName(t) + ': ' + o.m + ' mastered, ' + o.l + ' learning, ' + o.n + ' new')}"><span class="nm">${esc(tagName(t))}</span>${seg(o)}<span class="fg">${o.m}/${n}</span></div>`; });
   const mature = E.filter(e => e.state === 'review' && e.ivl >= 21).length, young = E.filter(e => e.state === 'review' && e.ivl < 21).length, learning = E.filter(e => e.state === 'learn' || e.state === 'relearn').length, fresh = E.filter(e => e.state === 'new').length;
-  root.innerHTML = `<div class="pg"><div class="pg-head"><h2>📈 Your progress</h2><div class="pg-seg" role="group" aria-label="Period">${[7, 30, 90].map(n => `<button data-pgd="${n}" aria-pressed="${pg.days === n}">${n} days</button>`).join('')}</div></div>
+  root.innerHTML = `<div class="pg"><div class="pg-head">${mascotT(mascotMood().mood, { cls: 'mascot mascot-sm' })}<h2>Your progress</h2><div class="pg-seg" role="group" aria-label="Period">${[7, 30, 90].map(n => `<button data-pgd="${n}" aria-pressed="${pg.days === n}">${n} days</button>`).join('')}</div></div>
     <div class="pg-kpis">${kpi('🔥 ' + calcStreak(), 'day streak', 'best: ' + longestStreak() + ' days')}${kpi(rev7, 'reviews, last 7 days', (dl >= 0 ? '▲ ' : '▼ ') + Math.abs(dl) + ' vs the week before')}${kpi(fmtMin(time7), 'study time, last 7 days', 'practice, walks and reading')}${kpi(ret == null ? '–' : ret + '%', 'answered correctly', tr + ' answers in total')}${kpi(m + '<span class="muted" style="font-size:1rem;font-weight:600"> / ' + N + '</span>', 'phrases mastered', pct(m, N) + '%')}</div>
     <div class="pg-card"><h3>Reviews per day</h3><p class="sub">Last ${pg.days} days${goal ? ' · dashed line is your daily goal' : ''}. Today is gold.</p>${barChart(dayItems, { goal, aria: 'Reviews per day' })}
       <details style="margin-top:8px"><summary style="cursor:pointer;color:var(--muted);font-size:.86rem">Show as a table</summary><div style="max-height:220px;overflow:auto"><table style="width:100%;font-size:.86rem;border-collapse:collapse"><thead><tr><th align="left">Day</th><th align="right">Reviews</th><th align="right">Study time</th></tr></thead><tbody>${days.slice().reverse().map(d => `<tr><td>${esc(shortDate(d.d))}</td><td align="right">${state.days[d.k] || 0}</td><td align="right">${state.time[d.k] ? fmtMin(state.time[d.k]) : '–'}</td></tr>`).join('')}</tbody></table></div></details></div>
@@ -2808,7 +2987,7 @@ document.addEventListener('click', ev => { const g = ev.target.closest('[data-go
 function startSession() {
   const c = pr.cfg; let ids = queueInfo(c).list.map(e => e.id); if (!ids.length) { toast('Nothing to practise with those settings.', 'warn'); return; }
   if (c.count) ids = ids.slice(0, c.count);
-  Object.assign(pr, { active: true, done: false, queue: ids, i: 0, mode: c.mode, tally: { again: 0, hard: 0, good: 0, easy: 0 } }); showCardAudio();
+  Object.assign(pr, { active: true, done: false, run: 0, mood: 'happy', queue: ids, i: 0, mode: c.mode, tally: { again: 0, hard: 0, good: 0, easy: 0 } }); showCardAudio();
 }
 function showCardAudio() {
   shadowReset(); pr.revealed = pr.mode === 'shadow'; pr.result = null; pr.t0 = Date.now();
@@ -2833,12 +3012,13 @@ function rateCard(r) {
   const wasNew = e.state === 'new', wasReview = e.state === 'review', now = Date.now(), sc = schedule(e, r, now);
   Object.assign(e, { state: sc.state, step: sc.step, ivl: sc.ivl, ease: sc.ease, lapses: sc.lapses, due: sc.due, reviews: e.reviews + 1, lastReview: now });
   if (r === 'good' || r === 'easy') e.correct++;
+  pr.run = (r === 'good' || r === 'easy') ? (pr.run || 0) + 1 : 0; pr.mood = pr.run >= 5 ? 'flex' : r === 'again' ? 'sad' : r === 'hard' ? 'neutral' : 'happy';
   e.status = e.state === 'review' && e.ivl >= SR.mature ? 2 : 1;
   const k = dayCounts(); if (wasNew) k.n++; else if (wasReview) k.r++;
   const before = state.days[todayStr()] || 0, goal = lim().goal; bumpReview(); pr.tally[r]++;
   if (goal && before < goal && before + 1 >= goal) toast('🎉 Daily goal reached — ' + goal + ' reviews today!');
   if ((sc.state === 'learn' || sc.state === 'relearn') && sc.due - now <= LEARN_AHEAD) pr.queue.splice(Math.min(pr.queue.length, pr.i + 1 + (sc.ivMs >= 5 * MINMS ? 6 : 3)), 0, e.id);   // learning cards come back in this session
-  save(); renderStats(); renderChips(); pr.i++;
+  save(); renderStats(); renderChips(); refreshMascot(); pr.i++;
   if (pr.i >= pr.queue.length) endSession(true); else showCardAudio();
 }
 function endSession(finished) { const any = Object.values(pr.tally).some(v => v > 0); shadowReset(); pr.active = false; pr.done = finished === true && any; stopAudio(); renderPractice(); renderList(); }
@@ -3232,8 +3412,9 @@ function showTab(name, keepLesson) {
 }
 $$('nav.tabs button, #tabbar button').forEach(b => b.onclick = () => showTab(b.dataset.tab, b.dataset.tab === 'lessons' && !!wb));
 function updateTabBadge() {        // number of cards waiting in a default practice session, shown on the Practice tab of the bottom bar
-  const b = $('#tbBadge'); if (!b) return; let n = 0;
+  refreshMascot(); const b = $('#tbBadge'); if (!b) return; let n = 0;
   try { n = pr.active ? 0 : queueInfo({ scope: 'due', cat: 'all', audioOnly: false, mode: 'listen' }).list.length; } catch (e) {}
+  try { if (navigator.setAppBadge) { if (n) navigator.setAppBadge(n); else navigator.clearAppBadge(); } } catch (e) {}
   b.hidden = !n; b.textContent = n > 99 ? '99+' : String(n); const pb = $('#tabbar [data-tab=practice]'); if (pb) pb.setAttribute('aria-label', n ? `Practice, ${n} to do` : 'Practice');
 }
 setInterval(updateTabBadge, 60000); document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') updateTabBadge(); });
