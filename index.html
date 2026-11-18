@@ -342,6 +342,122 @@ main{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env
   .np .time{order:7;min-width:76px}
   .item .tag{display:none}
 }
+/* ---- bottom tab bar: phones and tablets (the pill tabs stay in the header on desktop) ---- */
+.tabbar{display:none}
+@media (max-width:900px),(pointer:coarse) and (hover:none){
+  :root{--tb:calc(58px + env(safe-area-inset-bottom))}
+  body.typing{--tb:0px}                       /* keyboard is open: give the space back */
+  nav.tabs{display:none}
+  .tabbar{display:block;position:fixed;left:0;right:0;bottom:0;z-index:65;background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+  body.typing .tabbar{display:none}
+  .tabbar-in{max-width:720px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);height:58px}
+  .tabbar button{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;background:transparent;color:var(--muted);font-size:.72rem;font-weight:600;padding:4px 2px;min-width:0;-webkit-tap-highlight-color:transparent}
+  .tabbar .ic{display:grid;place-items:center;width:58px;height:30px;border-radius:15px;transition:background .15s,color .15s}
+  .tabbar svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  .tabbar button[aria-current="page"]{color:var(--accent)}
+  .tabbar button[aria-current="page"] .ic{background:color-mix(in srgb,var(--accent) 17%,transparent)}
+  .tabbar button:active .ic{background:color-mix(in srgb,var(--text) 10%,transparent)}
+  .tabbar .badge{position:absolute;top:3px;left:calc(50% + 7px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--red);color:#fff;font-size:.68rem;font-weight:700;display:grid;place-items:center;line-height:1;box-shadow:0 0 0 2px var(--surface)}
+  /* everything that used to sit on the bottom edge now sits above the bar */
+  body{padding-bottom:var(--tb)}
+  main{padding-bottom:24px}
+  .np{bottom:var(--tb);padding-bottom:0}
+  body.has-np{padding-bottom:calc(var(--tb) + 78px)}
+  .wb-foot{bottom:calc(var(--tb) + 8px)}
+  body.has-np .wb-foot{bottom:calc(var(--tb) + 76px)}
+  #toasts{bottom:calc(var(--tb) + 12px)}
+  body.has-np #toasts{bottom:calc(var(--tb) + 88px)}
+  html{scroll-padding-bottom:calc(var(--tb) + 110px)}
+  .clip{scroll-margin-bottom:calc(var(--tb) + 110px)}
+  .side{max-height:calc(100dvh - 72px - var(--tb))}
+}
+@media (max-width:600px){
+  body.has-np{padding-bottom:calc(var(--tb) + 112px)}
+  body.has-np .wb-foot{bottom:calc(var(--tb) + 104px)}
+  body.has-np #toasts{bottom:calc(var(--tb) + 124px)}
+}
+@media ((max-width:900px),(pointer:coarse) and (hover:none)) and (max-height:520px) and (orientation:landscape){   /* landscape phones: slimmer bar */
+  :root{--tb:calc(44px + env(safe-area-inset-bottom))}
+  .tabbar-in{height:44px}
+  .tabbar button{flex-direction:row;gap:6px;font-size:.8rem}
+  .tabbar .ic{width:auto;height:auto;background:none!important}
+  .tabbar .badge{position:static;box-shadow:none}
+}
+
+/* word links + reader */
+.wchips{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 8px}
+.wchip{cursor:pointer;color:var(--text)}
+.wchip:hover{border-color:var(--accent)}
+.wchip .wn{background:var(--accent);color:var(--accent-ink);border-radius:999px;font-size:.7rem;padding:0 6px;line-height:1.5}
+.wrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.wrow .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.wrow .lt{font-weight:700}.wrow .en{color:var(--muted);font-size:.9rem}
+.wrow mark{background:color-mix(in srgb,var(--accent) 28%,transparent);color:inherit;border-radius:3px;padding:0 1px}
+.wgrp{font-size:.78rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:14px 0 2px;font-weight:700}
+.rd-wrap{max-width:860px;margin:0 auto}
+.rd-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.rd-head h2{margin:0;font-size:1.25rem;flex:1;min-width:140px}
+.rd-card{display:flex;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line);background:var(--surface);border-radius:12px;margin-bottom:8px;cursor:pointer;text-align:left;width:100%;color:var(--text);font:inherit}
+.rd-card:hover{border-color:var(--accent)}
+.rd-card .t{flex:1;min-width:0}.rd-card b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rd-card .m{color:var(--muted);font-size:.84rem}
+.rd-cov{padding:12px 14px;border:1px solid var(--line);background:var(--surface);border-radius:12px;margin-bottom:12px}
+.rd-bar{display:flex;height:10px;border-radius:99px;overflow:hidden;background:var(--surface2);margin:8px 0}
+.rd-bar i{display:block;height:100%}
+.rd-leg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;color:var(--muted)}
+.rd-leg span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;background:var(--c)}
+.rs{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);background:var(--surface);border-radius:12px;margin-bottom:8px}
+.rs .st{flex:1;font-size:1.12rem;line-height:1.9;min-width:0;overflow-wrap:anywhere}
+.rs .sb{display:flex;flex-direction:column;gap:6px;flex:none}
+.rw{border-radius:5px;padding:1px 2px;cursor:pointer;border-bottom:2px solid transparent}
+.rw:hover,.rw:focus-visible{outline:none;background:color-mix(in srgb,var(--accent) 20%,transparent)}
+.hl .w-m{background:color-mix(in srgb,var(--green) 22%,transparent)}
+.hl .w-l{background:color-mix(in srgb,var(--gold) 26%,transparent)}
+.hl .w-n{background:color-mix(in srgb,var(--gold) 12%,transparent)}
+.hl .w-s{border-bottom-color:color-mix(in srgb,var(--gold) 70%,transparent);border-bottom-style:dotted}
+.hl .w-u{border-bottom-color:var(--red);border-bottom-style:dashed}
+.rd-new{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.rd-new .chip{cursor:pointer}
+/* progress */
+.pg{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.pg-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.pg-head h2{margin:0;flex:1;font-size:1.25rem}
+.pg-seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.pg-seg button{border:0;background:transparent;color:var(--muted);padding:6px 12px;font-weight:600;font-size:.86rem}
+.pg-seg button[aria-pressed=true]{background:var(--accent);color:var(--accent-ink)}
+.pg-kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.pg-kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.pg-kpi .v{font-size:1.7rem;font-weight:800;line-height:1.15;font-variant-numeric:tabular-nums}
+.pg-kpi .l{color:var(--muted);font-size:.82rem}.pg-kpi .d{font-size:.8rem;color:var(--muted);margin-top:2px}
+.pg-kpi:last-child:nth-child(odd){grid-column:1/-1}
+@media (min-width:760px){.pg-kpis{grid-template-columns:repeat(5,1fr)}.pg-kpi:last-child:nth-child(odd){grid-column:auto}}
+.pg-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.pg-card h3{margin:0 0 2px;font-size:1rem}.pg-card .sub{color:var(--muted);font-size:.84rem;margin:0 0 8px}
+.pg-two{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media (max-width:760px){.pg-two{grid-template-columns:1fr}}
+svg.pg-svg{width:100%;height:auto;display:block;overflow:visible}
+.pg-svg .grid{stroke:var(--line);stroke-width:1}.pg-svg .ax{fill:var(--muted);font-size:11px}
+.pg-svg .bar{fill:var(--accent)}.pg-svg .bar.zero{fill:var(--surface2)}.pg-svg .bar.today{fill:var(--gold)}
+.pg-svg .goal{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:5 4}.pg-svg .hit{fill:transparent}
+.pg-svg .ln-m{stroke:var(--green);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.pg-svg .ln-t{stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pg-svg .dot-m{fill:var(--green);stroke:var(--surface);stroke-width:2}.pg-svg .dot-t{fill:var(--muted);stroke:var(--surface);stroke-width:2}
+.pg-svg .lb{font-size:11px;font-weight:700}
+.pg-heat{--cs:clamp(9px,2.5vw,14px);display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,var(--cs));gap:2px;justify-content:start;overflow-x:auto;padding-bottom:4px}
+.pg-heat i{width:var(--cs);height:var(--cs);border-radius:3px;background:var(--surface2);display:block}
+.pg-leg{display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:.82rem;align-items:center;margin-top:6px}
+.pg-leg span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;background:var(--c)}
+.pg-seg3{display:flex;gap:2px;height:14px}.pg-seg3 i{display:block;border-radius:4px;min-width:0}
+.pg-row{display:grid;grid-template-columns:minmax(90px,170px) 1fr auto;gap:10px;align-items:center;padding:5px 0}
+.pg-row .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.92rem}.pg-row .fg{color:var(--muted);font-size:.84rem;font-variant-numeric:tabular-nums}
+@media (max-width:520px){.pg-row{grid-template-columns:1fr auto}.pg-row .pg-seg3{grid-column:1/-1;order:3}}
+#pgTip{position:fixed;z-index:90;pointer-events:none;background:var(--text);color:var(--bg);padding:5px 9px;border-radius:7px;font-size:.8rem;font-weight:600;box-shadow:var(--shadow);max-width:240px;display:none}
+
+.more{grid-column:1/-1;text-align:center;padding:14px 0}
+.pr-weak{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px;border-color:var(--gold)}
+.ls-step{font-weight:700;color:var(--gold-text);letter-spacing:.02em}
+.ls-step.listen,.ls-step.next{color:var(--accent)}
+.ls-ctl{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin:10px 0}
+.ls-ctl .btn{min-width:52px}
+.gap{color:var(--gold-text);letter-spacing:.05em;border-bottom:2px dashed var(--gold)}
+.gapfill{background:color-mix(in srgb,var(--accent) 28%,transparent);color:inherit;border-radius:4px;padding:0 3px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -354,7 +470,9 @@ main{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env
     <nav class="tabs" aria-label="Sections">
       <button data-tab="dict" aria-current="page">📖 Dictionary</button>
       <button data-tab="lessons">🎓 Lessons</button>
+      <button data-tab="reader">📰 Reader</button>
       <button data-tab="practice">🧠 Practice</button>
+      <button data-tab="progress">📈 Progress</button>
       <button data-tab="backup">💾 Backup</button>
     </nav>
     <button class="btn sm" id="btnInstall" hidden title="Install as an app">⤓ Install</button>
@@ -392,10 +510,13 @@ main{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env
   </section>
 
   <section id="tab-lessons" class="tab" hidden aria-label="Lessons"><div id="lessonsRoot"></div></section>
+  <section id="tab-progress" class="tab" hidden aria-label="Progress"><div id="progressRoot"></div></section>
+  <section id="tab-reader" class="tab" hidden aria-label="Reader"><div id="readerRoot"></div></section>
   <section id="tab-practice" class="tab" hidden aria-label="Practice"><div class="pr-wrap" id="practiceRoot"></div></section>
   <section id="tab-backup" class="tab" hidden aria-label="Backup"><div id="backupRoot"></div></section>
 </main>
 
+<nav class="tabbar" id="tabbar" aria-label="Sections"><div class="tabbar-in"><button data-tab="dict" aria-current="page"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span><span class="lb">Dictionary</span></button><button data-tab="lessons"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 10v3M6 6v11M10 3v18M14 8v7M18 5v13M22 10v3"/></svg></span><span class="lb">Lessons</span></button><button data-tab="reader"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h6"/></svg></span><span class="lb">Reader</span></button><button data-tab="practice"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 7l10 5 10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg></span><span class="lb">Practice</span><span class="badge" id="tbBadge" aria-hidden="true" hidden></span></button><button data-tab="backup"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg></span><span class="lb">Backup</span></button></div></nav>
 <div class="np" id="np" hidden>
   <div class="np-in">
     <div class="np-title"><b id="npTitle" lang="lt">—</b><span id="npSub"></span></div>
@@ -416,6 +537,7 @@ main{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env
 <input type="file" id="fileSingle" data-mode="single" accept="audio/*,.mp3,.m4a,.wav,.ogg" multiple hidden>
 <input type="file" id="fileOne" accept="audio/*,.mp3,.m4a,.wav,.ogg" hidden>
 <input type="file" id="fileJson" accept="application/json,.json" hidden>
+<input type="file" id="fileSync" accept="application/json,.json" hidden>
 
 <script>
 (() => {
@@ -575,19 +697,22 @@ function mkEntry(o = {}) {
     ph: o.ph || '', note: o.note || '', status: [0, 1, 2].includes(+o.status) ? +o.status : 0, fav: !!o.fav,
     audioId: o.audioId || null, audioName: o.audioName || '', t0: numOrNull(o.t0), t1: numOrNull(o.t1), lessonId: o.lessonId || null,
     clip: !!o.clip, s0: numOrNull(o.s0), s1: numOrNull(o.s1),   // clip=true: audioId is this phrase's own cut file (s0..s1 = where it came from in the lesson)
-    due: +o.due || 0, reviews: +o.reviews || 0, correct: +o.correct || 0, lastReview: +o.lastReview || 0,
+    upd: +o.upd || 0, due: +o.due || 0, reviews: +o.reviews || 0, correct: +o.correct || 0, lastReview: +o.lastReview || 0,
     plays: +o.plays || 0, order: Number.isFinite(+o.order) ? +o.order : 0, created: +o.created || Date.now()
   });
 }
 function mkLesson(o = {}) {
   return {
-    id: o.id || uid(), title: o.title || 'Untitled lesson', name: o.name || '', audioId: o.audioId || null, size: +o.size || 0, duration: +o.duration || 0,
+    id: o.id || uid(), upd: +o.upd || 0, title: o.title || 'Untitled lesson', name: o.name || '', audioId: o.audioId || null, size: +o.size || 0, duration: +o.duration || 0,
     clips: (o.clips || []).map(c => ({ id: c.id || uid(), t0: +c.t0 || 0, t1: +c.t1 || 0, text: c.text || '', type: ['lt', 'en', 'skip'].includes(c.type) ? c.type : 'lt', entryId: c.entryId || null })),
     params: Object.assign({ pause: 0.6, thr: 0.25 }, o.params || {}), pairMode: o.pairMode || 'en-lt', analyzed: !!o.analyzed, created: +o.created || Date.now()
   };
 }
+let wIdx = null, hayC = new WeakMap();
+const fpMap = new Map();                    // remembers what each phrase/lesson/text looked like at the last save, to stamp 'changed at'
+const mkText = o => ({ id: o.id || uid(), title: String(o.title || 'Untitled text'), body: String(o.body || ''), created: +o.created || Date.now(), upd: +o.upd || 0 });
 const DEF_SETTINGS = { theme: null, view: 'list', asr: 'base', newPerDay: 20, maxReviews: 200, dailyGoal: 20 };
-let state = { entries: [], lessons: [], days: {}, counts: { d: '', n: 0, r: 0 }, settings: Object.assign({}, DEF_SETTINGS), lastExport: 0 };
+let state = { entries: [], lessons: [], texts: [], tomb: {}, time: {}, hist: {}, lastSync: 0, days: {}, counts: { d: '', n: 0, r: 0 }, settings: Object.assign({}, DEF_SETTINGS), lastExport: 0 };
 function setManualStatus(e, st) {      // dictionary buttons: keep the scheduler consistent with the status chosen by hand
   e.status = st;
   if (st === 2) { if (e.state !== 'review' || e.ivl < SR.mature) { e.state = 'review'; e.ivl = Math.max(e.ivl || 0, SR.mature); e.step = 0; e.due = dayStartPlus(e.ivl); } }
@@ -601,8 +726,8 @@ function loadState() {
     raw = localStorage.getItem(LS_KEY);
     if (raw) {
       const o = JSON.parse(raw);
-      state.entries = (o.entries || []).map(mkEntry); state.lessons = (o.lessons || []).map(mkLesson);
-      state.days = o.days || {}; state.counts = o.counts && typeof o.counts === 'object' ? o.counts : { d: '', n: 0, r: 0 }; state.settings = Object.assign(state.settings, o.settings || {}); state.lastExport = o.lastExport || 0;
+      state.entries = (o.entries || []).map(mkEntry); state.lessons = (o.lessons || []).map(mkLesson); state.texts = (o.texts || []).map(mkText); wIdx = null; hayC = new WeakMap();
+      state.tomb = o.tomb && typeof o.tomb === 'object' ? o.tomb : {}; state.lastSync = +o.lastSync || 0; state.time = o.time && typeof o.time === 'object' ? o.time : {}; state.hist = o.hist && typeof o.hist === 'object' ? o.hist : {}; state.days = o.days || {}; state.counts = o.counts && typeof o.counts === 'object' ? o.counts : { d: '', n: 0, r: 0 }; state.settings = Object.assign(state.settings, o.settings || {}); state.lastExport = o.lastExport || 0; stampChanges(true);
     }
   } catch (e) {
     console.warn('Could not read saved data', e);
@@ -612,11 +737,25 @@ function loadState() {
   }
 }
 let lastSaved = null;
+const entryFP = e => [e.lt, e.stress, e.en, e.cat, e.note, e.ph, e.fav ? 1 : 0, e.status, e.state, e.due, e.ivl, e.ease, e.step, e.lapses, e.reviews, e.correct, e.order, e.audioId ? 1 : 0].join('\u0001');
+function snapHist() {                   // one snapshot per day: how many phrases were mastered / learning / total (for the growth chart)
+  if (!state.entries.length) return; let m = 0, l = 0; for (const e of state.entries) { if (e.status === 2) m++; else if (e.status === 1) l++; }
+  state.hist[todayStr()] = [m, l, state.entries.length]; const ks = Object.keys(state.hist); if (ks.length > 900) ks.sort().slice(0, ks.length - 800).forEach(k => delete state.hist[k]);
+}
+function stampChanges(rebase) {         // every phrase/lesson/text carries the time it last changed, so devices can tell which copy is newer
+  const now = Date.now(), seen = new Set();
+  const chk = (id, f, o) => { seen.add(id); if (fpMap.get(id) !== f) { fpMap.set(id, f); if (!rebase) o.upd = now; } };
+  for (const e of state.entries) chk(e.id, entryFP(e), e);
+  for (const l of state.lessons) chk('L' + l.id, JSON.stringify(l, (k, v) => k === 'upd' ? undefined : v), l);
+  for (const t of state.texts) chk('T' + t.id, t.title + '\u0001' + t.body, t);
+  for (const k of [...fpMap.keys()]) if (!seen.has(k)) fpMap.delete(k);
+}
 const saveNow = () => {
-  try { const str = JSON.stringify({ v: 2, entries: state.entries, lessons: state.lessons, days: state.days, counts: state.counts, settings: state.settings, lastExport: state.lastExport }); localStorage.setItem(LS_KEY, str); lastSaved = str; }
+  try { stampChanges(); snapHist(); const str = JSON.stringify({ v: 2, entries: state.entries, lessons: state.lessons, texts: state.texts, tomb: state.tomb, time: state.time, hist: state.hist, lastSync: state.lastSync, days: state.days, counts: state.counts, settings: state.settings, lastExport: state.lastExport }); localStorage.setItem(LS_KEY, str); lastSaved = str; }
   catch (e) { toast('Could not save to localStorage (storage full or blocked).', 'err'); }
 };
-const save = debounce(saveNow, 250);
+const saveDeb = debounce(saveNow, 250);
+const save = () => { wIdx = null; hayC = new WeakMap(); saveDeb(); };
 window.addEventListener('beforeunload', saveNow);
 window.addEventListener('pagehide', saveNow);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveNow(); });
@@ -730,6 +869,7 @@ function unlockAudio() {
 }
 UNLOCK_EVENTS.forEach(ev => document.addEventListener(ev, unlockAudio, true));
 const play = { key: null, src: null, queue: null, qi: 0, token: 0 };
+const ls = { active: false, queue: [], i: 0, step: '', token: 0, resolve: null, paused: false };   // listening walk
 const rate = {}, loopOn = {};
 const rateOf = k => rate[k] || 1;
 let clipTimer = null, ttsWarned = false;
@@ -763,6 +903,7 @@ function startClipTimer() {
   }, 30);
 }
 function stopAudio() {
+  if (ls.active) lsEnd(true);
   stopClipTimer(); audio.pause(); play.key = null; play.src = null; play.queue = null; play.ab = null; play.token++;
   audio.removeAttribute('src'); audio.dataset.url = ''; try { audio.load(); } catch (e) {}
   if ('speechSynthesis' in window) speechSynthesis.cancel(); syncUI();
@@ -773,6 +914,7 @@ async function playEntry(id, opts = {}) {
   return playSrc(srcOfEntry(e), opts);
 }
 async function playSrc(src, opts = {}) {
+  if (ls.active && !src.lsw) lsEnd(true);
   if ('speechSynthesis' in window) speechSynthesis.cancel();
   if (play.key === src.key && audio.getAttribute('src') && !opts.restart) {
     if (!audio.paused) { audio.pause(); stopClipTimer(); syncUI(); return; }
@@ -799,6 +941,7 @@ async function playSrc(src, opts = {}) {
 const replay = id => playEntry(id, { restart: true });
 function onSrcEnd() {
   const s = play.src; if (!s) return;
+  if (ls.active && s.ls && ls.resolve) { stopClipTimer(); audio.pause(); const r = ls.resolve; ls.resolve = null; r(); return; }
   if (abOn()) { audio.currentTime = play.ab.a; if (audio.paused) audio.play().catch(() => {}); return; }
   if (loopOn[s.key]) { audio.currentTime = s.t0 || 0; if (audio.paused) audio.play().catch(() => {}); return; }
   stopClipTimer(); audio.pause(); if (s.t1 != null) audio.currentTime = s.t0 || 0;
@@ -839,7 +982,7 @@ function msMeta() {
 function msState() {
   const MS = getMS(); if (!MS) return;
   try { MS.playbackState = !play.src ? 'none' : audio.paused ? 'paused' : 'playing'; if (!play.src) { MS.metadata = null; msKey = ''; } } catch (e) {}
-  try { MS.setActionHandler('previoustrack', play.queue ? () => queueStep(-1) : null); MS.setActionHandler('nexttrack', play.queue ? () => queueStep(1) : null); } catch (e) {}
+  try { MS.setActionHandler('previoustrack', ls.active ? () => lsGo(ls.i - 1) : play.queue ? () => queueStep(-1) : null); MS.setActionHandler('nexttrack', ls.active ? () => lsGo(ls.i + 1) : play.queue ? () => queueStep(1) : null); } catch (e) {}
 }
 function msPos() {
   const MS = getMS(), s = play.src; if (!MS || !MS.setPositionState || !s) return; const now = Date.now(); if (now - msPosAt < 500) return; msPosAt = now;
@@ -860,10 +1003,11 @@ function queueStep(d) {
   h('seekto', d => { const s = play.src; if (s && d && d.seekTime != null) audio.currentTime = (s.t0 || 0) + d.seekTime; });
 })();
 
-function playAll() {
-  if (play.queue) { play.queue = null; audio.pause(); syncUI(); return; }
-  const ids = getFiltered().filter(e => e.audioId).map(e => e.id);
+function playAll(startId) {
+  if (!startId && play.queue) { play.queue = null; audio.pause(); syncUI(); return; }
+  let ids = getFiltered().filter(e => e.audioId).map(e => e.id);
   if (!ids.length) { toast('None of the visible phrases have audio yet.', 'warn'); return; }
+  if (startId) { const i = ids.indexOf(startId); if (i > 0) ids = ids.slice(i); }
   play.queue = ids; play.qi = 0; playEntry(ids[0], { restart: true, fromQueue: true });
 }
 function syncUI() {
@@ -920,19 +1064,21 @@ function calcStreak() {
   return n;
 }
 function renderStats() {
+  updateTabBadge();
   const E = state.entries, n = E.length, m = E.filter(e => e.status === 2).length, l = E.filter(e => e.status === 1).length, nw = n - m - l;
   const pct = n ? Math.round(m / n * 100) : 0, now = Date.now();
   const due = E.filter(e => e.state !== 'new' && e.due <= now).length, goal = Math.max(0, +state.settings.dailyGoal || 0), today = state.days[todayStr()] || 0, withA = E.filter(e => e.audioId).length;
   $('#stats').innerHTML = `<span><b>${n}</b> phrases</span><span style="color:var(--green)"><b>${m}</b> mastered</span><span style="color:var(--gold-text)"><b>${l}</b> learning</span>
     <span class="bar" role="img" aria-label="${m} mastered, ${l} learning, ${nw} new"><i class="m" style="width:${n ? m / n * 100 : 0}%"></i><i class="l" style="width:${n ? l / n * 100 : 0}%"></i><i class="n" style="width:${n ? nw / n * 100 : 0}%"></i></span>
-    <span><b>${pct}%</b> done</span><span>🔥 <b>${calcStreak()}</b> day streak</span><span title="Reviews done today${goal ? ' (daily goal ' + goal + ')' : ''}">Today <b>${today}</b>${goal ? '/' + goal : ''}${goal && today >= goal ? ' ✓' : ''}</span><span>Due <b>${due}</b></span><span>♪ <b>${withA}</b>/${n}</span>`;
+    <span><b>${pct}%</b> done</span><span>🔥 <b>${calcStreak()}</b> day streak</span><span title="Reviews done today${goal ? ' (daily goal ' + goal + ')' : ''}">Today <b>${today}</b>${goal ? '/' + goal : ''}${goal && today >= goal ? ' ✓' : ''}</span><span>Due <b>${due}</b></span><span>♪ <b>${withA}</b>/${n}</span><button class="chip" data-go="progress" style="cursor:pointer">📈 Progress</button>`;
 }
 const bumpReview = () => { const k = todayStr(); state.days[k] = (state.days[k] || 0) + 1; };
 
 /* ===================================================================
    Dictionary
 =================================================================== */
-const ui = { q: '', filter: 'all', cat: 'all', sort: 'course', sel: null, open: new Set(), selMode: false, picked: new Set() };
+const PAGE = 120;
+const ui = { sig: '', limit: PAGE, want: null, cur: [], q: '', filter: 'all', cat: 'all', sort: 'course', sel: null, open: new Set(), selMode: false, picked: new Set() };
 let tab = 'dict';
 const cmpCourse = (a, b) => natCmp(a.cat, b.cat) || ((a.lessonId && a.lessonId === b.lessonId && (a.t0 ?? a.s0) != null && (b.t0 ?? b.s0) != null) ? (a.t0 ?? a.s0) - (b.t0 ?? b.s0) : a.order - b.order);
 
@@ -945,14 +1091,20 @@ function getFiltered() {
     if (ui.filter === 'favorites' && !e.fav) return false;
     if (ui.cat !== 'all' && e.cat !== ui.cat) return false;
     if (!raw) return true;
-    const hay = [e.lt, e.stress, e.en, e.cat, e.note, e.ph].join(' ').toLowerCase();
-    return hay.includes(raw) || norm(hay).includes(q);
+    let h = hayC.get(e); if (!h) { const s = [e.lt, e.stress, e.en, e.cat, e.note, e.ph].join(' ').toLowerCase(); h = { s, n: norm(s) }; hayC.set(e, h); }   // cached until the next save
+    return h.s.includes(raw) || h.n.includes(q);
   });
   const s = ui.sort;
   list.sort((a, b) => s === 'lt' ? stripStress(a.lt).localeCompare(stripStress(b.lt), 'lt') : s === 'en' ? a.en.localeCompare(b.en) :
     s === 'status' ? a.status - b.status || cmpCourse(a, b) : s === 'reviews' ? a.reviews - b.reviews || cmpCourse(a, b) :
     s === 'newest' ? b.created - a.created || b.order - a.order : cmpCourse(a, b));
   return list;
+}
+const ekey = e => key(stripStress(e.lt)) + '|' + (e.cat || '');
+const tombOf = (id, k) => Math.max(state.tomb[id] || 0, state.tomb['k:' + k] || 0);
+function addTomb(es) {                   // remember deletions (by id and by phrase text) so a sync from another device can't bring them back
+  const t = Date.now(); for (const e of es) { state.tomb[e.id] = t; state.tomb['k:' + ekey(e)] = t; }
+  const ks = Object.keys(state.tomb); if (ks.length > 4000) ks.sort((a, b) => state.tomb[a] - state.tomb[b]).slice(0, ks.length - 3000).forEach(k => delete state.tomb[k]);
 }
 const cats = () => [...new Set(state.entries.map(e => e.cat).filter(Boolean))].sort(natCmp);
 
@@ -976,10 +1128,10 @@ function itemHTML(e) {
   let extra = '';
   if (open) {
     const ph = e.ph || autoPhon(stripStress(e.lt));
-    extra = `<div class="extra"><div class="ph">/ ${esc(ph)} /${e.ph ? '' : '<span class="approx">approx.</span>'}</div>
+    extra = `<div class="extra"><div class="ph">/ ${esc(ph)} /${e.ph ? '' : '<span class="approx">approx.</span>'}</div>${wordChipsHTML(e)}
       <div class="xc"><button class="btn sm" data-act="replay" ${has ? '' : 'disabled'}>↺ Replay</button><button class="chip" data-act="speed" title="Playback speed">${rateOf(e.id)}×</button>
         <button class="icon-btn loop" data-act="loop" aria-pressed="${!!loopOn[e.id]}" title="Loop (L)" aria-label="Loop">⟲</button>
-        <button class="btn sm" data-act="edit">✎ Edit</button>${has ? '' : '<span class="muted" style="font-size:.84rem">No audio — uses your browser voice</span>'}</div>
+        ${has ? '<button class="btn sm" data-act="from" title="Play this phrase, then continue down the list">⏩ Play from here</button>' : ''}<button class="btn sm" data-act="edit">✎ Edit</button>${has ? '' : '<span class="muted" style="font-size:.84rem">No audio — uses your browser voice</span>'}</div>
       <textarea data-note rows="2" placeholder="Your notes, mnemonics, examples…" aria-label="Notes for ${esc(e.lt)}">${esc(e.note)}</textarea></div>`;
   }
   return `<div class="item${open ? ' open' : ''}" role="listitem" tabindex="-1" data-id="${esc(e.id)}" data-status="${e.status}" aria-label="${esc(e.lt)} — ${esc(e.en)}">
@@ -1001,16 +1153,30 @@ function renderList() {
   renderBulk();
   if (!state.entries.length) {
     g.innerHTML = `<div class="empty" style="grid-column:1/-1"><b>Your dictionary is empty</b>It fills up from your course audio:
-      <div class="steps"><div>1. Open the <b>Lessons</b> tab and add your lesson MP3s</div><div>2. Open a lesson — it is split into short clips automatically</div><div>3. Let the speech model fill in the text (or type it), then add the phrases</div></div><br>
+      <div class="steps"><div>1. Open the <strong>Lessons</strong> tab and add your lesson MP3s</div><div>2. Open a lesson — it is split into short clips automatically</div><div>3. Let the speech model fill in the text (or type it), then add the phrases</div></div><br>
       <button class="btn primary" id="emptyLessons">🎓 Add lesson MP3s</button> <button class="btn" id="emptyAdd">＋ Add a phrase by hand</button></div>`;
     $('#emptyLessons').onclick = () => { showTab('lessons'); $('#fileLesson').click(); }; $('#emptyAdd').onclick = () => openEdit(null);
     return;
   }
   if (!list.length) { g.innerHTML = `<div class="empty" style="grid-column:1/-1"><b>No phrases match</b>Try a different search, lesson or filter.</div>`; return; }
-  g.innerHTML = list.map(itemHTML).join('');
+  const sig = [ui.q, ui.filter, ui.cat, ui.sort].join('|'); if (sig !== ui.sig) { ui.sig = sig; ui.limit = PAGE; }
+  if (ui.want) { const k = list.findIndex(e => e.id === ui.want); if (k >= ui.limit) ui.limit = k + PAGE / 2; ui.want = null; }
+  ui.cur = list; g.innerHTML = list.slice(0, ui.limit).map(itemHTML).join('') + moreHTML();
   if (!list.find(e => e.id === ui.sel)) ui.sel = list[0].id;
-  markSel(); syncUI();
+  markSel(); syncUI(); watchMore();
 }
+const moreHTML = () => ui.cur.length > ui.limit ? `<div class="more" id="listMore"><button class="btn" data-more>Show ${Math.min(PAGE, ui.cur.length - ui.limit)} more <span class="muted">(${ui.cur.length - ui.limit} left)</span></button></div>` : '';
+let moreObs = null;
+function appendMore() {                  // long lists are drawn in pages of 120 so a library of thousands stays fast
+  const m = $('#listMore'); if (!m) return; const from = ui.limit; ui.limit = Math.min(ui.cur.length, from + PAGE);
+  m.insertAdjacentHTML('beforebegin', ui.cur.slice(from, ui.limit).map(itemHTML).join('')); m.remove();
+  $('#list').insertAdjacentHTML('beforeend', moreHTML()); markSel(); syncUI(); watchMore();
+}
+function watchMore() {
+  if (moreObs) { moreObs.disconnect(); moreObs = null; } const m = $('#listMore'); if (!m || !('IntersectionObserver' in window)) return;
+  moreObs = new IntersectionObserver(es => { if (es.some(x => x.isIntersecting)) appendMore(); }, { rootMargin: '900px 0px' }); moreObs.observe(m);
+}
+$('#list').addEventListener('click', ev => { if (ev.target.closest('[data-more]')) appendMore(); });
 function markSel() { $$('#list .item').forEach(c => { const s = c.dataset.id === ui.sel; c.classList.toggle('sel', s); c.tabIndex = s ? 0 : -1; }); }
 function selectItem(id, focus = true) {
   ui.sel = id; markSel(); const c = $(`#list .item[data-id="${CSS.escape(id)}"]`);
@@ -1026,7 +1192,7 @@ function listCols() {
 }
 function refresh() {
   renderStats(); renderChips(); renderList();
-  if (tab === 'lessons' && !(lv.open && !wb)) renderLessons(); if (tab === 'backup') renderBackup(); if (tab === 'practice' && !pr.active && !pr.done) renderPractice();
+  if (tab === 'lessons' && !(lv.open && !wb)) renderLessons(); if (tab === 'backup') renderBackup(); if (tab === 'reader') renderReader(); if (tab === 'progress') renderProgress(); if (tab === 'practice' && !pr.active && !pr.done) renderPractice();
 }
 function cycleStatus(e) {
   setManualStatus(e, (e.status + 1) % 3);
@@ -1043,8 +1209,8 @@ function renderBulk() {
     <select data-bulk="status" aria-label="Set status"><option value="">Set status…</option><option value="0">🔴 New</option><option value="1">🟡 Learning</option><option value="2">🟢 Mastered</option></select>
     <button class="btn sm" data-bulk="move">Move to lesson…</button><button class="btn sm danger" data-bulk="del" ${ui.picked.size ? '' : 'disabled'}>Delete</button><span class="grow"></span><button class="btn sm" data-bulk="done">Done</button>`;
 }
-async function deleteEntries(ids) {
-  const set = new Set(ids), audioIds = new Set();
+async function deleteEntries(ids, noTomb) {
+  const set = new Set(ids), audioIds = new Set(); if (!noTomb) addTomb(state.entries.filter(e => set.has(e.id)));
   state.entries.forEach(e => { if (set.has(e.id) && e.audioId) audioIds.add(e.audioId); });
   if (play.key && set.has(play.key)) stopAudio();
   state.entries = state.entries.filter(e => !set.has(e.id));
@@ -1076,6 +1242,136 @@ $('#bulk').addEventListener('change', ev => {
 });
 $('#btnSelect').onclick = () => { ui.selMode = !ui.selMode; if (!ui.selMode) ui.picked.clear(); renderList(); };
 
+
+/* ===================================================================
+   Words: index of every word in your phrases, links between phrases, Reader
+=================================================================== */
+const WORD_RE = /[\p{L}\p{M}]+(?:[-’'][\p{L}\p{M}]+)*/gu;
+const wkey = w => stripStress(String(w)).normalize('NFC').toLowerCase();
+function WI() {
+  if (wIdx) return wIdx;
+  const m = new Map(), pre = new Map(), ent = new Map(state.entries.map(e => [e.id, e]));
+  for (const e of state.entries) { const seen = new Set(); for (const w of (e.lt.match(WORD_RE) || [])) { const k = wkey(w); if (seen.has(k)) continue; seen.add(k); if (!m.has(k)) m.set(k, []); m.get(k).push(e.id); } }
+  for (const k of m.keys()) { const pf = k.slice(0, 3); if (!pre.has(pf)) pre.set(pf, []); pre.get(pf).push(k); }
+  return (wIdx = { m, pre, ent, sim: new Map(), cls: new Map() });
+}
+function similarKeys(k) {            // other words that probably share the same stem (Lithuanian endings change a lot)
+  const w = WI(); if (w.sim.has(k)) return w.sim.get(k);
+  const out = []; if (k.length >= 4) for (const o of w.pre.get(k.slice(0, 3)) || []) {
+    if (o === k || o.length < 4) continue; const mx = Math.min(k.length, o.length); let cp = 0; while (cp < mx && k[cp] === o[cp]) cp++;
+    if (cp >= 3 && cp >= mx - 2) out.push(o);
+  }
+  w.sim.set(k, out); return out;
+}
+function wordMatches(word) {
+  const k = wkey(word), w = WI(), exact = (w.m.get(k) || []).map(id => w.ent.get(id)).filter(Boolean), seen = new Set(exact.map(e => e.id)), similar = [];
+  for (const o of similarKeys(k)) for (const id of w.m.get(o)) if (!seen.has(id)) { seen.add(id); const e = w.ent.get(id); if (e) similar.push({ e, form: o }); }
+  return { k, exact, similar };
+}
+function wordClass(word) {           // m mastered · l learning · n in dictionary, not started · s only a similar form · u not in dictionary
+  const k = wkey(word), w = WI(); let c = w.cls.get(k); if (c) return c;
+  const ids = w.m.get(k);
+  if (ids) { let best = 0; for (const id of ids) { const e = w.ent.get(id); if (e) best = Math.max(best, e.status === 2 ? 2 : (e.status === 1 || e.reviews > 0) ? 1 : 0); } c = 'w-' + ['n', 'l', 'm'][best]; }
+  else c = similarKeys(k).length ? 'w-s' : 'w-u';
+  w.cls.set(k, c); return c;
+}
+function hiWords(lt, keys) { let out = '', last = 0; String(lt).replace(WORD_RE, (w, i) => { out += esc(lt.slice(last, i)) + (keys.has(wkey(w)) ? '<mark>' + esc(w) + '</mark>' : esc(w)); last = i + w.length; return w; }); return out + esc(lt.slice(last)); }
+function wordChipsHTML(e) {
+  const seen = new Set(), chips = [];
+  for (const w of (e.lt.match(WORD_RE) || [])) {
+    const k = wkey(w); if (seen.has(k) || k.length < 2) continue; seen.add(k);
+    const m = wordMatches(w), n = m.exact.filter(x => x.id !== e.id).length + m.similar.filter(x => x.e.id !== e.id).length;
+    chips.push(`<button class="chip wchip" data-act="word" data-w="${esc(w)}" title="Phrases with “${esc(w)}”">${esc(w)}${n ? `<span class="wn">${n}</span>` : ''}</button>`);
+  }
+  return chips.length ? `<div class="wchips" aria-label="Words in this phrase">${chips.join('')}</div>` : '';
+}
+function openWord(word, ctx = {}) {
+  const { k, exact, similar } = wordMatches(word), forms = new Set([k]); similar.forEach(x => forms.add(x.form));
+  const row = (e, mark) => `<div class="wrow" data-id="${esc(e.id)}"><button class="pbtn" data-wp aria-label="Play">${e.audioId ? '▶' : '🗣'}</button>
+    <div class="txt"><span class="lt" lang="lt">${hiWords(e.lt, mark)}</span><span class="en">${esc(e.en)}</span></div><button class="btn sm" data-wg title="Show in the dictionary">Open</button></div>`;
+  const others = exact.filter(e => e.id !== ctx.exclude), simO = similar.filter(x => x.e.id !== ctx.exclude);
+  const m = openModal(`<div class="modal-head"><h2>Word: <i lang="lt">${esc(word)}</i></h2><button class="icon-btn" data-x aria-label="Close">✕</button></div>
+    <div class="modal-body">
+      <p class="muted" style="margin-top:0">${others.length} other phrase${others.length === 1 ? '' : 's'} with this exact word${simO.length ? `, ${simO.length} with a similar form` : ''}. Seeing the same word with different endings is how you pick up the grammar.</p>
+      ${others.length ? `<div class="wgrp">Same word</div>${others.map(e => row(e, new Set([k]))).join('')}` : ''}
+      ${simO.length ? `<div class="wgrp">Similar forms</div>${simO.map(x => row(x.e, forms)).join('')}` : ''}
+      ${!others.length && !simO.length ? '<p class="muted">This word is not in any other phrase yet.</p>' : ''}
+    </div>
+    <div class="modal-foot"><button class="btn" id="wSay">🔊 Say it</button><button class="btn" id="wSearch">Search dictionary</button>${ctx.add ? '<button class="btn primary" id="wAdd">＋ Add word</button>' : ''}<button class="btn" data-x>Close</button></div>`);
+  m.el.addEventListener('click', ev => {
+    const r = ev.target.closest('.wrow'); if (!r) return; const id = r.dataset.id;
+    if (ev.target.closest('[data-wp]')) playEntry(id);
+    else if (ev.target.closest('[data-wg]')) { m.close(); ui.q = ''; ui.filter = 'all'; ui.cat = 'all'; ui.open.add(id); ui.sel = id; ui.want = id; $('#q').value = ''; showTab('dict'); setTimeout(() => { const c = $(`#list .item[data-id="${CSS.escape(id)}"]`); if (c) c.scrollIntoView({ block: 'center' }); }, 60); }
+  });
+  $('#wSay', m.el).onclick = () => speak(word);
+  $('#wSearch', m.el).onclick = () => { m.close(); ui.q = word; $('#q').value = word; showTab('dict'); };
+  if (ctx.add) $('#wAdd', m.el).onclick = () => { m.close(); openEdit(null, { lt: ctx.add.lt, cat: ctx.add.cat, note: ctx.add.note || '' }); };
+}
+
+/* ---------- Reader ---------- */
+const rd = { open: null, hl: true };
+const rdSentences = body => { const out = []; String(body).split(/\n+/).forEach(par => { const t = par.trim(); if (!t) return; (t.match(/[^.!?…]+(?:[.!?…]+["”»)’']*|$)/g) || [t]).forEach(x => { x = x.trim(); if (x && /\p{L}/u.test(x)) out.push(x); }); }); return out; };
+function rdStats(body) {
+  const c = { m: 0, l: 0, n: 0, s: 0, u: 0 }, unk = new Map(); let total = 0;
+  for (const w of (String(body).match(WORD_RE) || [])) { const k = wordClass(w).slice(2); c[k]++; total++; if (k === 'u') { const kk = wkey(w); if (!unk.has(kk)) unk.set(kk, { w, n: 0 }); unk.get(kk).n++; } }
+  return { c, total, unk: [...unk.values()].sort((a, b) => b.n - a.n) };
+}
+const pct = (n, t) => t ? Math.round(100 * n / t) : 0;
+function renderReader() {
+  const root = $('#readerRoot'); if (!root) return;
+  const t = rd.open && state.texts.find(x => x.id === rd.open);
+  if (!t) {
+    rd.open = null;
+    root.innerHTML = `<div class="rd-wrap"><div class="rd-head"><h2>📰 Reader</h2><button class="btn primary" data-rd="new">＋ New text</button><button class="btn" data-rd="lesson">🎓 From a lesson</button></div>
+      <p class="muted" style="margin-top:0">Paste any real Lithuanian — a news article, a song, a message, a transcript. Words you already know are highlighted; tap any word to see it in your phrases or add it, and tap ＋ to save a whole sentence.</p>
+      ${state.texts.length ? state.texts.slice().sort((a, b) => b.created - a.created).map(x => { const st = rdStats(x.body); return `<button class="rd-card" data-rd="open" data-id="${esc(x.id)}"><div class="t"><b>${esc(x.title)}</b><span class="m">${st.total} words · ${pct(st.c.m + st.c.l + st.c.n, st.total)}% in your dictionary</span></div><span aria-hidden="true">›</span></button>`; }).join('')
+        : '<div class="empty"><b>No texts yet</b>Paste something you want to be able to read — it takes a few seconds.</div>'}</div>`;
+    return;
+  }
+  const st = rdStats(t.body), tt = st.total, c = st.c, sents = rdSentences(t.body), have = new Set(state.entries.map(e => tnorm(e.lt)));
+  root.innerHTML = `<div class="rd-wrap"><div class="rd-head"><button class="btn sm" data-rd="back">← Texts</button><h2>${esc(t.title)}</h2>
+      <button class="btn sm" data-rd="hl" aria-pressed="${rd.hl}">${rd.hl ? '◉' : '○'} Highlight</button><button class="btn sm" data-rd="edit">✎ Edit</button><button class="btn sm danger" data-rd="del">Delete</button></div>
+    <div class="rd-cov"><div><b>${pct(c.m + c.l + c.n, tt)}%</b> of the words are in your dictionary${c.s ? ` · <b>${pct(c.s, tt)}%</b> more as other forms` : ''} <span class="muted">(${tt} words, ${st.unk.length} new)</span></div>
+      <div class="rd-bar" role="img" aria-label="Word coverage"><i style="width:${pct(c.m, tt)}%;background:var(--green)"></i><i style="width:${pct(c.l, tt)}%;background:var(--gold)"></i><i style="width:${pct(c.n, tt)}%;background:color-mix(in srgb,var(--gold) 45%,transparent)"></i><i style="width:${pct(c.s, tt)}%;background:color-mix(in srgb,var(--gold) 25%,transparent)"></i></div>
+      <div class="rd-leg"><span style="--c:var(--green)">Mastered ${c.m}</span><span style="--c:var(--gold)">Learning ${c.l}</span><span style="--c:color-mix(in srgb,var(--gold) 45%,transparent)">Not started ${c.n}</span><span style="--c:color-mix(in srgb,var(--gold) 25%,transparent)">Other form ${c.s}</span><span style="--c:var(--red)">New ${c.u}</span></div>
+      ${st.unk.length ? `<details style="margin-top:8px"><summary style="cursor:pointer;font-weight:600">New words (${st.unk.length}) — tap to look up or add</summary><div class="rd-new">${st.unk.slice(0, 80).map(x => `<button class="chip" data-rd="word" data-w="${esc(x.w)}">${esc(x.w)}${x.n > 1 ? ` ×${x.n}` : ''}</button>`).join('')}</div></details>` : ''}</div>
+    <div class="${rd.hl ? 'hl' : ''}" id="rdBody">${sents.map((s, i) => `<div class="rs" data-i="${i}"><div class="st" lang="lt">${rdHTML(s)}</div><div class="sb"><button class="pbtn" data-rd="say" aria-label="Say this sentence" title="Say it">🗣</button>${have.has(tnorm(s)) ? '<button class="pbtn" disabled title="Already in your dictionary" style="background:var(--surface2);color:var(--muted)">✓</button>' : '<button class="pbtn" data-rd="addS" aria-label="Add this sentence as a phrase" title="Add as a phrase">＋</button>'}</div></div>`).join('')}</div></div>`;
+}
+function rdHTML(s) { let out = '', last = 0; s.replace(WORD_RE, (w, i) => { out += esc(s.slice(last, i)) + `<span class="rw ${wordClass(w)}" data-rd="word" data-w="${esc(w)}" tabindex="0" role="button">${esc(w)}</span>`; last = i + w.length; return w; }); return out + esc(s.slice(last)); }
+function rdEditor(t) {
+  const isNew = !t, m = openModal(`<div class="modal-head"><h2>${isNew ? 'New text' : 'Edit text'}</h2><button class="icon-btn" data-x aria-label="Close">✕</button></div>
+    <div class="modal-body"><label class="lbl" for="rdT">Title</label><input type="text" id="rdT" value="${esc(t ? t.title : '')}" placeholder="e.g. LRT news — weather">
+      <label class="lbl" for="rdB" style="margin-top:10px">Lithuanian text</label><textarea id="rdB" rows="12" lang="lt" placeholder="Paste the text here…" style="width:100%">${esc(t ? t.body : '')}</textarea></div>
+    <div class="modal-foot"><button class="btn" data-x>Cancel</button><button class="btn primary" id="rdSave">Save</button></div>`);
+  $('#rdSave', m.el).onclick = () => {
+    const body = $('#rdB', m.el).value.trim(); if (!body) { toast('Paste some text first.', 'warn'); return; }
+    const title = $('#rdT', m.el).value.trim() || body.split(/\s+/).slice(0, 5).join(' ') + '…';
+    if (t) { t.title = title; t.body = body; } else { t = mkText({ title, body }); state.texts.push(t); }
+    save(); rd.open = t.id; m.close(); renderReader(); window.scrollTo({ top: 0 });
+  };
+}
+function rdFromLesson() {
+  const ls = state.lessons.filter(l => l.clips.some(c => c.type === 'lt' && c.text.trim()));
+  if (!ls.length) { toast('No lesson has Lithuanian text yet — transcribe or type clips in a lesson first.', 'warn'); return; }
+  const m = openModal(`<div class="modal-head"><h2>Read a lesson transcript</h2><button class="icon-btn" data-x aria-label="Close">✕</button></div>
+    <div class="modal-body"><p class="muted" style="margin-top:0">Turns the Lithuanian clip texts of a lesson into a text you can read with highlighting. Works well for podcasts and news audio you transcribed in Lessons.</p>${ls.map(l => `<button class="rd-card" data-l="${esc(l.id)}"><div class="t"><b>${esc(l.title)}</b><span class="m">${l.clips.filter(c => c.type === 'lt' && c.text.trim()).length} clips</span></div><span>›</span></button>`).join('')}</div>`);
+  m.el.addEventListener('click', ev => { const b = ev.target.closest('[data-l]'); if (!b) return; const l = lessonById(b.dataset.l); const t = mkText({ title: l.title, body: l.clips.filter(c => c.type === 'lt' && c.text.trim()).map(c => c.text.trim()).join('\n') }); state.texts.push(t); save(); rd.open = t.id; m.close(); renderReader(); window.scrollTo({ top: 0 }); });
+}
+function rdAction(b) {
+  const a = b.dataset.rd, t = state.texts.find(x => x.id === rd.open);
+  if (a === 'new') rdEditor(null); else if (a === 'lesson') rdFromLesson();
+  else if (a === 'open') { rd.open = b.dataset.id; renderReader(); window.scrollTo({ top: 0 }); }
+  else if (a === 'back') { rd.open = null; renderReader(); }
+  else if (a === 'hl') { rd.hl = !rd.hl; renderReader(); }
+  else if (a === 'edit' && t) rdEditor(t);
+  else if (a === 'del' && t) { if (confirm('Delete “' + t.title + '”? Your dictionary is not affected.')) { state.tomb['T' + t.id] = Date.now(); state.texts = state.texts.filter(x => x !== t); rd.open = null; save(); renderReader(); } }
+  else if (a === 'say') speak($('.st', b.closest('.rs')).textContent);
+  else if (a === 'addS') { const sent = $('.st', b.closest('.rs')).textContent.trim(); openEdit(null, { lt: sent, cat: t ? t.title : 'Reader' }); }
+  else if (a === 'word') { const w = b.dataset.w, sent = b.closest('.rs') ? $('.st', b.closest('.rs')).textContent.trim() : ''; openWord(w, { add: { lt: w.toLowerCase(), cat: t ? t.title : 'Reader', note: sent ? 'From text: ' + sent : '' } }); }
+}
+$('#readerRoot').addEventListener('click', ev => { const b = ev.target.closest('[data-rd]'); if (b) rdAction(b); });
+$('#readerRoot').addEventListener('keydown', ev => { if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.matches('.rw')) { ev.preventDefault(); rdAction(ev.target); } });
+
 /* ---------- list events ---------- */
 $('#list').addEventListener('click', ev => {
   const it = ev.target.closest('.item'); if (!it) return;
@@ -1085,7 +1381,7 @@ $('#list').addEventListener('click', ev => {
   const b = ev.target.closest('[data-act]'); if (!b) return; const a = b.dataset.act;
   if (a === 'toggle' && ui.selMode) { ui.picked.has(e.id) ? ui.picked.delete(e.id) : ui.picked.add(e.id); const cb = $('[data-pick]', it); if (cb) cb.checked = ui.picked.has(e.id); renderBulk(); return; }
   if (a === 'play') playEntry(e.id); else if (a === 'replay') replay(e.id); else if (a === 'speed') cycleSpeed(e.id); else if (a === 'loop') toggleLoop(e.id);
-  else if (a === 'fav') toggleFav(e); else if (a === 'status') cycleStatus(e); else if (a === 'edit') openEdit(e.id); else if (a === 'toggle') toggleOpen(e);
+  else if (a === 'fav') toggleFav(e); else if (a === 'status') cycleStatus(e); else if (a === 'edit') openEdit(e.id); else if (a === 'from') playAll(e.id); else if (a === 'word') openWord(b.dataset.w, { exclude: e.id }); else if (a === 'toggle') toggleOpen(e);
 });
 $('#list').addEventListener('input', ev => { if (!ev.target.matches('textarea[data-note]')) return; const e = byId(ev.target.closest('.item').dataset.id); if (e) { e.note = ev.target.value; save(); } });
 $('#list').addEventListener('focusin', ev => { const c = ev.target.closest('.item'); if (c && c.dataset.id !== ui.sel) { ui.sel = c.dataset.id; markSel(); } });
@@ -1096,7 +1392,7 @@ $('#catSel').addEventListener('change', e => { ui.cat = e.target.value; renderCh
 $('#sortSel').addEventListener('change', e => { ui.sort = e.target.value; renderList(); });
 $('#vList').onclick = () => { state.settings.view = 'list'; save(); renderList(); };
 $('#vGrid').onclick = () => { state.settings.view = 'cards'; save(); renderList(); };
-$('#btnPlayAll').onclick = playAll;
+$('#btnPlayAll').onclick = () => playAll();
 $('#btnAdd').onclick = () => openEdit(null);
 
 /* ===================================================================
@@ -1505,6 +1801,19 @@ function sliceClip(c) {
   const sr = wb.sr, pad = Math.round(0.15 * sr), a = Math.max(0, Math.round(c.t0 * sr)), b = Math.min(wb.samples.length, Math.round(c.t1 * sr));
   const seg = wb.samples.subarray(a, b), out = new Float32Array(seg.length + pad * 2); out.set(seg, pad); return resample(out, sr, 16000);
 }
+const HALLU = /thanks? for watching|thank you for watching|please subscribe|like and subscribe|subtitles? by|subtitled by|amara\.org|www\.|https?:|©|♪|translated by|ačiū už žiūrėjimą|subtitrai|užsiprenumeruok/i;
+function isHalluc(text, dur) {          // text Whisper tends to invent on silence or noise
+  const t = String(text || '').trim(); if (!t || !/\p{L}/u.test(t)) return true;
+  if (HALLU.test(t)) return true;
+  const w = t.toLowerCase().match(/[\p{L}\p{M}]+/gu) || [];
+  if (w.length >= 4) { const cnt = {}; let top = 0; for (const x of w) top = Math.max(top, cnt[x] = (cnt[x] || 0) + 1); if (top / w.length >= 0.6) return true; }   // "ne ne ne ne ne"
+  return t.length / Math.max(dur, 0.3) > 28;                                   // far more text than could be said in that time
+}
+function isSilent(a) {                  // 16 kHz samples; true when there is no real speech (so Whisper has nothing to hear)
+  const n = 320, r = []; let peak = 0;
+  for (let i = 0; i + n <= a.length; i += n) { let sum = 0; for (let j = i; j < i + n; j++) { const v = a[j]; sum += v * v; const av = v < 0 ? -v : v; if (av > peak) peak = av; } r.push(Math.sqrt(sum / n)); }
+  if (!r.length) return true; r.sort((x, y) => x - y); return peak < 0.02 || r[Math.floor(r.length * 0.9)] < 0.006;
+}
 async function transcribeClips(onlyEmpty) {
   const l = lessonById(lv.open); if (!l || !wb || wb.busy) return;
   const model = $('#wbModel').value, useMarks = $('#wbUseMarks').checked, gpu = !!($('#wbGpu') && $('#wbGpu').checked); state.settings.asr = model; state.settings.asrGpu = gpu; save();
@@ -1525,12 +1834,19 @@ async function transcribeClips(onlyEmpty) {
       console.error(err); asrKill(); status('Could not load the speech model.'); toast('Could not load the speech model — it needs an internet connection the first time (' + (err.message || err) + ').', 'err'); return;
     }
     bar(0);
+    const skipped = { short: 0, silent: 0, invented: 0 }, markSkip = (c, why) => { c.type = 'skip'; c.text = ''; skipped[why]++; };
     for (let i = 0; i < todo.length; i++) {
       if (myWb.abort || wb !== myWb) break; const c = todo[i]; status(`Transcribing clip ${i + 1} of ${todo.length}… (${asr.device === 'webgpu' ? 'GPU' : 'CPU'})`); bar(i / todo.length);
       const opts = { task: 'transcribe' }; if (useMarks && c.type === 'lt') opts.language = 'lithuanian'; if (useMarks && c.type === 'en') opts.language = 'english';
       try {
-        const audio = sliceClip(c), out = await asrCall({ type: 'run', key: asr.key, audio, opts }, { transfer: [audio.buffer] }); let text = cleanText(out && out.text);
-        if (!useMarks) c.type = guessLang(text); if (c.type === 'lt') text = cap(text); c.text = text;
+        const dur = c.t1 - c.t0, audio = dur < 0.4 ? null : sliceClip(c);
+        if (!audio) markSkip(c, 'short');
+        else if (isSilent(audio)) markSkip(c, 'silent');
+        else {
+          const out = await asrCall({ type: 'run', key: asr.key, audio, opts }, { transfer: [audio.buffer] }); let text = cleanText(out && out.text);
+          if (isHalluc(text, dur)) markSkip(c, 'invented');
+          else { if (!useMarks) c.type = guessLang(text); if (c.type === 'lt') text = cap(text); c.text = text; }
+        }
       } catch (err) {
         console.error(err);
         if (!asr.worker) { status('The speech engine stopped unexpectedly.'); toast('The speech engine ran out of memory or crashed. Try the Tiny model, and close other tabs.', 'err'); break; }
@@ -1539,7 +1855,9 @@ async function transcribeClips(onlyEmpty) {
       if (row) { row.className = 'clip ' + c.type; $('[data-wb=text]', row).value = c.text; $('[data-wb=type]', row).value = c.type; }
       await sleep(0);
     }
-    save(); if (wb === myWb) { bar(1); status(myWb.abort ? 'Stopped.' : 'Done — play each clip and correct the text.'); renderClipRows(); }
+    save(); const sk = skipped.short + skipped.silent + skipped.invented, skNote = sk ? ` ${sk} clip${sk === 1 ? '' : 's'} set to Skip (${[skipped.short && skipped.short + ' under 0.4 s', skipped.silent && skipped.silent + ' silent', skipped.invented && skipped.invented + ' with invented text'].filter(Boolean).join(', ')}) — switch back to LT/EN if one was real.` : '';
+    if (wb === myWb) { bar(1); status((myWb.abort ? 'Stopped.' : 'Done — play each clip and correct the text.') + skNote); renderClipRows(); }
+    if (sk) toast(skNote.trim(), 'warn');
   } finally { myWb.busy = false; if (asr.state === 'loading') asr.state = 'idle'; if (wb !== myWb) asrKill(); const s = $('#wbStop'); if (s) s.hidden = true; }
 }
 async function addClipsToDictionary() {
@@ -1978,12 +2296,20 @@ async function removeLesson(id) {
    Practice
 =================================================================== */
 const pr = { active: false, done: false, queue: [], i: 0, revealed: false, mode: 'listen', result: null, t0: 0, tally: { again: 0, hard: 0, good: 0, easy: 0 }, cfg: { scope: 'due', mode: 'listen', count: 20, audioOnly: false, cat: 'all' } };
-const PR_MODES = [['listen', '🎧 Listen first → recall'], ['en2lt', '🇬🇧 English → Lithuanian (in your head)'], ['type', '⌨ English → type the Lithuanian'], ['dictation', '🎧⌨ Dictation: listen → type it'], ['shadow', '🗣 Shadowing: listen → repeat → compare']];
-const isTyped = m => m === 'type' || m === 'dictation';
+const PR_MODES = [['listen', '🎧 Listen first → recall'], ['en2lt', '🇬🇧 English → Lithuanian (in your head)'], ['type', '⌨ English → type the Lithuanian'], ['dictation', '🎧⌨ Dictation: listen → type it'], ['shadow', '🗣 Shadowing: listen → repeat → compare'], ['cloze', '🧩 Fill the gap: type the missing word']];
+const isTyped = m => m === 'type' || m === 'dictation' || m === 'cloze';
+const clozeToks = lt => { const out = []; String(lt).replace(WORD_RE, (w, i) => { out.push({ s: i, e: i + w.length, word: w }); return w; }); return out; };
+function clozePick(e) {              // hide one word of the phrase (prefer words of 3+ letters)
+  const t = clozeToks(e.lt), good = t.filter(x => [...x.word].length >= 3), pool = good.length ? good : t;
+  return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+}
 const LEARN_AHEAD = 20 * MINMS;
 const lim = () => { const n = (v, d) => Number.isFinite(+v) && +v >= 0 ? Math.floor(+v) : d; return { newPerDay: n(state.settings.newPerDay, 20), maxRev: n(state.settings.maxReviews, 200), goal: n(state.settings.dailyGoal, 20) }; };
 function dayCounts() { const d = todayStr(); if (!state.counts || state.counts.d !== d) state.counts = { d, n: 0, r: 0 }; return state.counts; }
-const modeOK = (e, m) => m === 'type' ? !!e.en : (m === 'dictation' || m === 'shadow') ? !!e.audioId : true;
+const modeOK = (e, m) => m === 'cloze' ? clozeToks(e.lt).length >= 2 : m === 'type' ? !!e.en : (m === 'dictation' || m === 'shadow') ? !!e.audioId : true;
+const accOf = e => e.reviews ? e.correct / e.reviews : 1;
+const isWeak = e => e.reviews >= 2 && ((e.lapses || 0) >= 2 || (e.reviews >= 4 && accOf(e) < 0.6) || (e.reviews >= 3 && (e.ease || SR.ease0) <= 1.8));
+const weakScore = e => (e.lapses || 0) * 2 + (1 - accOf(e)) * 6 + (SR.ease0 - (e.ease || SR.ease0)) * 2;
 function queueInfo(c, now = Date.now()) {
   const base = state.entries.filter(e => (c.cat === 'all' || e.cat === c.cat) && (!c.audioOnly || e.audioId) && modeOK(e, c.mode));
   if (c.scope === 'due') {
@@ -1993,9 +2319,10 @@ function queueInfo(c, now = Date.now()) {
     const newAll = base.filter(e => e.state === 'new').sort(cmpCourse), newLeft = Math.max(0, L.newPerDay - k.n), nw = newAll.slice(0, newLeft);
     const mixed = [], every = nw.length ? Math.max(1, Math.floor((rev.length + 1) / (nw.length + 1))) : 0; let ni = 0;      // spread new cards between the reviews
     rev.forEach((e, i) => { mixed.push(e); if (every && (i + 1) % every === 0 && ni < nw.length) mixed.push(nw[ni++]); }); while (ni < nw.length) mixed.push(nw[ni++]);
-    const waiting = base.filter(e => e.state !== 'new' && !learn.includes(e) && !revAll.includes(e)).map(e => e.due).sort((x, y) => x - y);
+    const inQ = new Set(learn.concat(revAll)), waiting = base.filter(e => e.state !== 'new' && !inQ.has(e)).map(e => e.due).sort((x, y) => x - y);
     return { list: learn.concat(mixed), k: { learn: learn.length, review: rev.length, reviewAll: revAll.length, nw: nw.length, newAll: newAll.length, newLeft }, nextDue: waiting[0] || 0 };
   }
+  if (c.scope === 'weak') return { list: base.filter(isWeak).sort((x, y) => weakScore(y) - weakScore(x)), k: null, nextDue: 0 };
   let l = base.slice();
   if (c.scope === 'unmastered') l = l.filter(e => e.status < 2); else if (c.scope === 'learning') l = l.filter(e => e.status === 1); else if (c.scope === 'favorites') l = l.filter(e => e.fav);
   l.sort((x, y) => ((x.state === 'new') - (y.state === 'new')) || (x.state === 'new' ? cmpCourse(x, y) : x.due - y.due));
@@ -2016,6 +2343,7 @@ function prRefreshStatus() {       // after a limit changes: refresh the numbers
 }
 function renderPractice() {
   const root = $('#practiceRoot');
+  if (ls.active) return lsScreen(root);
   if (pr.done) {
     const t = pr.tally, n = t.again + t.hard + t.good + t.easy, ok = t.good + t.easy;
     root.innerHTML = `<div class="pr-card"><div style="font-size:2.6rem">🎉</div><h2 style="margin:0">Session complete</h2><p class="muted" style="margin:0">${n} review${n === 1 ? '' : 's'} · ${n ? Math.round(ok / n * 100) : 0}% recalled</p>
@@ -2029,9 +2357,9 @@ function renderPractice() {
       <div class="pr-form">
         <div><label class="lbl" for="prMode">Mode</label><select id="prMode">${PR_MODES.map(([v, t]) => `<option value="${v}" ${c.mode === v ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
         <div><label class="lbl" for="prCat">Lesson</label><select id="prCat"><option value="all">All lessons</option>${cs.map(x => `<option value="${esc(x)}" ${x === c.cat ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div>
-        <div><label class="lbl" for="prScope">Phrases</label><select id="prScope"><option value="due" ${c.scope === 'due' ? 'selected' : ''}>Due + new (follows your daily limits)</option><option value="unmastered" ${c.scope === 'unmastered' ? 'selected' : ''}>All unmastered</option><option value="learning" ${c.scope === 'learning' ? 'selected' : ''}>Learning only</option><option value="favorites" ${c.scope === 'favorites' ? 'selected' : ''}>Favorites</option><option value="all" ${c.scope === 'all' ? 'selected' : ''}>Everything</option></select></div>
+        <div><label class="lbl" for="prScope">Phrases</label><select id="prScope"><option value="due" ${c.scope === 'due' ? 'selected' : ''}>Due + new (follows your daily limits)</option><option value="unmastered" ${c.scope === 'unmastered' ? 'selected' : ''}>All unmastered</option><option value="learning" ${c.scope === 'learning' ? 'selected' : ''}>Learning only</option><option value="favorites" ${c.scope === 'favorites' ? 'selected' : ''}>Favorites</option><option value="weak" ${c.scope === 'weak' ? 'selected' : ''}>⚠ Weak spots (most-missed)</option><option value="all" ${c.scope === 'all' ? 'selected' : ''}>Everything</option></select></div>
         <div><label class="lbl" for="prCount">Cards per session</label><select id="prCount">${[10, 20, 50, 0].map(n => `<option value="${n}" ${c.count === n ? 'selected' : ''}>${n || 'All available'}</option>`).join('')}</select></div>
-        <div class="full"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="prAudioOnly" ${c.audioOnly ? 'checked' : ''}> Only phrases with audio</label>${c.mode === 'type' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">Typing mode uses phrases that have an English translation.</p>' : ''}${c.mode === 'dictation' || c.mode === 'shadow' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">This mode uses phrases that have audio.</p>' : ''}</div>
+        <div class="full"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="prAudioOnly" ${c.audioOnly ? 'checked' : ''}> Only phrases with audio</label>${c.mode === 'cloze' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">Fill-the-gap uses phrases with two or more words.</p>' : ''}${c.mode === 'type' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">Typing mode uses phrases that have an English translation.</p>' : ''}${c.mode === 'dictation' || c.mode === 'shadow' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">This mode uses phrases that have audio.</p>' : ''}</div>
         <div class="full" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button class="btn primary" id="prStart" ${avail ? '' : 'disabled'}>Start session</button><span id="prStatus">${prStatusHTML(info)}</span></div></div>
       <details class="pr-limits" ${state.settings._limitsOpen ? 'open' : ''}><summary>⚙ Daily limits &amp; goal</summary><div class="pr-form" style="margin-top:10px">
         <div><label class="lbl" for="stNew">New phrases per day</label><input type="number" id="stNew" min="0" max="500" inputmode="numeric" value="${L.newPerDay}"></div>
@@ -2042,7 +2370,7 @@ function renderPractice() {
     ['prMode', 'prScope', 'prCount', 'prAudioOnly', 'prCat'].forEach(id => $('#' + id).onchange = sync); $('#prStart').onclick = startSession;
     const lm = (id, key, max) => { $('#' + id).onchange = ev => { const v = Math.max(0, Math.min(max, Math.floor(+ev.target.value) || 0)); ev.target.value = v; state.settings[key] = v; state.settings._limitsOpen = true; save(); prRefreshStatus(); renderStats(); }; };
     const dl = $('.pr-limits'); if (dl) dl.addEventListener('toggle', () => { state.settings._limitsOpen = dl.open; });   // stays open when you change another option
-    lm('stNew', 'newPerDay', 500); lm('stRev', 'maxReviews', 2000); lm('stGoal', 'dailyGoal', 2000); return;
+    lm('stNew', 'newPerDay', 500); lm('stRev', 'maxReviews', 2000); lm('stGoal', 'dailyGoal', 2000); weakMount(root); lsMount(root); return;
   }
   const e = byId(pr.queue[pr.i]); if (!e) { endSession(); return; }
   const total = pr.queue.length, m = pr.mode, typed = isTyped(m), res = pr.result;
@@ -2055,11 +2383,12 @@ function renderPractice() {
     if (m === 'listen') front = `<button class="pr-big-play" id="prPlay" aria-label="Play audio">🔊</button><p class="muted" style="margin:0">${e.audioId ? 'Listen, then say it out loud.' : 'No audio for this phrase — using your browser voice.'}<br><kbd>Space</kbd> replays</p><button class="btn primary" id="prReveal" style="margin-top:8px">Reveal answer <kbd style="color:#000">Enter</kbd></button>`;
     else if (m === 'en2lt') front = `<div class="pr-en">${esc(e.en || '(no translation)')}</div><p class="muted" style="margin:0">How do you say this in Lithuanian?</p><button class="btn primary" id="prReveal" style="margin-top:8px">Reveal answer <kbd style="color:#000">Enter</kbd></button>`;
     else if (m === 'type') front = `<div class="pr-en">${esc(e.en)}</div><p class="muted" style="margin:0">Type it in Lithuanian — letters like <b>ą č ę ė į š ų ū ž</b> count.</p>${typeForm}`;
+    else if (m === 'cloze' && pr.cz) front = `<div class="pr-lt" lang="lt">${esc(e.lt.slice(0, pr.cz.s))}<span class="gap" aria-label="missing word">${'＿'.repeat(Math.min(8, Math.max(3, [...pr.cz.word].length)))}</span>${esc(e.lt.slice(pr.cz.e))}</div>${e.en ? `<div class="pr-en">${esc(e.en)}</div>` : ''}<p class="muted" style="margin:0">Type the missing word — mind the ending, it changes with the sentence.</p>${typeForm}`;
     else if (m === 'dictation') front = `<button class="pr-big-play" id="prPlay" aria-label="Play audio">🔊</button><p class="muted" style="margin:0">Type what you hear. <kbd>Ctrl</kbd>+<kbd>Space</kbd> replays</p>${typeForm}`;
   } else {
     const banner = res ? { exact: '✓ Perfect', diacritics: '≈ Right letters — check the diacritics', close: '≈ Almost there', wrong: '✗ Not quite', skip: 'Here is the answer', empty: 'Here is the answer' }[res.kind] : '';
     front = `${res ? `<div class="pr-res ${res.kind}" role="status">${banner}</div>` : ''}${res && res.diff ? `<div class="pr-diff" lang="lt"><small>You typed</small><span>${res.diff.typed || '—'}</span><small>Correct</small><span>${res.diff.target}</span></div>` : ''}
-      <div class="pr-lt" lang="lt">${esc(e.stress || e.lt)}</div><div class="pr-en">${esc(e.en)}</div><div class="muted" style="font-style:italic">/ ${esc(e.ph || autoPhon(stripStress(e.lt)))} /</div><span class="tag">${esc(e.cat)}</span>
+      <div class="pr-lt" lang="lt">${m === 'cloze' && pr.cz ? esc(e.lt.slice(0, pr.cz.s)) + '<mark class="gapfill">' + esc(pr.cz.word) + '</mark>' + esc(e.lt.slice(pr.cz.e)) : esc(e.stress || e.lt)}</div><div class="pr-en">${esc(e.en)}</div><div class="muted" style="font-style:italic">/ ${esc(e.ph || autoPhon(stripStress(e.lt)))} /</div><span class="tag">${esc(e.cat)}</span>
       ${e.note ? `<p class="muted" style="margin:0;max-width:520px">${esc(e.note)}</p>` : ''}<button class="btn sm" id="prPlay2">🔊 Play again <kbd>Space</kbd></button>${shadowHTML(e, m === 'shadow')}<div class="rate">${rb}</div>`;
   }
   root.innerHTML = `<div class="pr-prog" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${pr.i}"><i style="width:${pr.i / total * 100}%"></i></div>
@@ -2074,13 +2403,203 @@ function renderPractice() {
   }
   shadowWire(e);
 }
+
+/* ===================================================================
+   Weak-spot rescue + hands-free listening walk
+=================================================================== */
+function weakMount(root) {
+  root.insertAdjacentHTML('afterbegin', '<div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn sm" data-go="progress">📈 Your progress</button></div>');
+  const w = weakList(); if (!w.length) return;
+  root.firstElementChild.insertAdjacentHTML('afterend', `<div class="panel pr-weak"><div style="flex:1;min-width:200px"><b>⚠ ${w.length} weak spot${w.length === 1 ? '' : 's'}</b><div class="muted" style="font-size:.88rem">Phrases you keep missing: ${w.slice(0, 3).map(e => '<span lang="lt">' + esc(e.lt) + '</span>').join(' · ')}${w.length > 3 ? ' …' : ''}</div></div><button class="btn primary" id="prWeak">Rescue session · ${Math.min(10, w.length)}</button></div>`);
+  $('#prWeak').onclick = () => { pr.cfg = Object.assign({}, pr.cfg, { scope: 'weak', count: 10, cat: 'all', audioOnly: false }); startSession(); };
+}
+const weakList = () => state.entries.filter(isWeak).sort((x, y) => weakScore(y) - weakScore(x));
+
+const LS_DEF = { scope: 'due', cat: 'all', order: 'course', prompt: true, gap: 'auto', reps: 1, count: 30, show: true };
+const lsCfg = () => (state.settings.ls = Object.assign({}, LS_DEF, state.settings.ls || {}));
+function lsIds() {
+  const c = lsCfg(); let l = queueInfo({ scope: c.scope, cat: c.cat, audioOnly: false, mode: 'listen' }).list.slice();
+  if (c.order === 'shuffle') shuffle(l); else if (c.scope !== 'due' && c.scope !== 'weak') l.sort(cmpCourse);
+  if (c.count) l = l.slice(0, c.count); return l.map(e => e.id);
+}
+function lsMount(root) {
+  const c = lsCfg(), cs = cats(), sel = (id, lbl, opts, cur) => `<div><label class="lbl" for="${id}">${lbl}</label><select id="${id}">${opts.map(([v, t]) => `<option value="${v}" ${String(cur) === String(v) ? 'selected' : ''}>${t}</option>`).join('')}</select></div>`;
+  root.insertAdjacentHTML('beforeend', `<div class="panel" id="lsPanel" style="margin-top:14px"><h2 class="sec">🎧 Listening walk</h2>
+    <p class="muted" style="margin-top:0">Hands-free practice for walking or commuting: you hear the English, get a pause to answer out loud, then hear the Lithuanian. It does not change your review schedule.</p>
+    <div class="pr-form">
+      ${sel('lsScope', 'Phrases', [['due', 'Due + learning + new'], ['unmastered', 'All unmastered'], ['learning', 'Learning only'], ['favorites', 'Favorites'], ['weak', '⚠ Weak spots'], ['all', 'Everything']], c.scope)}
+      ${sel('lsCat', 'Lesson', [['all', 'All lessons'], ...cs.map(x => [x, x])], c.cat)}
+      ${sel('lsOrder', 'Order', [['course', 'Course order'], ['shuffle', 'Shuffled']], c.order)}
+      ${sel('lsCount', 'Phrases per walk', [[10, '10'], [30, '30'], [60, '60'], [0, 'All']], c.count)}
+      ${sel('lsGap', 'Pause for your answer', [['auto', 'Automatic'], [3, '3 s'], [5, '5 s'], [8, '8 s'], [12, '12 s']], c.gap)}
+      ${sel('lsReps', 'Hear the Lithuanian', [[1, 'Once'], [2, 'Twice'], [3, '3 times']], c.reps)}
+      <div class="full"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="lsPrompt" ${c.prompt ? 'checked' : ''}> Say the English first (browser voice) — otherwise only the Lithuanian is played</label>
+        <label style="display:flex;gap:8px;align-items:center;margin-top:6px"><input type="checkbox" id="lsShow" ${c.show ? 'checked' : ''}> Show the phrase on screen</label></div>
+      <div class="full" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button class="btn primary" id="lsStart">▶ Start walk</button><span class="muted" id="lsInfo"></span></div>
+    </div></div>`);
+  const info = () => { const n = lsIds().length; $('#lsInfo').innerHTML = n ? `<b>${n}</b> phrase${n === 1 ? '' : 's'}` : 'No phrases match these settings.'; $('#lsStart').disabled = !n; };
+  const read = () => { Object.assign(lsCfg(), { scope: $('#lsScope').value, cat: $('#lsCat').value, order: $('#lsOrder').value, count: +$('#lsCount').value, gap: $('#lsGap').value === 'auto' ? 'auto' : +$('#lsGap').value, reps: +$('#lsReps').value, prompt: $('#lsPrompt').checked, show: $('#lsShow').checked }); save(); info(); };
+  ['lsScope', 'lsCat', 'lsOrder', 'lsCount', 'lsGap', 'lsReps', 'lsPrompt', 'lsShow'].forEach(id => $('#' + id).onchange = read);
+  $('#lsStart').onclick = lsStart; info();
+}
+function lsStart() {
+  const ids = lsIds(); if (!ids.length) { toast('Nothing to play with those settings.', 'warn'); return; }
+  stopAudio(); pr.active = false; Object.assign(ls, { active: true, queue: ids, i: 0, paused: false, step: '', resolve: null }); ls.token++;
+  lsRun(ls.token); renderPractice();
+}
+function lsEnd(silent, finished) {
+  if (!ls.active) return; ls.active = false; ls.token++; ls.resolve = null; ls.paused = false;
+  stopAudio(); if (finished) toast('Walk finished — ' + ls.queue.length + ' phrases. 🎉'); else if (!silent) toast('Walk ended.');
+  renderPractice();
+}
+function lsGo(i) {
+  if (!ls.active) return; if (i >= ls.queue.length) { lsEnd(false, true); return; } i = Math.max(0, i);
+  ls.token++; ls.resolve = null; ls.i = i; ls.paused = false; audio.pause(); stopClipTimer(); if ('speechSynthesis' in window) speechSynthesis.cancel(); lsRun(ls.token);
+}
+function lsPause() { ls.paused = !ls.paused; if (ls.paused) { audio.pause(); if ('speechSynthesis' in window) speechSynthesis.pause(); } else { audio.play().catch(() => {}); if ('speechSynthesis' in window) speechSynthesis.resume(); } if (tab === 'practice') renderPractice(); }
+function silId(sec) {                 // a short silent WAV, played through the normal audio element so the phone keeps the walk alive
+  const id = '__sil' + sec.toFixed(1); if (mem.has(id)) return id;
+  const n = Math.round(sec * 8000), b = new ArrayBuffer(44 + n), v = new DataView(b), w = (o, t) => [...t].forEach((ch, k) => v.setUint8(o + k, ch.charCodeAt(0)));
+  w(0, 'RIFF'); v.setUint32(4, 36 + n, true); w(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true); w(36, 'data'); v.setUint32(40, n, true); new Uint8Array(b, 44).fill(128);
+  mem.set(id, new Blob([b], { type: 'audio/wav' })); return id;
+}
+const silSrc = (sec, e, step, resolves) => ({ key: '__sil', audioId: silId(sec), t0: 0, t1: sec - 0.06, title: step === 'think' ? 'Your turn…' : (e.en || e.lt), sub: step === 'think' ? (e.en || '') : 'Listening walk', lsw: true, ls: !!resolves });
+function lsPlay(src, tok) {
+  return new Promise(async res => { ls.resolve = res; await playSrc(src, { restart: true }); if (ls.token === tok && ls.resolve === res && play.key !== src.key) { ls.resolve = null; res(); } });
+}
+function ttsSay(text, lang, rate) {
+  return new Promise(res => {
+    if (!('speechSynthesis' in window)) return res(); let done = false; const fin = () => { if (!done) { done = true; res(); } };
+    const u = new SpeechSynthesisUtterance(stripStress(text)); u.lang = lang; u.rate = rate || 0.95;
+    const v = speechSynthesis.getVoices().find(x => x.lang && x.lang.toLowerCase().startsWith(lang.slice(0, 2).toLowerCase())); if (v) u.voice = v;
+    u.onend = fin; u.onerror = fin; setTimeout(fin, 12000 + text.length * 150); speechSynthesis.speak(u);
+  });
+}
+function lsGap(e) { const c = lsCfg(); if (c.gap !== 'auto') return +c.gap || 4; const d = e.t1 != null ? e.t1 - (e.t0 || 0) : 2.5; return Math.max(3, Math.min(10, 2 + d * 1.5)); }
+async function lsRun(tok) {
+  const live = () => ls.active && ls.token === tok;
+  while (live() && ls.i < ls.queue.length) {
+    const e = byId(ls.queue[ls.i]); if (!e) { ls.i++; continue; } const c = lsCfg();
+    if (e.en) {
+      if (c.prompt) { ls.step = 'prompt'; lsUI(); await playSrc(silSrc(20, e, 'prompt', false), { restart: true }); if (!live()) return; await ttsSay(e.en, 'en-US'); if (!live()) return; }
+      ls.step = 'think'; lsUI(); await lsPlay(silSrc(lsGap(e), e, 'think', true), tok); if (!live()) return;
+    }
+    for (let r = 0; r < c.reps; r++) {
+      ls.step = 'listen'; lsUI();
+      if (e.audioId) await lsPlay(Object.assign(srcOfEntry(e), { lsw: true, ls: true }), tok);
+      else { await playSrc(silSrc(20, e, 'prompt', false), { restart: true }); if (!live()) return; await ttsSay(e.stress || e.lt, 'lt-LT', 0.9); }
+      if (!live()) return; if (r < c.reps - 1) { await lsPlay(silSrc(1.2, e, 'gap', true), tok); if (!live()) return; }
+    }
+    ls.step = 'next'; lsUI(); await lsPlay(silSrc(1, e, 'gap', true), tok); if (!live()) return;
+    ls.i++;
+  }
+  if (live()) lsEnd(false, true);
+}
+function lsUI() { if (tab === 'practice' && ls.active) renderPractice(); }
+function lsScreen(root) {
+  const e = byId(ls.queue[ls.i]); if (!e) { lsEnd(true); return; } const c = lsCfg(), n = ls.queue.length, listen = ls.step === 'listen' || ls.step === 'next';
+  const label = { prompt: 'Listen…', think: 'Your turn — say it in Lithuanian', listen: 'Listen', next: 'Listen' }[ls.step] || '…';
+  root.innerHTML = `<div class="pr-prog" role="progressbar" aria-valuemin="0" aria-valuemax="${n}" aria-valuenow="${ls.i}"><i style="width:${ls.i / n * 100}%"></i></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px" class="muted"><span>Phrase ${ls.i + 1} / ${n} · Listening walk</span><button class="btn sm ghost" data-ls="stop">End walk</button></div>
+    <div class="pr-card" aria-live="polite"><div class="ls-step ${ls.step}">${label}</div>
+      ${c.show ? `${e.en ? `<div class="pr-en">${esc(e.en)}</div>` : ''}<div class="pr-lt" lang="lt" style="${listen ? '' : 'visibility:hidden'}">${esc(e.stress || e.lt)}</div>` : '<div style="font-size:3rem" aria-hidden="true">🎧</div>'}
+      <div class="ls-ctl"><button class="btn" data-ls="prev" aria-label="Previous phrase">⏮</button><button class="btn primary" data-ls="pp">${ls.paused ? '▶ Resume' : '❚❚ Pause'}</button><button class="btn" data-ls="next" aria-label="Next phrase">⏭</button></div>
+      <p class="muted" style="margin:0;font-size:.84rem">You can lock the screen — the lock-screen controls skip and pause. Some phones pause the English voice when locked.</p></div>`;
+}
+$('#practiceRoot').addEventListener('click', ev => { const b = ev.target.closest('[data-ls]'); if (!b) return; const a = b.dataset.ls; if (a === 'stop') lsEnd(false); else if (a === 'pp') lsPause(); else if (a === 'next') lsGo(ls.i + 1); else if (a === 'prev') lsGo(ls.i - 1); });
+
+/* ===================================================================
+   Progress: study time, streaks, charts
+=================================================================== */
+const pg = { days: 30 };
+const dayKey = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const lastDays = n => { const out = []; for (let i = n - 1; i >= 0; i--) { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - i); out.push({ k: dayKey(d), d }); } return out; };
+const fmtMin = sec => { const m = Math.round(sec / 60); return m < 60 ? m + ' min' : Math.floor(m / 60) + ' h ' + String(m % 60).padStart(2, '0') + ' min'; };
+const shortDate = d => d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+let lastTick = Date.now();
+setInterval(() => {                      // study time: counted while a practice session, a listening walk or a Reader text is open
+  const now = Date.now(), dt = Math.min(15, (now - lastTick) / 1000); lastTick = now;
+  const on = ls.active || (document.visibilityState === 'visible' && (pr.active || (tab === 'reader' && rd.open)));
+  if (on && dt > 0) { const k = todayStr(); state.time[k] = (state.time[k] || 0) + dt; if (Math.round(state.time[k]) % 20 === 0) save(); }
+}, 5000);
+function longestStreak() { const ks = Object.keys(state.days).filter(k => state.days[k] > 0).sort(); let best = 0, run = 0, prev = null; for (const k of ks) { const d = new Date(k + 'T12:00:00'); if (prev && Math.round((d - prev) / 864e5) === 1) run++; else run = 1; best = Math.max(best, run); prev = d; } return best; }
+function niceMax(v) { if (v <= 5) return 5; const p = Math.pow(10, Math.floor(Math.log10(v))), f = v / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; }
+function barChart(items, o = {}) {       // items: [{label, v, tip, cls}]  – thin rounded columns on one baseline, hairline grid, hover tooltips
+  const W = innerWidth < 600 ? 380 : 640, H = 190, L = 34, R = 6, T = 10, B = 24, n = items.length, max = niceMax(Math.max(o.goal || 0, ...items.map(i => i.v), 1)), iw = W - L - R, ih = H - T - B, slot = iw / n, bw = Math.min(24, slot * 0.62);
+  const y = v => T + ih - v / max * ih; let g = '';
+  for (const t of [0, 0.5, 1]) g += `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(max * t)}" y2="${y(max * t)}"/><text class="ax" x="${L - 6}" y="${y(max * t) + 4}" text-anchor="end">${Math.round(max * t)}${o.unit || ''}</text>`;
+  let bars = '', hits = '';
+  items.forEach((it, i) => {
+    const x = L + slot * i + (slot - bw) / 2, h = Math.max(it.v ? 2 : 1.5, it.v / max * ih), top = T + ih - h, r = Math.min(4, bw / 2, h);
+    bars += it.v ? `<path class="bar ${it.cls || ''}" d="M${x},${T + ih}V${top + r}Q${x},${top} ${x + r},${top}H${x + bw - r}Q${x + bw},${top} ${x + bw},${top + r}V${T + ih}Z"/>` : `<rect class="bar zero" x="${x}" y="${T + ih - 1.5}" width="${bw}" height="1.5" rx="0.75"/>`;
+    hits += `<rect class="hit" x="${L + slot * i}" y="${T}" width="${slot}" height="${ih + B}" data-tip="${esc(it.tip)}"/>`;
+  });
+  const lbl = (i, a) => `<text class="ax" x="${L + slot * i + slot / 2}" y="${H - 6}" text-anchor="${a}">${esc(items[i].label)}</text>`;
+  const goal = o.goal ? `<line class="goal" x1="${L}" x2="${W - R}" y1="${y(o.goal)}" y2="${y(o.goal)}"/><text class="ax" x="${W - R}" y="${y(o.goal) - 4}" text-anchor="end">goal ${o.goal}</text>` : '';
+  return `<svg class="pg-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.aria || '')}">${g}${goal}${bars}${n > 1 ? lbl(0, 'start') + (n > 8 ? lbl(Math.floor(n / 2), 'middle') : '') + lbl(n - 1, 'end') : lbl(0, 'middle')}${hits}</svg>`;
+}
+function lineChart(pts) {                // pts: [{k, m, t}] mastered vs all phrases over time
+  const W = innerWidth < 600 ? 380 : 640, H = 190, L = 34, R = 46, T = 12, B = 24, n = pts.length, max = niceMax(Math.max(...pts.map(p => p.t), 1)), iw = W - L - R, ih = H - T - B;
+  const x = i => L + (n === 1 ? iw / 2 : i / (n - 1) * iw), y = v => T + ih - v / max * ih, path = k => pts.map((p, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ',' + y(p[k]).toFixed(1)).join('');
+  let g = ''; for (const t of [0, 0.5, 1]) g += `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(max * t)}" y2="${y(max * t)}"/><text class="ax" x="${L - 6}" y="${y(max * t) + 4}" text-anchor="end">${Math.round(max * t)}</text>`;
+  const last = pts[n - 1], hits = pts.map((p, i) => `<rect class="hit" x="${x(i) - (iw / n) / 2}" y="${T}" width="${iw / n}" height="${ih + B}" data-tip="${esc(shortDate(new Date(p.k + 'T12:00:00')) + ': ' + p.m + ' mastered of ' + p.t)}"/>`).join('');
+  return `<svg class="pg-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Mastered phrases over time">${g}<path class="ln-t" d="${path('t')}"/><path class="ln-m" d="${path('m')}"/><circle class="dot-t" cx="${x(n - 1)}" cy="${y(last.t)}" r="4"/><circle class="dot-m" cx="${x(n - 1)}" cy="${y(last.m)}" r="4"/>
+    <text class="lb" x="${W - R + 8}" y="${y(last.t) + 4}" style="fill:var(--muted)">${last.t}</text><text class="lb" x="${W - R + 8}" y="${y(last.m) + (Math.abs(y(last.t) - y(last.m)) < 13 ? 14 : 4)}" style="fill:var(--green)">${last.m}</text>
+    <text class="ax" x="${L}" y="${H - 6}">${esc(shortDate(new Date(pts[0].k + 'T12:00:00')))}</text><text class="ax" x="${W - R}" y="${H - 6}" text-anchor="end">${esc(shortDate(new Date(last.k + 'T12:00:00')))}</text>${hits}</svg>`;
+}
+function renderProgress() {
+  const root = $('#progressRoot'); if (!root) return; const E = state.entries, now = Date.now(), days = lastDays(pg.days), N = E.length;
+  const m = E.filter(e => e.status === 2).length, l = E.filter(e => e.status === 1).length, nw = N - m - l, goal = lim().goal;
+  const rev7 = lastDays(7).reduce((a, d) => a + (state.days[d.k] || 0), 0), prev7 = lastDays(14).slice(0, 7).reduce((a, d) => a + (state.days[d.k] || 0), 0), time7 = lastDays(7).reduce((a, d) => a + (state.time[d.k] || 0), 0);
+  const tr = E.reduce((a, e) => a + e.reviews, 0), tc = E.reduce((a, e) => a + e.correct, 0), ret = tr ? Math.round(tc / tr * 100) : null, weak = weakList().length;
+  const dl = rev7 - prev7, kpi = (v, lb, d) => `<div class="pg-kpi"><div class="v">${v}</div><div class="l">${lb}</div>${d ? `<div class="d">${d}</div>` : ''}</div>`;
+  const dayItems = days.map(d => ({ label: shortDate(d.d), v: state.days[d.k] || 0, cls: d.k === todayStr() ? 'today' : '', tip: shortDate(d.d) + ': ' + (state.days[d.k] || 0) + ' reviews' + (state.time[d.k] ? ' · ' + fmtMin(state.time[d.k]) : '') }));
+  const wk = []; { const mon = new Date(); mon.setHours(0, 0, 0, 0); mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7)); for (let i = 11; i >= 0; i--) { const a = new Date(mon); a.setDate(a.getDate() - i * 7); const b = new Date(a); b.setDate(b.getDate() + 7); const c = E.filter(e => e.created >= a && e.created < b).length; wk.push({ label: shortDate(a), v: c, tip: 'Week of ' + shortDate(a) + ': ' + c + ' phrases added' }); } }
+  const t0 = new Date(); t0.setHours(0, 0, 0, 0); const fc = Array(14).fill(0); for (const e of E) if (e.state !== 'new' && e.due) { const di = Math.max(0, Math.floor((e.due - t0.getTime()) / 864e5)); if (di < 14) fc[di]++; }
+  const fItems = fc.map((v, i) => { const d = new Date(t0); d.setDate(d.getDate() + i); return { label: i === 0 ? 'today' : shortDate(d), v, cls: i === 0 ? 'today' : '', tip: (i === 0 ? 'Today (incl. overdue)' : shortDate(d)) + ': ' + v + ' due' }; });
+  const timeItems = days.map(d => ({ label: shortDate(d.d), v: Math.round((state.time[d.k] || 0) / 60), tip: shortDate(d.d) + ': ' + fmtMin(state.time[d.k] || 0) })), hasTime = timeItems.some(i => i.v > 0);
+  const hist = Object.keys(state.hist).sort().map(k => ({ k, m: state.hist[k][0], t: state.hist[k][2] }));
+  // activity heatmap, 20 weeks, Monday first
+  const mon = new Date(); mon.setHours(12, 0, 0, 0); mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7) - 19 * 7); let heat = ''; const hmax = Math.max(goal || 0, ...Object.values(state.days).map(Number), 1);
+  for (let i = 0; i < 140; i++) { const d = new Date(mon); d.setDate(d.getDate() + i); if (d > new Date()) { heat += '<i style="visibility:hidden"></i>'; continue; } const v = state.days[dayKey(d)] || 0, a = !v ? 0 : Math.max(0.28, Math.min(1, v / (goal || hmax)) * 0.72 + 0.28); heat += `<i style="${v ? `background:color-mix(in srgb,var(--accent) ${Math.round(a * 100)}%,var(--surface2))` : ''}" data-tip="${esc(shortDate(d) + ': ' + v + ' review' + (v === 1 ? '' : 's'))}"></i>`; }
+  const byCat = new Map(); E.forEach(e => { const c = e.cat || 'General', o = byCat.get(c) || { m: 0, l: 0, n: 0 }; o[e.status === 2 ? 'm' : e.status === 1 ? 'l' : 'n']++; byCat.set(c, o); });
+  const seg = o => { const t = o.m + o.l + o.n || 1; return `<div class="pg-seg3" role="img" aria-label="${o.m} mastered, ${o.l} learning, ${o.n} new"><i style="flex:${o.m};background:var(--green)"></i><i style="flex:${o.l};background:var(--gold)"></i><i style="flex:${o.n};background:var(--surface2)"></i></div>`; };
+  const catRows = [...byCat.keys()].sort(natCmp).map(c => { const o = byCat.get(c), t = o.m + o.l + o.n; return `<div class="pg-row" data-tip="${esc(c + ': ' + o.m + ' mastered, ' + o.l + ' learning, ' + o.n + ' new')}"><span class="nm">${esc(c)}</span>${seg(o)}<span class="fg">${o.m}/${t}</span></div>`; });
+  const mature = E.filter(e => e.state === 'review' && e.ivl >= 21).length, young = E.filter(e => e.state === 'review' && e.ivl < 21).length, learning = E.filter(e => e.state === 'learn' || e.state === 'relearn').length, fresh = E.filter(e => e.state === 'new').length;
+  root.innerHTML = `<div class="pg"><div class="pg-head"><h2>📈 Your progress</h2><div class="pg-seg" role="group" aria-label="Period">${[7, 30, 90].map(n => `<button data-pgd="${n}" aria-pressed="${pg.days === n}">${n} days</button>`).join('')}</div></div>
+    <div class="pg-kpis">${kpi('🔥 ' + calcStreak(), 'day streak', 'best: ' + longestStreak() + ' days')}${kpi(rev7, 'reviews, last 7 days', (dl >= 0 ? '▲ ' : '▼ ') + Math.abs(dl) + ' vs the week before')}${kpi(fmtMin(time7), 'study time, last 7 days', 'practice, walks and reading')}${kpi(ret == null ? '–' : ret + '%', 'answered correctly', tr + ' answers in total')}${kpi(m + '<span class="muted" style="font-size:1rem;font-weight:600"> / ' + N + '</span>', 'phrases mastered', pct(m, N) + '%')}</div>
+    <div class="pg-card"><h3>Reviews per day</h3><p class="sub">Last ${pg.days} days${goal ? ' · dashed line is your daily goal' : ''}. Today is gold.</p>${barChart(dayItems, { goal, aria: 'Reviews per day' })}
+      <details style="margin-top:8px"><summary style="cursor:pointer;color:var(--muted);font-size:.86rem">Show as a table</summary><div style="max-height:220px;overflow:auto"><table style="width:100%;font-size:.86rem;border-collapse:collapse"><thead><tr><th align="left">Day</th><th align="right">Reviews</th><th align="right">Study time</th></tr></thead><tbody>${days.slice().reverse().map(d => `<tr><td>${esc(shortDate(d.d))}</td><td align="right">${state.days[d.k] || 0}</td><td align="right">${state.time[d.k] ? fmtMin(state.time[d.k]) : '–'}</td></tr>`).join('')}</tbody></table></div></details></div>
+    <div class="pg-card"><h3>Activity</h3><p class="sub">The last 20 weeks — darker means more reviews.</p><div class="pg-heat" aria-label="Activity calendar">${heat}</div><div class="pg-leg"><span style="--c:var(--surface2)">none</span><span style="--c:color-mix(in srgb,var(--accent) 45%,var(--surface2))">some</span><span style="--c:var(--accent)">${goal ? 'goal reached' : 'most'}</span></div></div>
+    <div class="pg-two"><div class="pg-card"><h3>Mastered phrases over time</h3><p class="sub">${hist.length > 1 ? '<span style="color:var(--green)">●</span> mastered &nbsp; <span style="color:var(--muted)">●</span> all phrases' : 'The history starts today — come back tomorrow to see the line grow.'}</p>${hist.length > 1 ? lineChart(hist.slice(-120)) : `<div class="pg-kpi" style="margin-top:6px"><div class="v">${m}</div><div class="l">mastered of ${N} so far</div></div>`}</div>
+      <div class="pg-card"><h3>Phrases added per week</h3><p class="sub">The last 12 weeks.</p>${barChart(wk, { aria: 'Phrases added per week' })}</div></div>
+    <div class="pg-two"><div class="pg-card"><h3>Coming up</h3><p class="sub">Reviews due in the next 14 days. “Today” includes anything overdue.</p>${barChart(fItems, { aria: 'Reviews due per day' })}</div>
+      ${hasTime ? `<div class="pg-card"><h3>Study time per day</h3><p class="sub">Minutes, last ${pg.days} days.</p>${barChart(timeItems, { unit: '', aria: 'Study minutes per day' })}</div>` : `<div class="pg-card"><h3>Study time</h3><p class="sub">Time is counted while a practice session, a listening walk or a Reader text is open. Nothing recorded yet — start a session and it shows up here.</p></div>`}</div>
+    <div class="pg-card"><h3>Your phrases</h3><p class="sub">${N} in total</p><div class="pg-seg3" style="height:18px" role="img" aria-label="${m} mastered, ${l} learning, ${nw} new"><i style="flex:${m};background:var(--green)"></i><i style="flex:${l};background:var(--gold)"></i><i style="flex:${nw};background:var(--surface2)"></i></div>
+      <div class="pg-leg"><span style="--c:var(--green)">Mastered ${m}</span><span style="--c:var(--gold)">Learning ${l}</span><span style="--c:var(--surface2)">New ${nw}</span></div>
+      <p class="sub" style="margin:10px 0 0">By review stage: <b>${fresh}</b> not started · <b>${learning}</b> in learning steps · <b>${young}</b> young (under 3 weeks) · <b>${mature}</b> mature</p>
+      ${weak ? `<p style="margin:10px 0 0"><b>⚠ ${weak}</b> weak spot${weak === 1 ? '' : 's'} <button class="btn sm primary" data-go="rescue" style="margin-left:8px">Rescue session</button></p>` : ''}</div>
+    <div class="pg-card"><h3>By lesson</h3><p class="sub">Mastered / learning / new in each lesson or category.</p>${catRows.slice(0, 15).join('') || '<p class="muted">No phrases yet.</p>'}${catRows.length > 15 ? `<details><summary style="cursor:pointer;color:var(--muted);font-size:.86rem">Show ${catRows.length - 15} more</summary>${catRows.slice(15).join('')}</details>` : ''}</div></div>`;
+}
+const pgTip = document.body.appendChild(Object.assign(document.createElement('div'), { id: 'pgTip' }));
+function pgShowTip(ev) { const t = ev.target.closest && ev.target.closest('[data-tip]'); if (!t || !$('#progressRoot').contains(t)) { pgTip.style.display = 'none'; return; } pgTip.textContent = t.dataset.tip; pgTip.style.display = 'block'; const w = pgTip.offsetWidth; pgTip.style.left = Math.max(8, Math.min(innerWidth - w - 8, ev.clientX - w / 2)) + 'px'; pgTip.style.top = Math.max(8, ev.clientY - 40) + 'px'; }
+$('#progressRoot').addEventListener('pointermove', pgShowTip); $('#progressRoot').addEventListener('pointerdown', pgShowTip); $('#progressRoot').addEventListener('pointerleave', () => { pgTip.style.display = 'none'; });
+document.addEventListener('pointerup', ev => { if (ev.pointerType !== 'mouse') setTimeout(() => { pgTip.style.display = 'none'; }, 1400); });
+$('#progressRoot').addEventListener('click', ev => {
+  const d = ev.target.closest('[data-pgd]'); if (d) { pg.days = +d.dataset.pgd; renderProgress(); return; }
+  if (ev.target.closest('[data-go="rescue"]')) { pr.cfg = Object.assign({}, pr.cfg, { scope: 'weak', count: 10, cat: 'all', audioOnly: false }); showTab('practice'); startSession(); }
+});
+document.addEventListener('click', ev => { const g = ev.target.closest('[data-go="progress"]'); if (g) showTab('progress'); });
+
 function startSession() {
   const c = pr.cfg; let ids = queueInfo(c).list.map(e => e.id); if (!ids.length) { toast('Nothing to practise with those settings.', 'warn'); return; }
   if (c.count) ids = ids.slice(0, c.count);
   Object.assign(pr, { active: true, done: false, queue: ids, i: 0, mode: c.mode, tally: { again: 0, hard: 0, good: 0, easy: 0 } }); showCardAudio();
 }
 function showCardAudio() {
-  shadowReset(); pr.revealed = pr.mode === 'shadow'; pr.result = null; pr.t0 = Date.now(); renderPractice();
+  shadowReset(); pr.revealed = pr.mode === 'shadow'; pr.result = null; pr.t0 = Date.now();
+  { const ce = byId(pr.queue[pr.i]); pr.cz = pr.mode === 'cloze' && ce ? clozePick(ce) : null; }
+  renderPractice();
   const e = byId(pr.queue[pr.i]); if (e && (pr.mode === 'listen' || pr.mode === 'dictation' || pr.mode === 'shadow')) playEntry(e.id, { restart: true });
   if (isTyped(pr.mode)) { const i = $('#prInput'); if (i) setTimeout(() => i.focus({ preventScroll: true }), 40); }
 }
@@ -2089,9 +2608,9 @@ function checkTyped(skip) {
   if (!pr.active || pr.revealed || !isTyped(pr.mode)) return; const e = byId(pr.queue[pr.i]); if (!e) return;
   const typed = skip ? '' : ($('#prInput') ? $('#prInput').value : '');
   if (!skip && !typed.trim()) { toast('Type your answer first, or press “I don’t know”.', 'warn'); return; }
-  const j = skip ? { kind: 'skip', suggest: 'again', typed: '', target: '' } : judgeTyped(typed, e.lt);
+  const j = skip ? { kind: 'skip', suggest: 'again', typed: '', target: '' } : judgeTyped(typed, pr.mode === 'cloze' && pr.cz ? pr.cz.word : e.lt);
   j.diff = (j.kind === 'exact' || j.kind === 'skip') ? null : diffParts(j.typed, j.target); j.ms = Date.now() - pr.t0;
-  pr.result = j; pr.revealed = true; renderPractice(); if (pr.mode === 'type') playEntry(e.id, { restart: true });
+  pr.result = j; pr.revealed = true; renderPractice(); if (pr.mode === 'type' || pr.mode === 'cloze') playEntry(e.id, { restart: true });
 }
 function rateCard(r) {
   if (!pr.active || !pr.revealed) return; const e = byId(pr.queue[pr.i]); if (!e) return;
@@ -2188,7 +2707,12 @@ function shadowWire(e) {
 =================================================================== */
 function renderBackup() {
   const last = state.lastExport ? new Date(state.lastExport).toLocaleString() : 'never';
-  $('#backupRoot').innerHTML = `<div class="two">
+  $('#backupRoot').innerHTML = `<div class="panel" style="margin-bottom:14px" id="syncPanel"><h2 class="sec">⇄ Sync your devices</h2>
+    <p class="muted" style="margin-top:0">Use one backup file in a shared folder (for example Google Drive) for all your devices. Syncing keeps the <b>newer version of every phrase</b> and carries deletions, so an older file can’t overwrite newer practice.</p>
+    <label style="display:flex;gap:8px;align-items:center;margin-bottom:10px"><input type="checkbox" id="syncAudio" ${state.settings.syncAudio ? 'checked' : ''}> Include phrase audio in the sync file (much bigger)</label>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="btn primary" id="btnSync">⇄ Sync with file…</button><span class="muted" id="syncInfo">Last sync: <b>${state.lastSync ? esc(new Date(state.lastSync).toLocaleString()) : 'never'}</b></span></div>
+    <div id="syncLink" style="margin-top:10px"></div></div>
+  <div class="two">
     <div class="panel"><h2 class="sec">⤒ Export</h2><p class="muted" style="margin-top:0">Saves phrases, notes, favorites, mastery, review history and your lesson clip splits. Last export: <b>${esc(last)}</b>.</p>
       <label style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><input type="checkbox" id="expAudio"> Include phrase audio</label>
       <label style="display:flex;gap:8px;align-items:center;margin:0 0 6px 24px"><input type="checkbox" id="expLessons" disabled> Also the full lesson MP3s</label>
@@ -2204,6 +2728,11 @@ function renderBackup() {
       <p class="muted" style="font-size:.84rem;margin:10px 0 0"><b>iPhone / iPad:</b> Share → <i>Add to Home Screen</i>. <b>Android / desktop Chrome &amp; Edge:</b> use Install.</p></div>
     <div class="panel"><h2 class="sec">Delete all phrases</h2><p class="muted" style="margin-top:0">Empties the dictionary but keeps your lesson audio and clip splits, so you can re-add phrases from the Lessons tab.</p><button class="btn danger" id="btnWipePhrases">Delete all phrases…</button></div>
     <div class="panel"><h2 class="sec">Erase everything</h2><p class="muted" style="margin-top:0">Deletes all phrases, lessons, stored audio and progress from this browser.</p><button class="btn danger" id="btnWipe">Erase everything…</button></div></div>`;
+  $('#btnSync').onclick = syncNow; $('#syncAudio').onchange = ev => { state.settings.syncAudio = ev.target.checked; save(); };
+  (async () => { const box = $('#syncLink'); if (!box) return; const h = await syncH.get(); if (!box.isConnected) return;       // the panel was redrawn while we waited
+    if (!canLink()) { box.innerHTML = '<p class="muted" style="font-size:.86rem;margin:0">On this device Sync asks you to choose the file, merges it, then downloads the updated file to upload again. (One-tap sync with a linked file works in desktop Chrome and Edge.)</p>'; return; }
+    box.innerHTML = h ? `<span class="muted" style="font-size:.86rem">Linked file: <b>${esc(h.name)}</b> — Sync reads it, merges, and writes it back.</span> <button class="btn sm" id="btnUnlink">Unlink</button>` : '<span class="muted" style="font-size:.86rem">Link a file for one-tap sync:</span> <button class="btn sm" id="btnLinkOpen">Choose existing file…</button> <button class="btn sm" id="btnLinkNew">Create new file…</button>';
+    if (h) box.querySelector('#btnUnlink').onclick = async () => { await syncH.set(null); renderBackup(); }; else { box.querySelector('#btnLinkOpen').onclick = () => linkSyncFile(false); box.querySelector('#btnLinkNew').onclick = () => linkSyncFile(true); } })();
   $('#btnAnki').onclick = exportAnki; $('#btnExport').onclick = exportJSON; $('#btnJson').onclick = () => $('#fileJson').click();
   $('#expAudio').onchange = () => { const x = $('#expLessons'); x.disabled = !$('#expAudio').checked; if (x.disabled) x.checked = false; };
   renderStorageInfo();
@@ -2215,23 +2744,27 @@ function renderBackup() {
   $('#btnWipe').onclick = async () => {
     if (!await confirmBox('Erase everything?', 'All phrases, lessons, progress and stored audio in this browser will be deleted. <b>Export a backup first</b> if you may want them back.', 'Erase everything', true)) return;
     stopAudio(); const ids = new Set(); state.entries.forEach(e => e.audioId && ids.add(e.audioId)); state.lessons.forEach(l => l.audioId && ids.add(l.audioId));
-    state.entries = []; state.lessons = []; state.days = {}; lv.open = null; wb = null; for (const id of ids) await deleteAudio(id); save(); refresh(); toast('Everything erased.');
+    state.entries = []; state.lessons = []; state.texts = []; state.tomb = {}; state.time = {}; state.hist = {}; rd.open = null; state.days = {}; lv.open = null; wb = null; for (const id of ids) await deleteAudio(id); save(); refresh(); toast('Everything erased.');
   };
 }
 const blobToDataURL = b => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
+async function buildBackup(withAudio, withLessons) {
+  stampChanges();
+  const base = { app: 'lithuanian-audio-dashboard', version: 2, exported: new Date().toISOString(), entries: state.entries, lessons: state.lessons, texts: state.texts, tomb: state.tomb, time: state.time, hist: state.hist, days: state.days, counts: state.counts, settings: state.settings };
+  const head = JSON.stringify(base), parts = [];
+  if (!withAudio) parts.push(head);
+  else {
+    parts.push(head.slice(0, -1) + ',"audio":{'); const names = new Map(); state.entries.forEach(e => e.audioId && names.set(e.audioId, e.audioName)); if (withLessons) state.lessons.forEach(l => l.audioId && !names.has(l.audioId) && names.set(l.audioId, l.name)); let first = true;
+    for (const [id, name] of names) { const b = await getBlob(id); if (!b) continue; parts.push((first ? '' : ',') + JSON.stringify(id) + ':' + JSON.stringify({ name, type: b.type, data: await blobToDataURL(b) })); first = false; }
+    parts.push('}}');
+  }
+  return new Blob(parts, { type: 'application/json' });
+}
+function downloadBlob(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
 async function exportJSON() {
   const withAudio = $('#expAudio').checked, btn = $('#btnExport'); btn.disabled = true; btn.textContent = 'Preparing…';
   try {
-    const base = { app: 'lithuanian-audio-dashboard', version: 2, exported: new Date().toISOString(), entries: state.entries, lessons: state.lessons, days: state.days, settings: state.settings };
-    const head = JSON.stringify(base), parts = [];
-    if (!withAudio) parts.push(head);
-    else {
-      parts.push(head.slice(0, -1) + ',"audio":{'); const names = new Map(); state.entries.forEach(e => e.audioId && names.set(e.audioId, e.audioName)); if ($('#expLessons').checked) state.lessons.forEach(l => l.audioId && !names.has(l.audioId) && names.set(l.audioId, l.name)); let first = true;
-      for (const [id, name] of names) { const b = await getBlob(id); if (!b) continue; parts.push((first ? '' : ',') + JSON.stringify(id) + ':' + JSON.stringify({ name, type: b.type, data: await blobToDataURL(b) })); first = false; }
-      parts.push('}}');
-    }
-    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(parts, { type: 'application/json' }));
-    a.download = 'lithuanian-dashboard-' + todayStr() + (withAudio ? '-with-audio' : '') + '.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    downloadBlob(await buildBackup(withAudio, withAudio && $('#expLessons').checked), 'lithuanian-dashboard-' + todayStr() + (withAudio ? '-with-audio' : '') + '.json');
     state.lastExport = Date.now(); save(); toast('Backup downloaded.');
   } catch (err) { toast('Export failed: ' + err.message, 'err'); }
   btn.disabled = false; btn.textContent = 'Download backup'; renderBackup();
@@ -2303,31 +2836,129 @@ async function exportAnki() {
   btn.disabled = false; btn.textContent = label;
 }
 $('#fileJson').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) importJSONFile(f); };
+/* ---- merging a backup into this device: newest change per phrase wins, deletions travel along ---- */
+async function mergeData(data, smart, dry) {
+  const S = { add: 0, upd: 0, same: 0, kept: 0, del: 0, skip: 0, noAudio: 0, lNew: 0, lUpd: 0, tNew: 0, tUpd: 0, need: new Set() };
+  const incE = (data.entries || []).filter(e => e && (e.lt || e.stress)).map(mkEntry), incTomb = (smart && data.tomb) || {}, hasAudio = id => !!(data.audio && data.audio[id]);
+  const byIdM = new Map(state.entries.map(e => [e.id, e])), byKeyM = new Map(); state.entries.forEach(e => { const k = ekey(e); if (!byKeyM.has(k)) byKeyM.set(k, e); });
+  const adds = [], upds = [], idMap = new Map(), incOf = new Map();
+  for (const i of incE) {
+    const t = byIdM.get(i.id) || byKeyM.get(ekey(i));
+    if (!t) { if (smart && tombOf(i.id, ekey(i)) >= Math.max(i.upd, 1)) { S.skip++; continue; } adds.push(i); idMap.set(i.id, i.id); if (i.audioId) { if (hasAudio(i.audioId)) S.need.add(i.audioId); else S.noAudio++; } continue; }
+    idMap.set(i.id, t.id); incOf.set(t.id, i);
+    if (smart && entryFP(i) === entryFP(t)) { S.same++; continue; }
+    if (smart && !(i.upd > t.upd)) { S.kept++; continue; }
+    upds.push([t, i]); if (!t.audioId && i.audioId && hasAudio(i.audioId)) S.need.add(i.audioId);
+  }
+  const dels = []; for (const [k, ts] of Object.entries(incTomb)) { if (k[0] === 'T') continue; const t = k.startsWith('k:') ? byKeyM.get(k.slice(2)) : byIdM.get(k); const i = t && incOf.get(t.id); if (t && ts > t.upd && !(i && i.upd >= ts) && !dels.includes(t)) dels.push(t); }
+  S.del = dels.length; S.upd = upds.length; S.add = adds.length;
+  const lsig = l => l.title + JSON.stringify(l.clips.map(c => [c.t0, c.t1, c.text, c.type])), lOps = [], lMap = new Map();
+  for (const il of (data.lessons || []).map(mkLesson)) {
+    const ex = lessonById(il.id) || state.lessons.find(l => l.name && l.name === il.name);
+    if (!ex) { S.lNew++; lOps.push([null, il]); if (il.audioId && hasAudio(il.audioId)) S.need.add(il.audioId); }
+    else { lMap.set(il.id, ex.id); const newer = !smart || il.upd > ex.upd; if (newer && lsig(il) !== lsig(ex)) { S.lUpd++; lOps.push([ex, il]); } else lOps.push([ex, null, il]); if (!ex.audioId && il.audioId && hasAudio(il.audioId)) S.need.add(il.audioId); }
+  }
+  const tOps = []; for (const it of (data.texts || []).map(mkText)) {
+    const ex = state.texts.find(x => x.id === it.id);
+    if (!ex) { if (smart && (state.tomb['T' + it.id] || 0) >= Math.max(it.upd, 1)) continue; S.tNew++; tOps.push([null, it]); }
+    else if ((!smart || it.upd > ex.upd) && (it.body !== ex.body || it.title !== ex.title)) { S.tUpd++; tOps.push([ex, it]); }
+  }
+  if (dry) return S;
+  if (dels.length) await deleteEntries(dels.map(e => e.id), true);
+  const incIds = new Set(incE.map(e => e.id)), fixClips = il => il.clips.forEach(c => { if (c.entryId && incIds.has(c.entryId)) c.entryId = idMap.get(c.entryId) || null; });
+  for (const i of adds) { i.lessonId = lMap.get(i.lessonId) || i.lessonId; state.entries.push(i); }
+  for (const [t, i] of upds) {
+    const keep = { id: t.id, audioId: t.audioId || i.audioId, audioName: t.audioName || i.audioName, lessonId: lMap.get(i.lessonId) || i.lessonId };
+    if (t.audioId) Object.assign(keep, { clip: t.clip, s0: t.s0, s1: t.s1, t0: t.t0, t1: t.t1 });
+    Object.assign(t, i, keep); t.upd = smart ? i.upd : Date.now();
+  }
+  for (const [ex, il, src] of lOps) {
+    if (!ex) { fixClips(il); state.lessons.push(il); }
+    else if (il) { fixClips(il); const keep = ex.audioId; Object.assign(ex, il, { id: ex.id, audioId: keep || il.audioId }); }
+    else if (!ex.audioId && src && src.audioId) ex.audioId = src.audioId;
+  }
+  for (const [ex, it] of tOps) { if (!ex) state.texts.push(it); else Object.assign(ex, it); }
+  for (const [k, v] of Object.entries(incTomb)) state.tomb[k] = Math.max(state.tomb[k] || 0, +v || 0);
+  for (const [k, v] of Object.entries(data.days || {})) state.days[k] = Math.max(state.days[k] || 0, +v || 0);
+  for (const [k, v] of Object.entries(data.time || {})) state.time[k] = Math.max(state.time[k] || 0, +v || 0);
+  for (const [k, v] of Object.entries(data.hist || {})) if (!state.hist[k] && Array.isArray(v)) state.hist[k] = v.slice(0, 3).map(Number);
+  const c = data.counts, lc = dayCounts(); if (c && c.d === lc.d) { lc.n = Math.max(lc.n, +c.n || 0); lc.r = Math.max(lc.r, +c.r || 0); }
+  return S;
+}
+async function importAudioFrom(data, ids) {
+  if (!data.audio) return; const have = new Set((await idb('readonly', s => s.getAllKeys()).catch(() => [])) || []); mem.forEach((_, k) => have.add(k));
+  for (const id of (ids || Object.keys(data.audio))) { const a = data.audio[id]; if (!a || !a.data || (ids && have.has(id))) continue; const blob = await (await fetch(a.data)).blob(); mem.set(id, new Blob([blob], { type: a.type || blob.type || 'audio/mpeg' })); await idbPut(id, mem.get(id)); }
+}
+const planHTML = S => {
+  const li = (n, t) => n ? `<li><b>${n}</b> ${t}</li>` : '';
+  const body = li(S.add, `new phrase${S.add === 1 ? '' : 's'} added`) + li(S.upd, `updated from the file (file is newer)`) + li(S.kept, `kept as they are (yours are newer)`) + li(S.del, `removed (deleted on another device)`) + li(S.skip, `skipped (you deleted them here)`) + li(S.same, `already identical`) + li(S.lNew + S.lUpd, `lesson${S.lNew + S.lUpd === 1 ? '' : 's'} added or updated`) + li(S.tNew + S.tUpd, `text${S.tNew + S.tUpd === 1 ? '' : 's'} added or updated`);
+  return `<ul style="margin:6px 0 0;padding-left:20px">${body || '<li>Nothing to change — this device is already up to date.</li>'}</ul>${S.noAudio ? `<p class="muted" style="font-size:.86rem">${S.noAudio} new phrase${S.noAudio === 1 ? ' arrives' : 's arrive'} without audio because the file has none. Import a file saved with “Include phrase audio” once to get it.</p>` : ''}`;
+};
+async function readBackup(file) {
+  let data; try { data = JSON.parse(await file.text()); } catch (e) { toast('That file is not valid JSON.', 'err'); return null; }
+  if (!data || !Array.isArray(data.entries)) { toast('This does not look like a dashboard backup.', 'err'); return null; } return data;
+}
 async function importJSONFile(file) {
-  let data; try { data = JSON.parse(await file.text()); } catch (e) { toast('That file is not valid JSON.', 'err'); return; }
-  if (!data || !Array.isArray(data.entries)) { toast('This does not look like a dashboard backup.', 'err'); return; }
-  const n = data.entries.length, nl = (data.lessons || []).length, hasA = data.audio ? Object.keys(data.audio).length : 0;
-  const m = openModal(`<div class="modal-head"><h2>Import backup</h2></div><div class="modal-body"><p>Found <b>${n}</b> phrase${n === 1 ? '' : 's'}, <b>${nl}</b> lesson${nl === 1 ? '' : 's'}${hasA ? ` and <b>${hasA}</b> audio file${hasA === 1 ? '' : 's'}` : ''}.</p>
-    <p class="muted"><b>Merge</b> keeps what you have and adds/updates from the file. <b>Replace</b> discards everything stored now.</p></div>
-    <div class="modal-foot"><button class="btn" data-x>Cancel</button><button class="btn danger" data-mode="replace">Replace all</button><button class="btn primary" data-mode="merge">Merge</button></div>`);
+  const data = await readBackup(file); if (!data) return;
+  const n = data.entries.length, nl = (data.lessons || []).length, hasA = data.audio ? Object.keys(data.audio).length : 0, S = await mergeData(data, true, true);
+  const m = openModal(`<div class="modal-head"><h2>Import backup</h2></div><div class="modal-body"><p style="margin-top:0">The file has <b>${n}</b> phrase${n === 1 ? '' : 's'}, <b>${nl}</b> lesson${nl === 1 ? '' : 's'}${hasA ? ` and <b>${hasA}</b> audio file${hasA === 1 ? '' : 's'}` : ''}.</p>
+    <p style="margin-bottom:0"><b>Smart merge</b> keeps the newer version of every phrase, so you never lose newer practice:</p>${planHTML(S)}
+    <p class="muted" style="font-size:.86rem;margin-bottom:0"><b>Overwrite</b> makes matching phrases look like the file. <b>Replace all</b> discards everything stored here first.</p></div>
+    <div class="modal-foot"><button class="btn" data-x>Cancel</button><button class="btn danger" data-mode="replace">Replace all</button><button class="btn" data-mode="merge">Overwrite</button><button class="btn primary" data-mode="smart">Smart merge</button></div>`);
   m.el.addEventListener('click', async ev => {
     if (ev.target.closest('[data-x]')) return m.close(); const b = ev.target.closest('[data-mode]'); if (!b) return; b.disabled = true; b.textContent = 'Importing…';
     try { await applyImport(data, b.dataset.mode); toast('Backup imported.'); } catch (err) { console.error(err); toast('Import failed: ' + err.message, 'err'); } m.close();
   });
 }
 async function applyImport(data, mode) {
-  stopAudio(); lv.open = null; wb = null;
-  if (mode === 'replace') { const ids = new Set(); state.entries.forEach(e => e.audioId && ids.add(e.audioId)); state.lessons.forEach(l => l.audioId && ids.add(l.audioId)); state.entries = []; state.lessons = []; state.days = {}; for (const id of ids) await deleteAudio(id); }
-  for (const [id, a] of Object.entries(data.audio || {})) { if (!a || !a.data) continue; const blob = await (await fetch(a.data)).blob(); mem.set(id, new Blob([blob], { type: a.type || blob.type || 'audio/mpeg' })); await idbPut(id, mem.get(id)); }
-  for (const il of (data.lessons || []).map(mkLesson)) { const ex = lessonById(il.id) || state.lessons.find(l => l.name && l.name === il.name); if (ex) { const keep = ex.audioId; Object.assign(ex, il, { id: ex.id, audioId: keep || il.audioId }); } else state.lessons.push(il); }
-  for (const inc of data.entries.filter(e => e && (e.lt || e.stress)).map(mkEntry)) {
-    const t = state.entries.find(e => e.id === inc.id) || state.entries.find(e => key(stripStress(e.lt)) === key(stripStress(inc.lt)) && e.cat === inc.cat);
-    if (t) { const keep = { id: t.id, audioId: t.audioId || inc.audioId, audioName: t.audioName || inc.audioName }; if (t.audioId) Object.assign(keep, { clip: t.clip, s0: t.s0, s1: t.s1, t0: t.t0, t1: t.t1 }); Object.assign(t, inc, keep); } else state.entries.push(inc);
-  }
-  for (const [k, v] of Object.entries(data.days || {})) state.days[k] = Math.max(state.days[k] || 0, +v || 0);
-  if (mode === 'replace' && data.settings) state.settings = Object.assign({}, DEF_SETTINGS, data.settings);
-  await verifyAudioRefs(); applyTheme(); save(); refresh();
+  stopAudio(); lv.open = null; wb = null; const smart = mode === 'smart';
+  if (mode === 'replace') { const ids = new Set(); state.entries.forEach(e => e.audioId && ids.add(e.audioId)); state.lessons.forEach(l => l.audioId && ids.add(l.audioId)); state.entries = []; state.lessons = []; state.texts = []; state.tomb = {}; state.days = {}; state.time = {}; state.hist = {}; for (const i of ids) await deleteAudio(i); }
+  const S = await mergeData(data, smart, false);
+  await importAudioFrom(data, mode === 'replace' || !smart ? null : [...S.need]);
+  if (mode === 'replace') { state.tomb = data.tomb && typeof data.tomb === 'object' ? data.tomb : {}; if (data.settings) state.settings = Object.assign({}, DEF_SETTINGS, data.settings); }
+  await verifyAudioRefs(); stampChanges(true); applyTheme(); save(); refresh(); return S;
 }
+
+/* ---- sync with one shared file (e.g. on Google Drive) ---- */
+const syncDB = () => new Promise((res, rej) => { const r = indexedDB.open('ltSync', 1); r.onupgradeneeded = () => r.result.createObjectStore('h'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+const syncH = {
+  async get() { try { const d = await syncDB(); return await new Promise(res => { const q = d.transaction('h').objectStore('h').get('file'); q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); }); } catch (e) { return null; } },
+  async set(h) { const d = await syncDB(); return new Promise(res => { const tx = d.transaction('h', 'readwrite'); h ? tx.objectStore('h').put(h, 'file') : tx.objectStore('h').delete('file'); tx.oncomplete = () => res(); tx.onerror = () => res(); }); }
+};
+const canLink = () => !!(window.showOpenFilePicker && window.showSaveFilePicker);
+async function syncWrite(handle) { const w = await handle.createWritable(); await w.write(await buildBackup(!!state.settings.syncAudio, false)); await w.close(); state.lastSync = Date.now(); save(); }
+const syncSummary = S => { const bits = [S.add && S.add + ' added', S.upd && S.upd + ' updated', S.del && S.del + ' removed', S.lNew + S.lUpd && (S.lNew + S.lUpd) + ' lesson(s)'].filter(Boolean); return bits.length ? bits.join(', ') : 'already up to date'; };
+async function syncNow() {
+  const h = await syncH.get();
+  if (!h) { $('#fileSync').click(); return; }                                      // no linked file: pick one, merge, download
+  const btn = $('#btnSync'); if (btn) { btn.disabled = true; btn.textContent = 'Syncing…'; }
+  try {
+    if ((await h.requestPermission({ mode: 'readwrite' })) !== 'granted') { toast('Allow access to the file to sync.', 'warn'); return; }
+    const f = await h.getFile(); let S = null;
+    if (f.size > 2) { const data = await readBackup(f); if (!data) return; S = await applyImport(data, 'smart'); }
+    await syncWrite(h); toast('Synced — ' + (S ? syncSummary(S) : 'file created') + '.');
+  } catch (err) { console.error(err); toast('Sync failed: ' + (err.message || err), 'err'); }
+  finally { renderBackup(); }
+}
+async function syncPicked(file) {                                                   // phone / no linked file: preview, merge, then download the merged file
+  const data = await readBackup(file); if (!data) return; const S = await mergeData(data, true, true);
+  const m = openModal(`<div class="modal-head"><h2>Sync with “${esc(file.name)}”</h2><button class="icon-btn" data-x aria-label="Close">✕</button></div><div class="modal-body"><p style="margin-top:0">This is what will change on this device:</p>${planHTML(S)}
+    <p class="muted" style="font-size:.86rem">After merging, an updated file is downloaded. Upload it to your shared folder (replace the old file) so your other devices get the same data.</p></div>
+    <div class="modal-foot"><button class="btn" data-x>Cancel</button><button class="btn primary" id="syncGo">Merge &amp; download updated file</button></div>`);
+  $('#syncGo', m.el).onclick = async ev => {
+    ev.target.disabled = true; ev.target.textContent = 'Working…';
+    try { await applyImport(data, 'smart'); downloadBlob(await buildBackup(!!state.settings.syncAudio, false), 'lithuanian-dashboard-sync.json'); state.lastSync = Date.now(); save(); toast('Merged. Upload the downloaded file to replace the old one.'); }
+    catch (err) { console.error(err); toast('Sync failed: ' + (err.message || err), 'err'); } m.close(); renderBackup();
+  };
+}
+async function linkSyncFile(create) {
+  try {
+    const opts = { types: [{ description: 'Backup', accept: { 'application/json': ['.json'] } }] };
+    const h = create ? await window.showSaveFilePicker(Object.assign({ suggestedName: 'lithuanian-dashboard-sync.json' }, opts)) : (await window.showOpenFilePicker(opts))[0];
+    await syncH.set(h); toast('File linked. Press Sync to merge and update it.'); renderBackup();
+  } catch (e) { if (e && e.name !== 'AbortError') toast('Could not link the file: ' + e.message, 'err'); }
+}
+$('#fileSync').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) syncPicked(f); };
 async function verifyAudioRefs() {
   if (!db) { state.entries.forEach(e => { if (!mem.has(e.audioId)) { e.audioId = null; } }); state.lessons.forEach(l => { if (!mem.has(l.audioId)) l.audioId = null; }); return; }
   const keys = new Set((await idb('readonly', s => s.getAllKeys()).catch(() => [])) || []); mem.forEach((_, k) => keys.add(k)); let lost = 0;
@@ -2349,12 +2980,21 @@ function showTab(name, keepLesson) {
   if (pr.active && name !== 'practice') { pr.active = false; shadowReset(); stopAudio(); }
   if (name !== 'lessons' && wb) { /* keep decoded audio while browsing other tabs */ }
   tab = name; $$('.tab').forEach(s => s.hidden = s.id !== 'tab-' + name);
-  $$('nav.tabs button').forEach(b => b.setAttribute('aria-current', b.dataset.tab === name ? 'page' : 'false'));
-  if (name === 'practice') renderPractice(); if (name === 'lessons') { if (!keepLesson && !wb) lv.open = null; renderLessons(); }
+  $$('nav.tabs button, #tabbar button').forEach(b => b.setAttribute('aria-current', (b.dataset.tab === name || (name === 'progress' && b.closest('#tabbar') && b.dataset.tab === 'practice')) ? 'page' : 'false'));
+  if (name === 'progress') renderProgress(); if (name === 'reader') renderReader(); if (name === 'practice') renderPractice(); if (name === 'lessons') { if (!keepLesson && !wb) lv.open = null; renderLessons(); }
   if (name === 'backup') renderBackup(); if (name === 'dict') { renderStats(); renderChips(); renderList(); }
   window.scrollTo({ top: 0 }); syncWbOpen();
 }
-$$('nav.tabs button').forEach(b => b.onclick = () => showTab(b.dataset.tab, b.dataset.tab === 'lessons' && !!wb));
+$$('nav.tabs button, #tabbar button').forEach(b => b.onclick = () => showTab(b.dataset.tab, b.dataset.tab === 'lessons' && !!wb));
+function updateTabBadge() {        // number of cards waiting in a default practice session, shown on the Practice tab of the bottom bar
+  const b = $('#tbBadge'); if (!b) return; let n = 0;
+  try { n = pr.active ? 0 : queueInfo({ scope: 'due', cat: 'all', audioOnly: false, mode: 'listen' }).list.length; } catch (e) {}
+  b.hidden = !n; b.textContent = n > 99 ? '99+' : String(n); const pb = $('#tabbar [data-tab=practice]'); if (pb) pb.setAttribute('aria-label', n ? `Practice, ${n} to do` : 'Practice');
+}
+setInterval(updateTabBadge, 60000); document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') updateTabBadge(); });
+const isTextField = el => !!el && (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && !['checkbox', 'radio', 'range', 'button', 'submit', 'file', 'color'].includes(el.type)));
+document.addEventListener('focusin', e => { if (isTextField(e.target)) document.body.classList.add('typing'); });     // hides the bottom bar while the on-screen keyboard is up
+document.addEventListener('focusout', () => setTimeout(() => { if (!isTextField(document.activeElement)) document.body.classList.remove('typing'); }, 80));
 function applyTheme() {
   const th = state.settings.theme || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
   document.documentElement.dataset.theme = th;
@@ -2375,6 +3015,7 @@ function openHelp() {
 }
 $('#btnHelp').onclick = openHelp;
 function updateTopH() { const h = $('.top'); if (h) document.documentElement.style.setProperty('--top-h', (getComputedStyle(h).position === 'sticky' ? h.offsetHeight : 0) + 'px'); }
+window.addEventListener('resize', () => { updateTopH(); }); window.addEventListener('orientationchange', () => setTimeout(updateTopH, 200));
 function syncWbOpen() { document.body.classList.toggle('wb-open', tab === 'lessons' && !!lv.open && !!wb); updateTopH(); }
 (() => { const h = $('.top'); if (!h) return; updateTopH(); if (window.ResizeObserver) new ResizeObserver(updateTopH).observe(h); matchMedia('(max-width:700px)').addEventListener('change', updateTopH); })();
 document.addEventListener('keydown', ev => {
