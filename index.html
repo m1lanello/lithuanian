@@ -201,7 +201,10 @@ code.k{background:var(--bg2);border:1px solid var(--line);border-radius:5px;padd
 .clip input[type=text]{padding:5px 9px}
 .clip .pair{grid-column:5;font-size:.78rem;color:var(--muted);margin-top:-2px;padding-left:4px}
 .clip .added{color:var(--green);font-weight:800}
-.wb-foot{position:sticky;bottom:0;z-index:20;margin-top:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--accent);border-radius:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;box-shadow:0 -6px 20px rgba(0,0,0,.22)}
+.wb-foot{position:sticky;bottom:0;z-index:20;margin-top:10px;padding:6px 10px;background:var(--surface);border:1px solid var(--accent);border-radius:12px;display:flex;gap:8px;align-items:center;flex-wrap:nowrap;box-shadow:0 -4px 14px rgba(0,0,0,.18)}
+.wb-foot #wbFootInfo{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.88rem}.wb-foot .btn{flex:none;white-space:nowrap}.wb-foot .btn:disabled{opacity:.4}
+@media (max-width:700px){.wb-foot .wide{display:none}}
+.toast-act{margin-left:12px;background:transparent;border:1px solid currentColor;color:inherit;border-radius:8px;padding:2px 10px;font:inherit;font-weight:700;cursor:pointer}
 body.has-np .wb-foot{bottom:68px}
 
 /* modal / toast */
@@ -418,6 +421,8 @@ main{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env
 .hl .w-u{border-bottom-color:var(--red);border-bottom-style:dashed}
 .rd-new{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .rd-new .chip{cursor:pointer}
+.bd-ans{min-height:54px;border:2px dashed var(--line);border-radius:12px;padding:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;margin:10px 0}.bd-bank{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}.chip.bd{cursor:pointer;font-size:1.05rem;padding:8px 12px}.chip.bd.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.pp-opts{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:12px 0}.btn.pp{font-size:1.3rem;padding:14px 22px;flex-direction:column;gap:2px;min-width:140px}.btn.pp small{display:block;font-size:.78rem;opacity:.75;font-weight:400}
 .stress-pick{margin-top:8px}.sp{display:flex;flex-wrap:wrap;align-items:center;gap:2px;font-size:1.5rem;line-height:1.2}
 .sp .sl{min-width:1.35em;height:1.7em;border:1px solid var(--line);border-radius:7px;background:var(--surface2);color:var(--text);font:inherit;font-weight:600;padding:0 3px;cursor:pointer}
 .sp .sl:hover{border-color:var(--accent)}.sp .sl.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}.sp .sx{padding:0 2px;color:var(--muted)}
@@ -495,7 +500,7 @@ svg.pg-svg{width:100%;height:auto;display:block;overflow:visible}
       <div>
         <div class="statline" id="stats"></div>
         <div class="toolbar">
-          <div class="search"><input type="search" id="q" placeholder="Search Lithuanian or English…  ( / )" aria-label="Search phrases" autocomplete="off"></div>
+          <div class="search"><input type="search" id="q" placeholder="Search…  ( / )   ·   -oje finds word endings" aria-label="Search phrases" autocomplete="off"></div>
           <select id="catSel" aria-label="Lesson / category"></select>
           <select id="tagSel" aria-label="Grammar tag" hidden></select>
           <select id="sortSel" aria-label="Sort">
@@ -682,10 +687,11 @@ const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = se
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-function toast(msg, type = '') {
+function toast(msg, type = '', act) {
   const t = document.createElement('div'); t.className = 'toast ' + type; t.textContent = msg;
+  if (act) { const b = document.createElement('button'); b.type = 'button'; b.className = 'toast-act'; b.textContent = act.label; b.onclick = () => { t.remove(); act.fn(); }; t.appendChild(b); }
   $('#toasts').appendChild(t);
-  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 300); }, 4200);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 300); }, act ? 8000 : 4200);
 }
 
 /* ===================================================================
@@ -1091,7 +1097,7 @@ let tab = 'dict';
 const cmpCourse = (a, b) => natCmp(a.cat, b.cat) || ((a.lessonId && a.lessonId === b.lessonId && (a.t0 ?? a.s0) != null && (b.t0 ?? b.s0) != null) ? (a.t0 ?? a.s0) - (b.t0 ?? b.s0) : a.order - b.order);
 
 function getFiltered() {
-  const raw = ui.q.trim().toLowerCase(), q = norm(ui.q.trim());
+  const raw = ui.q.trim().toLowerCase(), q = norm(ui.q.trim()), endQ = /^-\p{L}{1,8}$/u.test(raw) ? raw.slice(1).normalize('NFC') : '';
   const list = state.entries.filter(e => {
     if (ui.filter === 'unmastered' && e.status === 2) return false;
     if (ui.filter === 'learning' && e.status !== 1) return false;
@@ -1100,6 +1106,7 @@ function getFiltered() {
     if (ui.cat !== 'all' && e.cat !== ui.cat) return false;
     if (ui.tag !== 'all' && !(e.tags || []).includes(ui.tag)) return false;
     if (!raw) return true;
+    if (endQ) return (e.lt.match(WORD_RE) || []).some(w => wkey(w).endsWith(endQ));
     let h = hayC.get(e); if (!h) { const s = [e.lt, e.stress, e.en, e.cat, e.note, e.ph].join(' ').toLowerCase(); h = { s, n: norm(s) }; hayC.set(e, h); }   // cached until the next save
     return h.s.includes(raw) || h.n.includes(q);
   });
@@ -1826,10 +1833,12 @@ function updatePairHints() {
   const l = lessonById(lv.open); if (!l) return; const pairs = buildPairs(l.clips, l.pairMode);
   $$('#clipRows .clip').forEach(el => { const c = l.clips.find(x => x.id === el.dataset.clip); const p = $('[data-pair]', el); if (c && p) p.innerHTML = pairHint(c, pairs); });
 }
+function wbFootUndo() { const u = $('#wbUndo'), r = $('#wbRedo'); if (u && wb) { u.disabled = !wb.undo.length; r.disabled = !wb.redo.length; } }
 function updateWbFoot() {
-  const l = lessonById(lv.open); if (!l || !$('#wbFoot')) return; const s = wbSummary(l);
-  $('#wbFootInfo').innerHTML = `<b>${s.ready}</b> Lithuanian phrase${s.ready === 1 ? '' : 's'} ready${s.empty ? ` · <span style="color:var(--gold-text)">${s.empty} LT clip${s.empty === 1 ? '' : 's'} still without text</span>` : ''}${s.added ? ` · ${s.added} already in dictionary` : ''}${s.legacy ? ` · <span style="color:var(--gold-text)">${s.legacy} still use the full lesson file — press Add to cut them</span>` : ''} · ${s.total} clips`;
-  $('#wbAdd').disabled = !s.ready;
+  const l = lessonById(lv.open); if (!l || !$('#wbFoot')) return; const s = wbSummary(l), f = $('#wbFootInfo');
+  f.innerHTML = `<b>${s.ready}</b> ready${s.empty ? ` · <span style="color:var(--gold-text)">${s.empty} no text</span>` : ''}${s.added ? ` · ${s.added} added` : ''}${s.legacy ? ` · <span style="color:var(--gold-text)">${s.legacy} uncut</span>` : ''} · ${s.total} clips`;
+  f.title = `${s.ready} Lithuanian phrase${s.ready === 1 ? '' : 's'} ready${s.empty ? ', ' + s.empty + ' LT clip(s) still without text' : ''}${s.added ? ', ' + s.added + ' already in the dictionary' : ''}${s.legacy ? ', ' + s.legacy + ' still use the full lesson file — Add cuts them' : ''}; ${s.total} clips in all`;
+  $('#wbAdd').disabled = !s.ready; $('#wbUndo').onclick = () => wb && wvRestore(wb.undo, wb.redo); $('#wbRedo').onclick = () => wb && wvRestore(wb.redo, wb.undo); wbFootUndo();
 }
 function renderWorkbench() {
   const l = lessonById(lv.open); if (!l || !wb) return;
@@ -1856,7 +1865,7 @@ function renderWorkbench() {
     </div>
     ${wvPanelHTML()}
     <div class="clips" id="clipRows" role="list"></div>
-    <div class="wb-foot" id="wbFoot"><span id="wbFootInfo" class="grow"></span><button class="btn primary" id="wbAdd" data-wb="add">Add to dictionary →</button></div>`;
+    <div class="wb-foot" id="wbFoot"><button class="btn sm" id="wbUndo" type="button" title="Undo (Ctrl+Z) — brings back a deleted clip" aria-label="Undo">↶</button><button class="btn sm" id="wbRedo" type="button" title="Redo" aria-label="Redo">↷</button><span id="wbFootInfo" class="grow"></span><button class="btn primary sm" id="wbAdd" data-wb="add">Add<span class="wide"> to dictionary</span> →</button></div>`;
   renderClipRows(); wvInit(); wvWire(); syncWbOpen();
 }
 const wbClip = el => { const l = lessonById(lv.open); const id = el.closest('.clip') && el.closest('.clip').dataset.clip; return l && l.clips.find(c => c.id === id); };
@@ -2130,7 +2139,7 @@ function wvSelect(id, { reveal = true } = {}) {
 function wvPushUndo(key) {
   const l = lessonById(lv.open); if (!l || !wb) return; const now = Date.now();
   if (key && wb.undoKey === key && now - wb.undoAt < 1200) { wb.undoAt = now; return; }   // coalesce rapid nudges
-  wb.undo.push(JSON.stringify(l.clips)); if (wb.undo.length > 60) wb.undo.shift(); wb.redo = []; wb.undoKey = key || null; wb.undoAt = now; wvBar();
+  wb.undo.push(JSON.stringify(l.clips)); if (wb.undo.length > 60) wb.undo.shift(); wb.redo = []; wb.undoKey = key || null; wb.undoAt = now; wvBar(); wbFootUndo();
 }
 function wvRestore(from, to) {
   const l = lessonById(lv.open); if (!l || !from.length) return toast(from === wb.undo ? 'Nothing to undo.' : 'Nothing to redo.', 'warn');
@@ -2222,7 +2231,7 @@ function wvMerge(c) {
   const l = lessonById(lv.open), i = l.clips.indexOf(c), n = l.clips[i + 1]; if (!n) return toast('This is the last clip.', 'warn');
   wvPushUndo(); c.t1 = n.t1; c.text = (c.text + ' ' + n.text).trim(); l.clips.splice(i + 1, 1); wvSyncEntry(c); wvAfterStructure();
 }
-function wvDelete(c) { const l = lessonById(lv.open), i = l.clips.indexOf(c); wvPushUndo(); if (play.key === 'clip:' + c.id) stopAudio(); l.clips.splice(i, 1); const v = wb.wv; v.sel = (l.clips[i] || l.clips[i - 1] || {}).id || null; wvAfterStructure(); }
+function wvDelete(c) { const l = lessonById(lv.open), i = l.clips.indexOf(c); wvPushUndo(); if (play.key === 'clip:' + c.id) stopAudio(); l.clips.splice(i, 1); const v = wb.wv; v.sel = (l.clips[i] || l.clips[i - 1] || {}).id || null; wvAfterStructure(); toast('Clip deleted.', '', { label: '↶ Undo', fn: () => wb && wvRestore(wb.undo, wb.redo) }); }
 function wvNudge(c, side, dt) {
   const lim = wvLimits(c, side); lim.partner = null; if (side === 't0') lim.lo = Math.min(lim.lo, c.t0); else lim.hi = Math.max(lim.hi, c.t1);
   const nt = wvClamp(c[side] + dt, lim.lo, lim.hi); if (Math.abs(nt - c[side]) < 1e-6) return toast('Can’t move further — the neighbouring clip is in the way.', 'warn');
@@ -2417,8 +2426,19 @@ async function removeLesson(id) {
    Practice
 =================================================================== */
 const pr = { active: false, done: false, queue: [], i: 0, revealed: false, mode: 'listen', result: null, t0: 0, tally: { again: 0, hard: 0, good: 0, easy: 0 }, cfg: { scope: 'due', mode: 'listen', count: 20, audioOnly: false, cat: 'all' } };
-const PR_MODES = [['listen', '🎧 Listen first → recall'], ['en2lt', '🇬🇧 English → Lithuanian (in your head)'], ['type', '⌨ English → type the Lithuanian'], ['dictation', '🎧⌨ Dictation: listen → type it'], ['shadow', '🗣 Shadowing: listen → repeat → compare'], ['cloze', '🧩 Fill the gap: type the missing word'], ['stress', '🎯 Stress: tap the stressed vowel'], ['case', '🧭 Grammar: which case or form?']];
-const isPick = m => m === 'stress' || m === 'case';
+const PR_MODES = [['listen', '🎧 Listen first → recall'], ['en2lt', '🇬🇧 English → Lithuanian (in your head)'], ['type', '⌨ English → type the Lithuanian'], ['dictation', '🎧⌨ Dictation: listen → type it'], ['shadow', '🗣 Shadowing: listen → repeat → compare'], ['cloze', '🧩 Fill the gap: type the missing word'], ['stress', '🎯 Stress: tap the stressed vowel'], ['case', '🧭 Grammar: which case or form?'], ['build', '🧱 Build the sentence: put the words in order'], ['pairs', '👂 Minimal pairs: which one did you hear?']];
+const isPick = m => m === 'stress' || m === 'case' || m === 'build' || m === 'pairs';
+const foldL = x => stripStress(String(x)).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+let pairMemo = { t: 0, n: -1, m: new Map() };
+function pairMap() {                     // id -> ids of phrases that sound/look almost the same (one letter apart, diacritics only, or same letters with different stress)
+  const now = Date.now(); if (pairMemo.n === state.entries.length && now - pairMemo.t < 5000) return pairMemo.m;
+  const idx = new Map(), add = (k, e) => { let a = idx.get(k); if (!a) idx.set(k, a = []); if (a.length < 40) a.push(e); }, T = new Map();
+  for (const e of state.entries) { if (!e.audioId || !e.lt || e.lt.length > 32) continue; const t = tnorm(e.lt); if (t.length < 3) continue; T.set(e.id, t); add('f:' + foldL(e.lt), e); add('d:' + t, e); for (let i = 0; i < t.length; i++) add('d:' + t.slice(0, i) + t.slice(i + 1), e); }
+  const m = new Map();
+  for (const a of idx.values()) if (a.length > 1) for (const x of a) for (const y of a) { if (x === y) continue; if (T.get(x.id) === T.get(y.id) && !(x.stress && y.stress && x.stress !== y.stress)) continue; let l = m.get(x.id); if (!l) m.set(x.id, l = new Set()); l.add(y.id); }
+  pairMemo = { t: now, n: state.entries.length, m }; return m;
+}
+const buildToks = lt => String(lt).match(WORD_RE) || [];
 const CASE_IDS = GTAGS[0][1].map(x => x[0]), VERB_IDS = GTAGS[1][1].map(x => x[0]);
 const caseGroup = e => (e.tags || []).some(t => CASE_IDS.includes(t)) ? CASE_IDS : (e.tags || []).some(t => VERB_IDS.includes(t)) ? VERB_IDS : null;
 const isTyped = m => m === 'type' || m === 'dictation' || m === 'cloze';
@@ -2430,7 +2450,7 @@ function clozePick(e) {              // hide one word of the phrase (prefer word
 const LEARN_AHEAD = 20 * MINMS;
 const lim = () => { const n = (v, d) => Number.isFinite(+v) && +v >= 0 ? Math.floor(+v) : d; return { newPerDay: n(state.settings.newPerDay, 20), maxRev: n(state.settings.maxReviews, 200), goal: n(state.settings.dailyGoal, 20) }; };
 function dayCounts() { const d = todayStr(); if (!state.counts || state.counts.d !== d) state.counts = { d, n: 0, r: 0 }; return state.counts; }
-const modeOK = (e, m) => m === 'stress' ? !!e.stress && stressMarks(e.lt, e.stress).marks.some(Boolean) : m === 'case' ? !!caseGroup(e) : m === 'cloze' ? clozeToks(e.lt).length >= 2 : m === 'type' ? !!e.en : (m === 'dictation' || m === 'shadow') ? !!e.audioId : true;
+const modeOK = (e, m) => m === 'pairs' ? !!e.audioId && pairMap().has(e.id) : m === 'build' ? (n => n >= 3 && n <= 14)(buildToks(e.lt).length) : m === 'stress' ? !!e.stress && stressMarks(e.lt, e.stress).marks.some(Boolean) : m === 'case' ? !!caseGroup(e) : m === 'cloze' ? clozeToks(e.lt).length >= 2 : m === 'type' ? !!e.en : (m === 'dictation' || m === 'shadow') ? !!e.audioId : true;
 const accOf = e => e.reviews ? e.correct / e.reviews : 1;
 const isWeak = e => e.reviews >= 2 && ((e.lapses || 0) >= 2 || (e.reviews >= 4 && accOf(e) < 0.6) || (e.reviews >= 3 && (e.ease || SR.ease0) <= 1.8));
 const weakScore = e => (e.lapses || 0) * 2 + (1 - accOf(e)) * 6 + (SR.ease0 - (e.ease || SR.ease0)) * 2;
@@ -2484,7 +2504,7 @@ function renderPractice() {
         <div><label class="lbl" for="prScope">Phrases</label><select id="prScope"><option value="due" ${c.scope === 'due' ? 'selected' : ''}>Due + new (follows your daily limits)</option><option value="unmastered" ${c.scope === 'unmastered' ? 'selected' : ''}>All unmastered</option><option value="learning" ${c.scope === 'learning' ? 'selected' : ''}>Learning only</option><option value="favorites" ${c.scope === 'favorites' ? 'selected' : ''}>Favorites</option><option value="weak" ${c.scope === 'weak' ? 'selected' : ''}>⚠ Weak spots (most-missed)</option><option value="all" ${c.scope === 'all' ? 'selected' : ''}>Everything</option></select></div>
         ${tagsInUse().length ? `<div><label class="lbl" for="prTag">Grammar tag</label><select id="prTag">${tagSelHTML(c.tag || 'all', 'All tags')}</select></div>` : ''}
         <div><label class="lbl" for="prCount">Cards per session</label><select id="prCount">${[10, 20, 50, 0].map(n => `<option value="${n}" ${c.count === n ? 'selected' : ''}>${n || 'All available'}</option>`).join('')}</select></div>
-        <div class="full"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="prAudioOnly" ${c.audioOnly ? 'checked' : ''}> Only phrases with audio</label>${c.mode === 'cloze' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">Fill-the-gap uses phrases with two or more words.</p>' : ''}${c.mode === 'type' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">Typing mode uses phrases that have an English translation.</p>' : ''}${c.mode === 'stress' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">Uses phrases where you have marked the stress (✎ Stress in the dictionary).</p>' : ''}${c.mode === 'case' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">Uses phrases tagged with a case or a verb form.</p>' : ''}${c.mode === 'dictation' || c.mode === 'shadow' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">This mode uses phrases that have audio.</p>' : ''}</div>
+        <div class="full"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="prAudioOnly" ${c.audioOnly ? 'checked' : ''}> Only phrases with audio</label>${c.mode === 'cloze' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">Fill-the-gap uses phrases with two or more words.</p>' : ''}${c.mode === 'type' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">Typing mode uses phrases that have an English translation.</p>' : ''}${c.mode === 'pairs' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">Uses phrases with audio that have a near-identical twin in your dictionary (one letter or one accent apart).</p>' : ''}${c.mode === 'build' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">Uses phrases with 3 to 14 words.</p>' : ''}${c.mode === 'stress' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">Uses phrases where you have marked the stress (✎ Stress in the dictionary).</p>' : ''}${c.mode === 'case' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">Uses phrases tagged with a case or a verb form.</p>' : ''}${c.mode === 'dictation' || c.mode === 'shadow' ? '<p class="muted" style="margin:6px 0 0;font-size:.84rem">This mode uses phrases that have audio.</p>' : ''}</div>
         <div class="full" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button class="btn primary" id="prStart" ${avail ? '' : 'disabled'}>Start session</button><span id="prStatus">${prStatusHTML(info)}</span></div></div>
       <details class="pr-limits" ${state.settings._limitsOpen ? 'open' : ''}><summary>⚙ Daily limits &amp; goal</summary><div class="pr-form" style="margin-top:10px">
         <div><label class="lbl" for="stNew">New phrases per day</label><input type="number" id="stNew" min="0" max="500" inputmode="numeric" value="${L.newPerDay}"></div>
@@ -2495,7 +2515,7 @@ function renderPractice() {
     ['prMode', 'prScope', 'prCount', 'prAudioOnly', 'prCat', 'prTag'].forEach(id => $('#' + id) && ($('#' + id).onchange = sync)); $('#prStart').onclick = startSession;
     const lm = (id, key, max) => { $('#' + id).onchange = ev => { const v = Math.max(0, Math.min(max, Math.floor(+ev.target.value) || 0)); ev.target.value = v; state.settings[key] = v; state.settings._limitsOpen = true; save(); prRefreshStatus(); renderStats(); }; };
     const dl = $('.pr-limits'); if (dl) dl.addEventListener('toggle', () => { state.settings._limitsOpen = dl.open; });   // stays open when you change another option
-    lm('stNew', 'newPerDay', 500); lm('stRev', 'maxReviews', 2000); lm('stGoal', 'dailyGoal', 2000); weakMount(root); lsMount(root); return;
+    lm('stNew', 'newPerDay', 500); lm('stRev', 'maxReviews', 2000); lm('stGoal', 'dailyGoal', 2000); weakMount(root); focusMount(root); lsMount(root); return;
   }
   const e = byId(pr.queue[pr.i]); if (!e) { endSession(); return; }
   const total = pr.queue.length, m = pr.mode, typed = isTyped(m), res = pr.result;
@@ -2509,6 +2529,12 @@ function renderPractice() {
     else if (m === 'en2lt') front = `<div class="pr-en">${esc(e.en || '(no translation)')}</div><p class="muted" style="margin:0">How do you say this in Lithuanian?</p><button class="btn primary" id="prReveal" style="margin-top:8px">Reveal answer <kbd style="color:#000">Enter</kbd></button>`;
     else if (m === 'type') front = `<div class="pr-en">${esc(e.en)}</div><p class="muted" style="margin:0">Type it in Lithuanian — letters like <b>ą č ę ė į š ų ū ž</b> count.</p>${typeForm}`;
     else if (m === 'cloze' && pr.cz) front = `<div class="pr-lt" lang="lt">${esc(e.lt.slice(0, pr.cz.s))}<span class="gap" aria-label="missing word">${'＿'.repeat(Math.min(8, Math.max(3, [...pr.cz.word].length)))}</span>${esc(e.lt.slice(pr.cz.e))}</div>${e.en ? `<div class="pr-en">${esc(e.en)}</div>` : ''}<p class="muted" style="margin:0">Type the missing word — mind the ending, it changes with the sentence.</p>${typeForm}`;
+    else if (m === 'pairs' && pr.pp) { const o = pr.pp.o, same = tnorm(o.lt) === tnorm(e.lt), lab = x => esc(same ? (x.stress || x.lt) : x.lt), opts = [[e, '1'], [o, '0']]; if (pr.pp.flip) opts.reverse();
+      front = `<button class="pr-big-play" id="prPlay" aria-label="Play audio">🔊</button><p class="muted" style="margin:0">Which one did you hear? <kbd>Space</kbd> replays</p><div class="pp-opts" lang="lt">${opts.map(([x, v]) => `<button type="button" class="btn pp" data-pp="${v}">${lab(x)}<small>${esc(x.en || '')}</small></button>`).join('')}</div>`; }
+    else if (m === 'build' && pr.bd) { const B = pr.bd; front = `<div class="pr-en">${esc(e.en || '')}</div><p class="muted" style="margin:0">Tap the words in the right order. Tap a placed word to take it back.</p>
+      <div class="bd-ans" lang="lt" aria-label="Your sentence">${B.placed.length ? B.placed.map(x => `<button type="button" class="chip bd on" data-bw="p" data-k="${x.i}">${esc(x.t)}</button>`).join('') : '<span class="muted">…</span>'}</div>
+      <div class="bd-bank" lang="lt">${B.bank.map(x => `<button type="button" class="chip bd" data-bw="b" data-k="${x.i}">${esc(x.t)}</button>`).join('')}</div>
+      <div class="row" style="margin-top:10px"><button class="btn primary" type="button" id="bdCheck" ${B.bank.length ? 'disabled' : ''}>Check</button><button class="btn" type="button" id="bdDunno">I don’t know</button><button class="btn" type="button" id="bdPlay">🔊 Hear it</button></div>`; }
     else if (m === 'stress') { const { us } = stressMarks(e.lt, ''); front = `<div class="pr-en">${esc(e.en || '')}</div><div class="sp pk" lang="lt" style="justify-content:center;margin:8px 0">${us.map((u, i) => STRESSY.test(u) ? `<button type="button" class="sl" data-spick="${i}" aria-label="Stress on ${esc(u.normalize('NFC'))}">${esc(u.normalize('NFC'))}</button>` : `<span class="sx">${u === ' ' ? '&nbsp;' : esc(u.normalize('NFC'))}</span>`).join('')}</div><p class="muted" style="margin:0">Tap the vowel that carries the stress. <kbd>Space</kbd> plays it</p><button class="btn sm" id="prPlay" style="margin-top:8px">🔊 Hear it</button>`; }
     else if (m === 'case') { const g = caseGroup(e); front = `<div class="pr-lt" lang="lt">${esc(stripStress(e.lt))}</div><div class="pr-en">${esc(e.en || '')}</div><p class="muted" style="margin:0">${g === CASE_IDS ? 'Which case is this phrase in?' : 'Which verb form is this?'}</p><div class="tg-grp" style="justify-content:center;margin-top:8px">${g.map(t => `<button type="button" class="chip tg pkc" data-pickt="${t}">${esc(tagName(t))}</button>`).join('')}</div>`; }
     else if (m === 'dictation') front = `<button class="pr-big-play" id="prPlay" aria-label="Play audio">🔊</button><p class="muted" style="margin:0">Type what you hear. <kbd>Ctrl</kbd>+<kbd>Space</kbd> replays</p>${typeForm}`;
@@ -2528,9 +2554,30 @@ function renderPractice() {
     inp.addEventListener('keydown', ev => { if (ev.ctrlKey && ev.code === 'Space') { ev.preventDefault(); replay(e.id); } });
     $$('.charpad button', f).forEach(b => { b.addEventListener('pointerdown', ev => ev.preventDefault()); b.onclick = () => { const st = inp.selectionStart ?? inp.value.length, en = inp.selectionEnd ?? st; inp.value = inp.value.slice(0, st) + b.dataset.ch + inp.value.slice(en); inp.focus(); inp.setSelectionRange(st + 1, st + 1); }; });
   }
+  $$('[data-pp]').forEach(b => b.onclick = () => answerPair(b.dataset.pp));
+  $$('[data-bw]').forEach(b => b.onclick = () => buildTap(b.dataset.bw, +b.dataset.k));
+  { const c = $('#bdCheck'); if (c) c.onclick = () => buildCheck(false); const d = $('#bdDunno'); if (d) d.onclick = () => buildCheck(true); const pl = $('#bdPlay'); if (pl) pl.onclick = () => replay(e.id); }
   $$('[data-spick]').forEach(b => b.onclick = () => answerPick(+b.dataset.spick));
   $$('[data-pickt]').forEach(b => b.onclick = () => answerPick(b.dataset.pickt));
   shadowWire(e);
+}
+function answerPair(v) {
+  const e = byId(pr.queue[pr.i]); if (!pr.active || pr.revealed || pr.mode !== 'pairs' || !e || !pr.pp) return; const o = pr.pp.o, same = tnorm(o.lt) === tnorm(e.lt), ok = v === '1';
+  pr.result = { kind: ok ? 'exact' : 'wrong', suggest: ok ? 'good' : 'again', ms: Date.now() - pr.t0 }; pr.revealed = true; renderPractice(); playEntry(e.id, { restart: true });
+  const c = $('.pr-card'); if (c) c.insertAdjacentHTML('afterbegin', `<div class="muted">The other one was <b lang="lt">${esc(same ? (o.stress || o.lt) : o.lt)}</b> — ${esc(o.en || '')}</div>`);
+}
+function buildTap(where, k) {
+  const B = pr.bd; if (!pr.active || pr.revealed || !B) return;
+  if (where === 'b') { const i = B.bank.findIndex(x => x.i === k); if (i >= 0) B.placed.push(B.bank.splice(i, 1)[0]); }
+  else { const i = B.placed.findIndex(x => x.i === k); if (i >= 0) B.bank.push(B.placed.splice(i, 1)[0]); }
+  renderPractice();
+}
+function buildCheck(skip) {
+  const B = pr.bd, e = byId(pr.queue[pr.i]); if (!pr.active || pr.revealed || !B || !e) return;
+  const want = buildToks(e.lt), got = B.placed.map(x => x.t), right = got.filter((t, i) => want[i] && wkey(t) === wkey(want[i])).length;
+  const ok = !skip && got.length === want.length && right === want.length;
+  pr.result = skip ? { kind: 'skip', suggest: 'again', typed: '', target: '' } : { kind: ok ? 'exact' : right >= Math.ceil(want.length / 2) ? 'close' : 'wrong', suggest: ok ? 'good' : right >= Math.ceil(want.length / 2) ? 'hard' : 'again', diff: ok ? null : { typed: esc(got.join(' ')) || '—', target: esc(want.join(' ')) }, ms: Date.now() - pr.t0 };
+  pr.revealed = true; renderPractice(); playEntry(e.id, { restart: true });
 }
 function answerPick(v) {
   if (!pr.active || pr.revealed || !isPick(pr.mode)) return; const e = byId(pr.queue[pr.i]); if (!e) return;
@@ -2570,15 +2617,40 @@ function lsMount(root) {
       ${sel('lsOrder', 'Order', [['course', 'Course order'], ['shuffle', 'Shuffled']], c.order)}
       ${sel('lsCount', 'Phrases per walk', [[10, '10'], [30, '30'], [60, '60'], [0, 'All']], c.count)}
       ${sel('lsGap', 'Pause for your answer', [['auto', 'Automatic'], [3, '3 s'], [5, '5 s'], [8, '8 s'], [12, '12 s']], c.gap)}
-      ${sel('lsReps', 'Hear the Lithuanian', [[1, 'Once'], [2, 'Twice'], [3, '3 times']], c.reps)}
+      ${sel('lsReps', 'Hear the Lithuanian', [[1, 'Once'], [2, 'Twice'], [3, '3 times'], ['ladder', 'Speed ladder: slow → normal → fast']], c.reps)}
       <div class="full"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="lsPrompt" ${c.prompt ? 'checked' : ''}> Say the English first (browser voice) — otherwise only the Lithuanian is played</label>
         <label style="display:flex;gap:8px;align-items:center;margin-top:6px"><input type="checkbox" id="lsShow" ${c.show ? 'checked' : ''}> Show the phrase on screen</label></div>
       <div class="full" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button class="btn primary" id="lsStart">▶ Start walk</button><span class="muted" id="lsInfo"></span></div>
+      <div class="full tg-grp" id="lsPre"></div>
     </div></div>`);
   const info = () => { const n = lsIds().length; $('#lsInfo').innerHTML = n ? `<b>${n}</b> phrase${n === 1 ? '' : 's'}` : 'No phrases match these settings.'; $('#lsStart').disabled = !n; };
-  const read = () => { Object.assign(lsCfg(), { scope: $('#lsScope').value, cat: $('#lsCat').value, tag: $('#lsTag') ? $('#lsTag').value : 'all', order: $('#lsOrder').value, count: +$('#lsCount').value, gap: $('#lsGap').value === 'auto' ? 'auto' : +$('#lsGap').value, reps: +$('#lsReps').value, prompt: $('#lsPrompt').checked, show: $('#lsShow').checked }); save(); info(); };
+  const read = () => { Object.assign(lsCfg(), { scope: $('#lsScope').value, cat: $('#lsCat').value, tag: $('#lsTag') ? $('#lsTag').value : 'all', order: $('#lsOrder').value, count: +$('#lsCount').value, gap: $('#lsGap').value === 'auto' ? 'auto' : +$('#lsGap').value, reps: $('#lsReps').value === 'ladder' ? 'ladder' : +$('#lsReps').value, prompt: $('#lsPrompt').checked, show: $('#lsShow').checked }); save(); info(); };
   ['lsScope', 'lsCat', 'lsTag', 'lsOrder', 'lsCount', 'lsGap', 'lsReps', 'lsPrompt', 'lsShow'].forEach(id => $('#' + id) && ($('#' + id).onchange = read));
   $('#lsStart').onclick = lsStart; info();
+  const pre = $('#lsPre'), drawPre = () => { const P = state.settings.lsPresets || []; pre.innerHTML = (P.length ? '<span class="tg-h">Saved walks</span>' : '') + P.map((x, i) => `<span class="chip" style="display:inline-flex;gap:6px;align-items:center"><button type="button" class="linkbtn" data-lp="${i}" style="all:unset;cursor:pointer;font-weight:600">▶ ${esc(x.name)}</button><button type="button" data-lpx="${i}" aria-label="Delete saved walk ${esc(x.name)}" style="all:unset;cursor:pointer;opacity:.6">✕</button></span>`).join('') + '<button type="button" class="btn sm" id="lsSaveP">💾 Save these settings as a walk</button>'; };
+  pre.addEventListener('click', ev => {
+    const P = state.settings.lsPresets || (state.settings.lsPresets = []), go = ev.target.closest('[data-lp]'), del = ev.target.closest('[data-lpx]');
+    if (go) { Object.assign(lsCfg(), P[+go.dataset.lp].cfg); save(); lsStart(); }
+    else if (del) { P.splice(+del.dataset.lpx, 1); save(); drawPre(); }
+    else if (ev.target.closest('#lsSaveP')) { if (P.length >= 12) { toast('You can keep up to 12 saved walks.', 'warn'); return; } const c = lsCfg(), def = [{ due: 'Due', unmastered: 'Unmastered', learning: 'Learning', favorites: 'Favorites', weak: 'Weak spots', all: 'Everything' }[c.scope], c.tag && c.tag !== 'all' ? tagName(c.tag) : '', c.cat !== 'all' ? c.cat : ''].filter(Boolean).join(' · '), name = (prompt('Name this walk', def) || '').trim().slice(0, 30); if (!name) return; P.push({ name, cfg: Object.assign({}, c) }); save(); drawPre(); toast('Saved. Tap its name to start it.'); }
+  }); drawPre();
+}
+const WEEKN = () => Math.floor(Date.now() / (7 * DAYMS));
+function focusTag() { const f = state.settings.focus || 'auto', used = tagsInUse().map(x => x[0]); if (f === 'off') return null; if (f !== 'auto') return used.includes(f) ? f : null; const cs = used.filter(t => CASE_IDS.includes(t)), pool = cs.length ? cs : used; return pool.length ? pool[WEEKN() % pool.length] : null; }
+function focusMount(root) {
+  const used = tagsInUse(), f = state.settings.focus || 'auto', t = focusTag(), n = t ? queueInfo({ scope: 'unmastered', cat: 'all', tag: t, audioOnly: false, mode: 'listen' }).list.length : 0;
+  root.insertAdjacentHTML('beforeend', `<div class="panel" id="fcPanel" style="margin-top:14px"><h2 class="sec">🎯 Habit</h2>
+    ${used.length ? `<p class="muted" style="margin-top:0">Focus of the week: spend a few days on one grammar tag until it feels natural.</p><div class="pr-form"><div><label class="lbl" for="fcSel">Focus</label><select id="fcSel"><option value="auto" ${f === 'auto' ? 'selected' : ''}>Rotate weekly (cases first)</option>${used.map(([k]) => `<option value="${esc(k)}" ${f === k ? 'selected' : ''}>${esc(tagName(k))}</option>`).join('')}<option value="off" ${f === 'off' ? 'selected' : ''}>Off</option></select></div>
+      <div class="full" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">${t ? `<button class="btn primary" id="fcGo">Practise “${esc(tagName(t))}” · ${Math.min(15, n)}</button><span class="muted">${n} unmastered phrase${n === 1 ? '' : 's'} with this tag</span>` : '<span class="muted">No focus tag right now.</span>'}</div></div>` : '<p class="muted" style="margin-top:0">Tag some phrases with grammar tags (Dictionary → Edit, or ☑ Select → 🏷 Tags) to unlock a weekly focus.</p>'}
+    <details style="margin-top:10px"><summary style="cursor:pointer;font-weight:600">⏰ Daily reminder</summary><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px"><input type="time" id="rmTime" value="${esc(state.settings.rmTime || '19:00')}" aria-label="Reminder time"><button class="btn" id="rmGo">Download calendar reminder (.ics)</button></div><p class="muted" style="font-size:.84rem;margin:6px 0 0">Open the file to add a repeating daily event to your phone or computer calendar.</p></details></div>`);
+  const sel = $('#fcSel'); if (sel) sel.onchange = () => { state.settings.focus = sel.value; save(); renderPractice(); };
+  const go = $('#fcGo'); if (go) go.onclick = () => { pr.cfg = Object.assign({}, pr.cfg, { scope: 'unmastered', count: 15, cat: 'all', tag: t, audioOnly: false }); startSession(); };
+  $('#rmGo').onclick = () => {
+    const tm = ($('#rmTime').value || '19:00').split(':'), d = new Date(), z = n => String(n).padStart(2, '0'); state.settings.rmTime = tm.join(':'); save();
+    const stamp = `${d.getFullYear()}${z(d.getMonth() + 1)}${z(d.getDate())}T${z(tm[0])}${z(tm[1])}00`;
+    const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//LitLingo//Daily practice//EN', 'BEGIN:VEVENT', 'UID:litlingo-daily@litlingo', 'DTSTAMP:' + new Date().toISOString().replace(/[-:]|\.\d+/g, ''), 'DTSTART:' + stamp, 'DURATION:PT15M', 'RRULE:FREQ=DAILY', 'SUMMARY:LitLingo — daily Lithuanian practice', 'DESCRIPTION:' + location.href.split('#')[0], 'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:Time to practise Lithuanian', 'TRIGGER:PT0M', 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+    downloadBlob(new Blob([ics], { type: 'text/calendar' }), fileBase() + '-daily-reminder.ics'); toast('Reminder file downloaded — open it to add it to your calendar.');
+  };
 }
 function lsStart() {
   const ids = lsIds(); if (!ids.length) { toast('Nothing to play with those settings.', 'warn'); return; }
@@ -2622,12 +2694,14 @@ async function lsRun(tok) {
       if (c.prompt) { ls.step = 'prompt'; lsUI(); await playSrc(silSrc(20, e, 'prompt', false), { restart: true }); if (!live()) return; await ttsSay(e.en, 'en-US'); if (!live()) return; }
       ls.step = 'think'; lsUI(); await lsPlay(silSrc(lsGap(e), e, 'think', true), tok); if (!live()) return;
     }
-    for (let r = 0; r < c.reps; r++) {
-      ls.step = 'listen'; lsUI();
+    const lad = c.reps === 'ladder' ? [0.75, 1, 1.25] : null, nrep = lad ? 3 : (+c.reps || 1), rk = lad && e.audioId ? srcOfEntry(e).key : null, r0 = rk ? rate[rk] : undefined;
+    for (let r = 0; r < nrep; r++) {
+      ls.step = 'listen'; lsUI(); if (rk) rate[rk] = lad[r];
       if (e.audioId) await lsPlay(Object.assign(srcOfEntry(e), { lsw: true, ls: true }), tok);
-      else { await playSrc(silSrc(20, e, 'prompt', false), { restart: true }); if (!live()) return; await ttsSay(e.stress || e.lt, 'lt-LT', 0.9); }
-      if (!live()) return; if (r < c.reps - 1) { await lsPlay(silSrc(1.2, e, 'gap', true), tok); if (!live()) return; }
+      else { await playSrc(silSrc(20, e, 'prompt', false), { restart: true }); if (!live()) return; await ttsSay(e.stress || e.lt, 'lt-LT', 0.9 * (lad ? lad[r] : 1)); }
+      if (!live()) { if (rk) { r0 === undefined ? delete rate[rk] : rate[rk] = r0; } return; } if (r < nrep - 1) { await lsPlay(silSrc(1.2, e, 'gap', true), tok); if (!live()) return; }
     }
+    if (rk) { r0 === undefined ? delete rate[rk] : rate[rk] = r0; }
     ls.step = 'next'; lsUI(); await lsPlay(silSrc(1, e, 'gap', true), tok); if (!live()) return;
     ls.i++;
   }
@@ -2738,9 +2812,11 @@ function startSession() {
 }
 function showCardAudio() {
   shadowReset(); pr.revealed = pr.mode === 'shadow'; pr.result = null; pr.t0 = Date.now();
-  { const ce = byId(pr.queue[pr.i]); pr.cz = pr.mode === 'cloze' && ce ? clozePick(ce) : null; }
+  { const ce = byId(pr.queue[pr.i]); pr.cz = pr.mode === 'cloze' && ce ? clozePick(ce) : null;
+    pr.pp = null; if (pr.mode === 'pairs' && ce) { const ids = [...(pairMap().get(ce.id) || [])], o = byId(ids[Math.floor(Math.random() * ids.length)]); if (o) pr.pp = { o, flip: Math.random() < 0.5 }; }
+    pr.bd = null; if (pr.mode === 'build' && ce) { const w = buildToks(ce.lt).map((t, i) => ({ t, i })); let b = w.slice(), n = 0; do { for (let k = b.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [b[k], b[j]] = [b[j], b[k]]; } n++; } while (n < 8 && b.every((x, i) => x.i === i)); pr.bd = { bank: b, placed: [] }; } }
   renderPractice();
-  const e = byId(pr.queue[pr.i]); if (e && (pr.mode === 'listen' || pr.mode === 'dictation' || pr.mode === 'shadow' || pr.mode === 'stress')) playEntry(e.id, { restart: true });
+  const e = byId(pr.queue[pr.i]); if (e && (pr.mode === 'listen' || pr.mode === 'dictation' || pr.mode === 'shadow' || pr.mode === 'stress' || pr.mode === 'pairs')) playEntry(e.id, { restart: true });
   if (isTyped(pr.mode)) { const i = $('#prInput'); if (i) setTimeout(() => i.focus({ preventScroll: true }), 40); }
 }
 function reveal() { if (!pr.active || pr.revealed || isTyped(pr.mode) || isPick(pr.mode)) return; pr.revealed = true; renderPractice(); const e = byId(pr.queue[pr.i]); if (e && pr.mode === 'en2lt') playEntry(e.id, { restart: true }); }
