@@ -40,7 +40,7 @@ small{font-size:.8em}
 
 /* top bar */
 .top{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
-.top-in{max-width:1360px;margin:0 auto;padding:7px 14px;display:flex;align-items:center;gap:12px}
+.top-in{max-width:1200px;margin:0 auto;padding:7px 14px;display:flex;align-items:center;gap:12px}
 .logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:1.05rem}
 .logo-mark{width:32px;height:32px;display:grid;place-items:center;font-size:.9rem}.logo-mark svg{width:100%;height:100%}
 nav.tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;background:var(--surface);border:1px solid var(--line);padding:3px;border-radius:10px;margin-left:auto}
@@ -48,7 +48,8 @@ nav.tabs button{border:0;background:transparent;padding:6px 14px;min-width:0;whi
 nav.tabs button[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
 nav.tabs button:hover:not([aria-current="page"]){color:var(--text)}
 
-main{max-width:1360px;margin:0 auto;padding:12px 14px 60px}
+html{scrollbar-gutter:stable}
+main{max-width:1200px;margin:0 auto;padding:12px 14px 60px}
 .btn{border:1px solid var(--line);background:var(--surface2);padding:7px 13px;border-radius:9px;font-weight:600;display:inline-flex;align-items:center;gap:7px;transition:background .15s,border-color .15s;white-space:nowrap}
 .btn:hover:not(:disabled){border-color:var(--accent)}
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
@@ -143,7 +144,7 @@ code.k{background:var(--bg2);border:1px solid var(--line);border-radius:5px;padd
 
 /* now playing */
 .np{position:fixed;left:0;right:0;bottom:0;z-index:60;background:color-mix(in srgb,var(--surface) 95%,transparent);backdrop-filter:blur(14px);border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(0,0,0,.25)}
-.np-in{max-width:1360px;margin:0 auto;padding:7px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.np-in{max-width:1200px;margin:0 auto;padding:7px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .np-title{min-width:140px;max-width:300px;line-height:1.2}
 .np-title b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .np-title span{font-size:.8rem;color:var(--muted);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -151,7 +152,8 @@ code.k{background:var(--bg2);border:1px solid var(--line);border-radius:5px;padd
 .np .time{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.82rem;min-width:80px;text-align:center}
 
 /* practice */
-.pr-wrap{max-width:720px;margin:0 auto}
+.pr-wrap{max-width:none;margin:0 auto}
+@media (min-width:1000px){#practiceRoot:not(:has(>.pr-card)){column-count:2;column-gap:14px}#practiceRoot:not(:has(>.pr-card))>.panel{break-inside:avoid}#practiceRoot:not(:has(>.pr-card))>div:not(.panel){column-span:all}}
 .pr-form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .pr-form .full{grid-column:1/-1}
 .pr-prog{height:7px;background:var(--surface);border:1px solid var(--line);border-radius:99px;overflow:hidden;margin-bottom:12px}
@@ -400,7 +402,7 @@ main{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env
 .wrow .lt{font-weight:700}.wrow .en{color:var(--muted);font-size:.9rem}
 .wrow mark{background:color-mix(in srgb,var(--accent) 28%,transparent);color:inherit;border-radius:3px;padding:0 1px}
 .wgrp{font-size:.78rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:14px 0 2px;font-weight:700}
-.rd-wrap{max-width:860px;margin:0 auto}
+.rd-wrap{max-width:none;margin:0 auto}
 .rd-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
 .rd-head h2{margin:0;font-size:1.25rem;flex:1;min-width:140px}
 .rd-card{display:flex;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line);background:var(--surface);border-radius:12px;margin-bottom:8px;cursor:pointer;text-align:left;width:100%;color:var(--text);font:inherit}
@@ -440,7 +442,7 @@ main{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env
 .tg-new{padding:5px 9px;border:1px solid var(--line);border-radius:8px;background:var(--surface2);color:var(--text);font:inherit;font-size:.86rem;min-width:130px}
 #tagSel{max-width:190px}
 /* progress */
-.pg{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.pg{max-width:none;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 .pg-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.pg-head h2{margin:0;flex:1;font-size:1.25rem}
 .pg-seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
 .pg-seg button{border:0;background:transparent;color:var(--muted);padding:6px 12px;font-weight:600;font-size:.86rem}
