@@ -73,8 +73,8 @@ kbd{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--bg2);bord
 code.k{background:var(--bg2);border:1px solid var(--line);border-radius:5px;padding:0 5px;font-size:.88em}
 
 /* dictionary layout */
-.layout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:14px;align-items:start}
-.side{position:sticky;top:58px;max-height:calc(100vh - 72px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start}
+.side{display:none;position:sticky;top:58px;max-height:calc(100vh - 72px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px}
 .side h4{margin:10px 8px 4px;font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
 .sitem{display:flex;align-items:center;gap:8px;width:100%;border:0;background:transparent;text-align:left;padding:6px 9px;border-radius:7px;color:var(--text);font-size:.92rem}
 .sitem:hover{background:var(--surface2)}
@@ -91,7 +91,7 @@ code.k{background:var(--bg2);border:1px solid var(--line);border-radius:5px;padd
 .search input{padding-left:32px}
 .search:before{content:"⌕";position:absolute;left:10px;top:3px;font-size:1.2rem;color:var(--muted)}
 .toolbar select{width:auto;min-width:120px}
-#catSel{display:none}
+#catSel{display:block;max-width:240px}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
 .seg button{border:0;background:var(--surface);padding:6px 10px;color:var(--muted);font-weight:600;font-size:.88rem}
 .seg button[aria-pressed="true"]{background:var(--surface2);color:var(--text)}
@@ -1382,7 +1382,7 @@ function renderChips() {
   $('#filters').innerHTML = defs.map(d => `<button data-filter="${d[0]}" aria-pressed="${ui.filter === d[0]}">${d[1]}<em>${d[2]}</em></button>`).join('');
   const cs = cats(); if (ui.cat !== 'all' && !cs.includes(ui.cat)) ui.cat = 'all';
   { const tu = tagsInUse(); if (ui.tag !== 'all' && !tu.some(x => x[0] === ui.tag)) ui.tag = 'all'; const ts = $('#tagSel'); ts.hidden = !tu.length; ts.innerHTML = tagSelHTML(ui.tag); }
-  $('#catSel').innerHTML = `<option value="all">All lessons</option>` + cs.map(c => `<option value="${esc(c)}" ${c === ui.cat ? 'selected' : ''}>${esc(c)}</option>`).join('');
+  $('#catSel').innerHTML = `<option value="all">All phrases (${E.length})</option>` + cs.map(c => `<option value="${esc(c)}" ${c === ui.cat ? 'selected' : ''}>${esc(c)} (${E.filter(e => (e.cat || 'General') === c).length})</option>`).join('');
   renderSide();
 }
 function itemHTML(e) {
@@ -1414,7 +1414,7 @@ function renderList() {
   $('#btnSelect').setAttribute('aria-pressed', ui.selMode);
   renderBulk();
   if (!state.entries.length) {
-    g.innerHTML = `<div class="empty" style="grid-column:1/-1"><b>Your dictionary is empty</b>It fills up from your course audio:
+    g.innerHTML = `<div class="empty" style="grid-column:1/-1"><b>Your dictionary is empty</b><span style="display:block;margin-bottom:6px">It fills up from your course audio:</span>
       <div class="steps"><div>1. Open the <strong>Lessons</strong> tab and add your lesson MP3s</div><div>2. Open a lesson — it is split into short clips automatically</div><div>3. Let the speech model fill in the text (or type it), then add the phrases</div></div><br>
       <button class="btn primary" id="emptyLessons">🎓 Add lesson MP3s</button> <button class="btn" id="emptyAdd">＋ Add a phrase by hand</button></div>`;
     $('#emptyLessons').onclick = () => { showTab('lessons'); $('#fileLesson').click(); }; $('#emptyAdd').onclick = () => openEdit(null);
