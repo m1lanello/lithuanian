@@ -43,8 +43,8 @@ small{font-size:.8em}
 .top-in{max-width:1360px;margin:0 auto;padding:7px 14px;display:flex;align-items:center;gap:12px}
 .logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:1.05rem}
 .logo-mark{width:32px;height:32px;display:grid;place-items:center;font-size:.9rem}.logo-mark svg{width:100%;height:100%}
-nav.tabs{display:flex;gap:2px;background:var(--surface);border:1px solid var(--line);padding:3px;border-radius:10px;margin-left:auto}
-nav.tabs button{border:0;background:transparent;padding:6px 12px;border-radius:7px;color:var(--muted);font-weight:600;font-size:.92rem}
+nav.tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;background:var(--surface);border:1px solid var(--line);padding:3px;border-radius:10px;margin-left:auto}
+nav.tabs button{border:0;background:transparent;padding:6px 14px;min-width:0;white-space:nowrap;text-align:center;border-radius:7px;color:var(--muted);font-weight:600;font-size:.92rem}
 nav.tabs button[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
 nav.tabs button:hover:not([aria-current="page"]){color:var(--text)}
 
@@ -322,7 +322,7 @@ main{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env
 }
 @media (max-width:600px){
   .top-in{flex-wrap:wrap}nav.tabs{margin-left:0;width:100%;order:3}
-  nav.tabs button{flex:1;padding:6px 4px;font-size:.86rem}
+  nav.tabs button{padding:6px 2px;font-size:.86rem}
   .fgrid,.pr-form{grid-template-columns:1fr}
   .rate{grid-template-columns:repeat(2,1fr)}
   /* workbench row becomes a two-line card: controls on top, full-width text below */
