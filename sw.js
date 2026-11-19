@@ -1,9 +1,9 @@
 /* Kalbėk service worker — offline app shell.
    Bump VERSION whenever you deploy changed files to force clients to refresh the shell cache. */
-const VERSION = 'v24';
+const VERSION = 'v26';
 const SHELL = 'kalbek-shell-' + VERSION;
 const CDN = 'kalbek-cdn-v1';
-const SHELL_FILES = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
+const SHELL_FILES = ['./', './index.html', './manifest.webmanifest', './icon-v2.svg', './icon-v2-180.png', './icon-v2-192.png', './icon-v2-512.png', './icon-v2-maskable-512.png'];
 const CDN_HOSTS = ['cdn.jsdelivr.net'];
 
 self.addEventListener('install', e => {
@@ -28,7 +28,7 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET' || req.headers.has('range')) return;          // never touch audio range requests
   const url = new URL(req.url);
   if (url.origin === location.origin) {
-    if (req.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname.endsWith('/')) e.respondWith(networkFirst(req));
+    if (req.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname.endsWith('/') || url.pathname.endsWith('.webmanifest')) e.respondWith(networkFirst(req));
     else e.respondWith(cacheFirst(req));
   } else if (CDN_HOSTS.includes(url.hostname)) {
     e.respondWith(staleWhileRevalidate(req));                              // transformers.js library

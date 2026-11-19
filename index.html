@@ -6,8 +6,8 @@
 <meta name="color-scheme" content="dark light">
 <meta name="theme-color" content="#12141a" id="metaTheme">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" id="favicon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" id="favicon" href="icon-v2.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-v2-180.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="LitLingo">
@@ -1004,7 +1004,7 @@ function getMS() { return ('mediaSession' in navigator) ? navigator.mediaSession
 function msMeta() {
   const MS = getMS(), s = play.src; if (!MS || !s || typeof MediaMetadata === 'undefined') return;
   const k = s.key + '|' + s.title + '|' + s.sub; if (k === msKey) return; msKey = k;
-  try { MS.metadata = new MediaMetadata({ title: s.title || 'LitLingo', artist: s.sub || 'LitLingo', album: 'LitLingo', artwork: [{ src: 'icon-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icon-512.png', sizes: '512x512', type: 'image/png' }] }); } catch (e) {}
+  try { MS.metadata = new MediaMetadata({ title: s.title || 'LitLingo', artist: s.sub || 'LitLingo', album: 'LitLingo', artwork: [{ src: 'icon-v2-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icon-v2-512.png', sizes: '512x512', type: 'image/png' }] }); } catch (e) {}
 }
 function msState() {
   const MS = getMS(); if (!MS) return;
