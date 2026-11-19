@@ -705,6 +705,7 @@ function toast(msg, type = '', act) {
   if (act) { const b = document.createElement('button'); b.type = 'button'; b.className = 'toast-act'; b.textContent = act.label; b.onclick = () => { t.remove(); act.fn(); }; t.appendChild(b); }
   $('#toasts').appendChild(t);
   setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 300); }, act ? 8000 : 4200);
+  return t;
 }
 
 /* ===================================================================
@@ -1223,6 +1224,143 @@ function openSuggest() {                 // review guessed tags for the selected
   if (!rows.length) { toast('No confident suggestions here. Cases (nominative, genitive…) can’t be guessed reliably — tag those yourself.'); return; }
   const m = openModal(`<div class="modal-head"><h2>Suggested tags</h2><button class="icon-btn" data-x aria-label="Close">✕</button></div><div class="modal-body"><p class="muted" style="margin-top:0">Guessed from obvious words and endings (question marks, “ne”, greetings, pronouns, …). Untick anything wrong. Cases are never guessed.</p><div id="sgList" style="max-height:52vh;overflow:auto;display:flex;flex-direction:column;gap:10px">${rows.slice(0, 200).map((r, i) => `<div><div lang="lt"><b>${esc(r.e.lt)}</b> <span class="muted">${esc(r.e.en || '')}</span></div><div class="tg-grp">${r.add.map(t => `<label class="chip" style="cursor:pointer"><input type="checkbox" data-r="${i}" value="${esc(t)}" checked> ${esc(tagName(t))}</label>`).join('')}</div></div>`).join('')}</div></div><div class="modal-foot"><button class="btn" data-x>Cancel</button><button class="btn primary" id="sgGo">Apply</button></div>`);
   $('#sgGo', m.el).onclick = () => { let n = 0; $$('#sgList input:checked', m.el).forEach(c => { const e = rows[+c.dataset.r].e; e.tags = [...(e.tags || []), c.value].slice(0, 12); n++; }); save(); m.close(); refresh(); toast(n + ' tag' + (n === 1 ? '' : 's') + ' added.'); };
+}
+
+/* ===================================================================
+   Import words from Anki (plain-text export) or any CSV / TSV
+=================================================================== */
+function parseDelim(text, sep) {         // small CSV/TSV parser: quoted fields, doubled quotes, newlines inside quotes
+  const rows = []; let row = [], cur = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += c; }
+    else if (c === '"' && cur === '') q = true;
+    else if (c === sep) { row.push(cur); cur = ''; }
+    else if (c === '\n') { row.push(cur); rows.push(row); row = []; cur = ''; }
+    else if (c !== '\r') cur += c;
+  }
+  if (cur !== '' || row.length) { row.push(cur); rows.push(row); } return rows;
+}
+const ankiClean = x => { const d = document.createElement('textarea'); d.innerHTML = String(x || '').replace(/\[sound:[^\]]*\]/gi, ' ').replace(/<br\s*\/?>|<\/div>|<\/p>/gi, ' ').replace(/<[^>]+>/g, ''); return d.value.replace(/ /g, ' ').replace(/\s+/g, ' ').trim(); };
+
+/* ---- Anki .apkg reader: a zip (deflate via DecompressionStream) holding a SQLite database + numbered media files. No libraries needed. ---- */
+async function zipRead(buf) {
+  const u8 = new Uint8Array(buf), dv = new DataView(buf); let e = -1;
+  for (let i = u8.length - 22; i >= Math.max(0, u8.length - 66000); i--) if (dv.getUint32(i, true) === 0x06054b50) { e = i; break; }
+  if (e < 0) throw new Error('This does not look like a zip / .apkg file.');
+  const n = dv.getUint16(e + 10, true); let o = dv.getUint32(e + 16, true); const files = new Map(), td = new TextDecoder();
+  for (let i = 0; i < n; i++) {
+    if (dv.getUint32(o, true) !== 0x02014b50) break;
+    const meth = dv.getUint16(o + 10, true), cs = dv.getUint32(o + 20, true), nl = dv.getUint16(o + 28, true), el = dv.getUint16(o + 30, true), cl = dv.getUint16(o + 32, true), lo = dv.getUint32(o + 42, true);
+    files.set(td.decode(u8.subarray(o + 46, o + 46 + nl)), { meth, cs, lo }); o += 46 + nl + el + cl;
+  }
+  const get = async name => {
+    const f = files.get(name); if (!f) return null; const ds = f.lo + 30 + dv.getUint16(f.lo + 26, true) + dv.getUint16(f.lo + 28, true), raw = u8.subarray(ds, ds + f.cs);
+    if (f.meth === 0) return raw; if (f.meth !== 8) throw new Error('Unsupported zip compression.');
+    return new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+  };
+  return { names: [...files.keys()], get };
+}
+function sqliteRead(u8) {                // minimal read-only SQLite reader: table b-trees, overflow pages, UTF-8 text
+  if (String.fromCharCode(...u8.subarray(0, 15)) !== 'SQLite format 3') throw new Error('The package does not contain a readable Anki collection.');
+  const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength); let ps = dv.getUint16(16); if (ps === 1) ps = 65536; const usable = ps - u8[20], td = new TextDecoder();
+  if (dv.getUint32(56) > 1) throw new Error('Unsupported database text encoding.');
+  const vint = (a, o) => { let v = 0; for (let i = 0; i < 8; i++) { const b = a[o + i]; v = v * 128 + (b & 127); if (b < 128) return [v, i + 1]; } return [v * 256 + a[o + 8], 9]; };
+  const payload = (o, P) => {
+    const X = usable - 35; if (P <= X) return u8.subarray(o, o + P);
+    const M = Math.floor((usable - 12) * 32 / 255) - 23, K = M + ((P - M) % (usable - 4)), loc = K <= X ? K : M, out = new Uint8Array(P); out.set(u8.subarray(o, o + loc));
+    let got = loc, pg = dv.getUint32(o + loc); while (got < P && pg) { const b = (pg - 1) * ps, n = Math.min(usable - 4, P - got); out.set(u8.subarray(b + 4, b + 4 + n), got); got += n; pg = dv.getUint32(b); } return out;
+  };
+  const record = p => {
+    const d = new DataView(p.buffer, p.byteOffset, p.byteLength); let [hs, n] = vint(p, 0), h = n, o = hs; const types = []; while (h < hs) { const [t, k] = vint(p, h); types.push(t); h += k; }
+    return types.map(t => { let v; if (t === 0) v = null; else if (t <= 6) { const len = [0, 1, 2, 3, 4, 6, 8][t]; if (len === 1) v = d.getInt8(o); else if (len === 2) v = d.getInt16(o); else if (len === 3) v = (d.getInt8(o) * 65536) + d.getUint16(o + 1); else if (len === 4) v = d.getInt32(o); else if (len === 6) v = d.getInt16(o) * 4294967296 + d.getUint32(o + 2); else v = Number(d.getBigInt64(o)); o += len; } else if (t === 7) { v = d.getFloat64(o); o += 8; } else if (t === 8) v = 0; else if (t === 9) v = 1; else { const len = t % 2 ? (t - 13) / 2 : (t - 12) / 2; v = t % 2 ? td.decode(p.subarray(o, o + len)) : p.subarray(o, o + len); o += len; } return v; });
+  };
+  const walk = (pg, cb) => {
+    const b = (pg - 1) * ps, h = pg === 1 ? 100 : 0, t = u8[b + h], nc = dv.getUint16(b + h + 3);
+    if (t === 13) { for (let i = 0; i < nc; i++) { let o = b + dv.getUint16(b + h + 8 + 2 * i); const [P, n1] = vint(u8, o); o += n1; const [rid, n2] = vint(u8, o); o += n2; cb(rid, record(payload(o, P))); } }
+    else if (t === 5) { for (let i = 0; i < nc; i++) walk(dv.getUint32(b + dv.getUint16(b + h + 12 + 2 * i)), cb); walk(dv.getUint32(b + h + 8), cb); }
+    else throw new Error('Unexpected database page.');
+  };
+  const master = []; walk(1, (rid, r) => { if (r[0] === 'table') master.push({ name: r[1], root: r[3] }); });
+  return { has: n => master.some(x => x.name === n), rows(name, cb) { const t = master.find(x => x.name === name); if (t) walk(t.root, cb); } };
+}
+async function openApkg(file) {
+  const busy = toast('Reading the Anki package…'); const td = new TextDecoder();
+  try {
+    const z = await zipRead(await file.arrayBuffer()), nm = z.names.includes('collection.anki21') ? 'collection.anki21' : 'collection.anki2';
+    if (!z.names.includes(nm)) throw new Error(z.names.includes('collection.anki21b') ? 'This package uses Anki’s newest format. In Anki, export again and tick “Support older Anki versions”.' : 'No Anki collection found in this file.');
+    const db = await z.get(nm); if (db[0] === 0x28 && db[1] === 0xb5 && db[2] === 0x2f && db[3] === 0xfd) throw new Error('This package uses Anki’s newest format. In Anki, export again and tick “Support older Anki versions”.');
+    const S = sqliteRead(db); let models = {}, decks = {};
+    S.rows('col', (id, r) => { try { models = JSON.parse(r[9] || '{}'); decks = JSON.parse(r[10] || '{}'); } catch (e) {} });
+    const deckOf = new Map(); S.rows('cards', (id, r) => { if (!deckOf.has(r[1])) deckOf.set(r[1], r[2]); });
+    const notes = []; S.rows('notes', (id, r) => notes.push({ id, mid: String(r[2]), tags: r[5] || '', flds: String(r[6] || '').split('\x1f') }));
+    if (!notes.length) throw new Error('No notes found in this package.');
+    const cnt = {}; notes.forEach(x => cnt[x.mid] = (cnt[x.mid] || 0) + 1); const mid = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0], use = notes.filter(x => x.mid === mid), skipped = notes.length - use.length;
+    const nf = Math.max(...use.map(x => x.flds.length)), M = models[mid], headers = M && M.flds ? M.flds.sort((a, b) => a.ord - b.ord).map(f => f.name) : [];
+    const rows = use.map(x => { const r = x.flds.slice(); while (r.length < nf) r.push(''); r.push(x.tags.trim()); const d = decks[deckOf.get(x.id)]; r.push(d ? d.name : ''); return r; });
+    headers[nf] = 'Anki tags'; headers[nf + 1] = 'Deck';
+    const media = new Map(); try { const mj = JSON.parse(td.decode(await z.get('media') || new Uint8Array())); for (const [idx, name] of Object.entries(mj)) media.set(name, () => z.get(idx)); } catch (e) {}
+    toastHide(busy);
+    openAnkiImport('', file.name, { rows, tagsCol: nf, deckCol: nf + 1, headers, media, note: skipped ? `${skipped} note${skipped === 1 ? '' : 's'} of another note type were left out.` : '' });
+  } catch (err) { console.error(err); toastHide(busy); toast(err.message || 'Could not read that Anki package.', 'err'); }
+}
+const toastHide = t => { try { t && t.remove && t.remove(); } catch (e) {} };
+function openAnkiImport(text, fileName, pre) {
+  text = String(text || '').replace(/^﻿/, ''); const SEP = { tab: '\t', comma: ',', semicolon: ';', space: ' ', pipe: '|', colon: ':' };
+  const lines = pre ? [] : text.split(/\r?\n/), body = []; let sep = '', tagsCol = pre ? pre.tagsCol : -1, deckCol = pre ? pre.deckCol : -1, ignore = new Set(); if (pre && deckCol >= 0) ignore.add(deckCol);
+  for (const ln of lines) {
+    const h = !body.length && /^#\s*([a-z ]+?)\s*:\s*(.*)$/i.exec(ln);
+    if (h) { const k = h[1].toLowerCase(), v = h[2].trim(); if (k === 'separator') sep = SEP[v.toLowerCase()] || (v.length === 1 ? v : ''); else if (k === 'tags column') tagsCol = (+v || 0) - 1; else if (k === 'deck column') { deckCol = (+v || 0) - 1; if (deckCol >= 0) ignore.add(deckCol); } else if (k === 'guid column' || k === 'notetype column') { if ((+v || 0) > 0) ignore.add(+v - 1); } continue; }
+    if (!body.length && !ln.trim()) continue; body.push(ln);
+  }
+  if (!sep && !pre) { const sample = body.slice(0, 8); let best = '\t', bs = -1; for (const c of ['\t', ';', ',', '|']) { const n = sample.map(l => l.split(c).length - 1); const sc = n.every(x => x === n[0]) && n[0] > 0 ? n[0] + 100 : Math.min(...n); if (sc > bs) { bs = sc; best = c; } } sep = best; }
+  const rows = pre ? pre.rows : parseDelim(body.join('\n'), sep).filter(r => r.some(c => String(c).trim())), ncol = Math.max(0, ...rows.map(r => r.length));
+  if (!rows.length || ncol < 1) { toast('Nothing to import — the file looks empty.', 'warn'); return; }
+  if (tagsCol >= 0) ignore.add(tagsCol);
+  const cand = [...Array(ncol).keys()].filter(i => !ignore.has(i)), LTRE = /[ąčęėįšųūžĄČĘĖĮŠŲŪŽ̀́̃]/g;
+  const lscore = i => { let a = 0, b = 0; rows.slice(0, 60).forEach(r => { const t = ankiClean(r[i]); a += (t.match(LTRE) || []).length; b += t.length; }); return b ? a / b : 0; };
+  let lt = cand[0] ?? 0, en = cand.find(i => i !== lt); if (cand.length > 1 && lscore(cand[1]) > lscore(cand[0])) { lt = cand[1]; en = cand[0]; }
+  const colName = i => pre && pre.headers && pre.headers[i] ? pre.headers[i] + ' (col ' + (i + 1) + ')' : 'Column ' + (i + 1) + ' — ' + (ankiClean((rows[0] || [])[i]).slice(0, 22) || '…');
+  const opts = (sel, none) => (none ? `<option value="-1" ${sel < 0 ? 'selected' : ''}>— none —</option>` : '') + [...Array(ncol).keys()].map(i => `<option value="${i}" ${i === sel ? 'selected' : ''}>${esc(colName(i))}</option>`).join('');
+  const hasSound = rows.some(r => r.some(c => /\[sound:/i.test(c)));
+  const m = openModal(`<div class="modal-head"><h2>Import from Anki / CSV</h2><button class="icon-btn" data-x aria-label="Close">✕</button></div><div class="modal-body">
+    <p class="muted" style="margin-top:0">${esc(fileName || 'Pasted text')} · ${rows.length} row${rows.length === 1 ? '' : 's'}. Check which column is which — the preview updates as you choose.</p>
+    <div class="pr-form"><div><label class="lbl" for="aiLt">Lithuanian</label><select id="aiLt">${opts(lt, false)}</select></div><div><label class="lbl" for="aiEn">English</label><select id="aiEn">${opts(en ?? -1, true)}</select></div>
+      <div><label class="lbl" for="aiNote">Notes (optional)</label><select id="aiNote">${opts(-1, true)}</select></div><div><label class="lbl" for="aiTags">Anki tags (optional)</label><select id="aiTags">${opts(tagsCol, true)}</select></div>
+      <div class="full"><label class="lbl" for="aiCat">Lesson / category</label><input type="text" id="aiCat" value="Anki import" maxlength="40"> ${deckCol >= 0 ? '<label style="display:flex;gap:8px;align-items:center;margin-top:6px"><input type="checkbox" id="aiDeck"> Use the Anki deck name instead</label>' : ''}</div></div>
+    <label style="display:flex;gap:8px;align-items:center;margin-top:8px"><input type="checkbox" id="aiKeepTags"> Keep Anki tags as tags here too</label>
+    <div id="aiPrev" style="margin-top:10px;font-size:.9rem;overflow:auto"></div><p id="aiSum" style="margin:10px 0 0"></p>
+    <label id="aiAudWrap" style="display:flex;gap:8px;align-items:center;margin-top:8px" hidden><input type="checkbox" id="aiAud" checked> <span id="aiAudTxt"></span></label>
+    ${pre && pre.note ? `<p class="muted" style="font-size:.84rem;margin:6px 0 0">${esc(pre.note)}</p>` : ''}
+    ${hasSound && !pre ? '<p class="muted" style="font-size:.84rem;margin:6px 0 0">🔊 Your Anki cards have audio. A text export does not include the sound files — to bring the audio too, export the deck as an <b>.apkg</b> instead (File → Export → Anki Deck Package, tick “Support older Anki versions”). Until then these phrases use text-to-speech.</p>' : ''}</div>
+    <div class="modal-foot"><button class="btn" data-x>Cancel</button><button class="btn primary" id="aiGo">Import</button></div>`);
+  const known = new Set(state.entries.map(e => key(stripStress(e.lt)))); const g = id => +$('#' + id, m.el).value;
+  const plan = () => {
+    const L = g('aiLt'), E = g('aiEn'), N = g('aiNote'), T = g('aiTags'), seen = new Set(), out = []; let dup = 0, empty = 0;
+    for (const r of rows) {
+      let t = ankiClean(r[L]); if (!t) { empty++; continue; }
+      let stress = ''; const plain = stripStress(t); if (plain !== t.normalize('NFC')) { stress = t.normalize('NFC'); t = plain; }
+      const k = key(stripStress(t)); if (known.has(k) || seen.has(k)) { dup++; continue; } seen.add(k);
+      const tags = []; if (T >= 0 && $('#aiKeepTags', m.el).checked) String(r[T] || '').split(/\s+/).filter(Boolean).forEach(x => { const nm = x.split('::').pop().replace(/_/g, ' ').slice(0, 24), hit = [...GT].find(([id, lab]) => tagName(id).toLowerCase() === nm.toLowerCase()); tags.push(hit ? hit[0] : nm); });
+      const sm = c => (/\[sound:([^\]]+)\]/i.exec(String(c || '')) || [])[1], snd = pre && pre.media ? [sm(r[L]), ...r.map(sm)].find(n => n && pre.media.has(n)) : '';
+      out.push({ snd, lt: t, stress, en: E >= 0 ? ankiClean(r[E]) : '', note: N >= 0 ? ankiClean(r[N]) : '', tags, deck: deckCol >= 0 ? ankiClean(r[deckCol]) : '' });
+    }
+    return { out, dup, empty };
+  };
+  const draw = () => {
+    const P = plan(); $('#aiPrev', m.el).innerHTML = P.out.length ? `<table style="width:100%;border-collapse:collapse">${P.out.slice(0, 5).map(x => `<tr><td lang="lt" style="padding:4px 8px 4px 0;font-weight:600">${x.snd ? '🔊 ' : ''}${esc(x.stress || x.lt)}</td><td style="padding:4px 0" class="muted">${esc(x.en)}</td></tr>`).join('')}</table>` : '<span class="muted">No new phrases with these settings.</span>';
+    $('#aiSum', m.el).innerHTML = `<b>${P.out.length}</b> new phrase${P.out.length === 1 ? '' : 's'}${P.dup ? ` · ${P.dup} already in your dictionary (skipped)` : ''}${P.empty ? ` · ${P.empty} empty (skipped)` : ''}`; $('#aiGo', m.el).disabled = !P.out.length; { const na = P.out.filter(x => x.snd).length; $('#aiAudWrap', m.el).hidden = !na; $('#aiAudTxt', m.el).textContent = `Import the audio too (${na} phrase${na === 1 ? '' : 's'} have a sound file)`; } return P;
+  };
+  $$('select, #aiKeepTags, #aiDeck', m.el).forEach(x => x.addEventListener('change', draw)); draw();
+  $('#aiGo', m.el).onclick = async () => {
+    const P = draw(), cat0 = ($('#aiCat', m.el).value.trim() || 'Anki import'), useDeck = $('#aiDeck', m.el) && $('#aiDeck', m.el).checked, wantAud = !$('#aiAudWrap', m.el).hidden && $('#aiAud', m.el).checked, go = $('#aiGo', m.el); let ord = maxOrder(), na = 0, fail = 0;
+    go.disabled = true; const MIME = { mp3: 'audio/mpeg', ogg: 'audio/ogg', oga: 'audio/ogg', wav: 'audio/wav', m4a: 'audio/mp4', aac: 'audio/aac', flac: 'audio/flac', opus: 'audio/ogg', webm: 'audio/webm' };
+    for (let i = 0; i < P.out.length; i++) {
+      const x = P.out[i], e = mkEntry({ lt: x.lt, stress: x.stress, en: x.en, note: x.note, tags: x.tags, cat: (useDeck && x.deck ? x.deck : cat0).replace(/::/g, ' · ') }); e.order = ++ord; state.entries.push(e);
+      if (wantAud && x.snd) { go.textContent = `Importing audio ${na + 1}…`; try { const buf = await pre.media.get(x.snd)(); if (buf && buf.length) { const ext = (x.snd.split('.').pop() || '').toLowerCase(); await setEntryAudio(e, new File([buf], x.snd.split('/').pop(), { type: MIME[ext] || 'audio/mpeg' })); na++; } else fail++; } catch (err) { console.error(err); fail++; } }
+      if (i % 25 === 24) await new Promise(r => setTimeout(r)); }
+    save(); m.close(); refresh(); toast(`Imported ${P.out.length} phrase${P.out.length === 1 ? '' : 's'} into ${useDeck ? 'your Anki decks' : '“' + cat0 + '”'}${na ? ` with ${na} audio file${na === 1 ? '' : 's'}` : ''}${fail ? ` (${fail} audio file${fail === 1 ? '' : 's'} could not be read)` : ''}.`);
+  };
 }
 const tagSelHTML = (cur, label = 'All grammar tags') => `<option value="all">${label}</option>` + tagsInUse().map(([t, n]) => `<option value="${esc(t)}" ${t === cur ? 'selected' : ''}>${esc(tagName(t))} (${n})</option>`).join('');
 const ekey = e => key(stripStress(e.lt)) + '|' + (e.cat || '');
@@ -3118,6 +3256,8 @@ function renderBackup() {
       <label style="display:flex;gap:8px;align-items:center;margin:0 0 6px 24px"><input type="checkbox" id="expLessons" disabled> Also the full lesson MP3s</label>
       <p class="muted" style="font-size:.84rem;margin:0 0 12px">Cut phrase clips are small. Full lesson MP3s make the file very large and are only needed to re-edit clips — without them, just re-add the same MP3s after importing and everything reconnects.</p><button class="btn primary" id="btnExport">Download backup</button></div>
     <div class="panel"><h2 class="sec">⤓ Import</h2><p class="muted" style="margin-top:0">Restore from a backup file — merge it into what you have, or replace everything.</p><button class="btn" id="btnJson">Choose backup file…</button></div>
+    <div class="panel"><h2 class="sec">📥 Import words from Anki or CSV</h2><p class="muted" style="margin-top:0">Bring in a word list you already have. In Anki: <b>File → Export…</b> and choose <b>Anki Deck Package (.apkg)</b> to bring the <b>audio</b> too (tick “Support older Anki versions” and “Include media”), or <b>Notes in Plain Text (.txt)</b> for text only. Then choose the file here. Any CSV or tab-separated list works too.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="btnAnkiIn">Choose file…</button><button class="btn" id="btnAnkiPaste">Paste text…</button></div><input type="file" id="fileAnkiIn" accept=".apkg,.txt,.csv,.tsv,text/plain,text/csv,text/tab-separated-values" hidden></div>
     <div class="panel"><h2 class="sec">📚 Export to Anki</h2><p class="muted" style="margin-top:0">Makes a .zip with an Anki import file and the phrase audio, so you can also study these phrases in Anki or AnkiDroid. A README inside explains the two import steps.</p>
       <div class="pr-form"><div><label class="lbl" for="ankiScope">Phrases</label><select id="ankiScope"><option value="all">All lessons (${state.entries.length})</option>${cats().map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('')}</select></div>
         <div><label class="lbl" for="ankiStyle">Cards</label><select id="ankiStyle"><option value="both">Both kinds (listen + English → Lithuanian)</option><option value="listen">Listen &amp; recall (audio on the front)</option><option value="en2lt">English → Lithuanian (audio on the back)</option></select></div></div>
@@ -3136,6 +3276,9 @@ function renderBackup() {
     if (!canLink()) { box.innerHTML = '<p class="muted" style="font-size:.86rem;margin:0">On this device Sync asks you to choose the file, merges it, then downloads the updated file to upload again. (One-tap sync with a linked file works in desktop Chrome and Edge.)</p>'; return; }
     box.innerHTML = h ? `<span class="muted" style="font-size:.86rem">Linked file: <b>${esc(h.name)}</b> — Sync reads it, merges, and writes it back.</span> <button class="btn sm" id="btnUnlink">Unlink</button>` : '<span class="muted" style="font-size:.86rem">Link a file for one-tap sync:</span> <button class="btn sm" id="btnLinkOpen">Choose existing file…</button> <button class="btn sm" id="btnLinkNew">Create new file…</button>';
     if (h) box.querySelector('#btnUnlink').onclick = async () => { await syncH.set(null); renderBackup(); }; else { box.querySelector('#btnLinkOpen').onclick = () => linkSyncFile(false); box.querySelector('#btnLinkNew').onclick = () => linkSyncFile(true); } })();
+  $('#btnAnkiIn').onclick = () => $('#fileAnkiIn').click();
+  $('#fileAnkiIn').onchange = async ev => { const f = ev.target.files[0]; ev.target.value = ''; if (!f) return; if (/\.colpkg$/i.test(f.name)) { toast('That is a full Anki backup. In Anki use File → Export, pick one deck, format “Anki Deck Package (.apkg)”, and choose that instead.', 'warn'); return; } if (/\.apkg$/i.test(f.name)) { openApkg(f); return; } openAnkiImport(await f.text(), f.name); };
+  $('#btnAnkiPaste').onclick = () => { const m = openModal(`<div class="modal-head"><h2>Paste your word list</h2><button class="icon-btn" data-x aria-label="Close">✕</button></div><div class="modal-body"><p class="muted" style="margin-top:0">One word or phrase per line, with the two columns separated by a tab, semicolon or comma.</p><textarea id="ankiPaste" rows="10" style="width:100%" placeholder="laba diena\tgood day"></textarea></div><div class="modal-foot"><button class="btn" data-x>Cancel</button><button class="btn primary" id="ankiPasteGo">Continue</button></div>`); $('#ankiPasteGo', m.el).onclick = () => { const t = $('#ankiPaste', m.el).value; if (!t.trim()) return; m.close(); openAnkiImport(t, ''); }; };
   $('#btnAnki').onclick = exportAnki; $('#btnExport').onclick = exportJSON; $('#btnJson').onclick = () => $('#fileJson').click();
   $('#expAudio').onchange = () => { const x = $('#expLessons'); x.disabled = !$('#expAudio').checked; if (x.disabled) x.checked = false; };
   renderStorageInfo();
