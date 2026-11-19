@@ -6,8 +6,8 @@
 <meta name="color-scheme" content="dark light">
 <meta name="theme-color" content="#12141a" id="metaTheme">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" id="favicon" href="icon-v2.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon-v2-180.png">
+<link rel="icon" href="icon-v4.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-v4-180.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="LitLingo">
@@ -129,6 +129,9 @@ code.k{background:var(--bg2);border:1px solid var(--line);border-radius:5px;padd
 .item.open .extra{display:block}
 .extra .ph{color:var(--muted);font-style:italic;font-size:.9rem;margin-bottom:6px}
 .extra .xc{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.sdot{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid var(--muted);background:transparent;vertical-align:middle}.sdot.s1{border-color:var(--gold);background:linear-gradient(90deg,var(--gold) 50%,transparent 50%)}.sdot.s2{border-color:var(--accent);background:var(--accent)}
+.ph{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.approx{white-space:nowrap}
+#btnInstall:not([hidden]){margin-left:auto}#btnInstall[hidden]+#btnHelp{margin-left:auto}@media (min-width:701px){#btnInstall[hidden]+#btnHelp{margin-left:0}}
 .approx{font-size:.68rem;border:1px solid var(--line);border-radius:5px;padding:0 4px;font-style:normal;margin-left:4px}
 .items.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
 .items.cards .item{align-content:flex-start;padding:8px 10px 6px 12px}
@@ -429,13 +432,6 @@ main{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env
 .ai-b.bot{align-self:flex-start;background:var(--surface2);border:1px solid var(--line);border-bottom-left-radius:4px}.ai-lt{font-size:1.1rem;font-weight:600}.ai-en{margin-top:6px;color:var(--muted);font-style:italic}
 .ai-fix{margin-top:8px;padding:8px 10px;border-left:3px solid var(--gold);background:color-mix(in srgb,var(--gold) 14%,transparent);border-radius:6px;font-size:.92rem}.ai-act{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 .linkish{all:unset;cursor:pointer;color:var(--accent);text-decoration:underline}
-.mascot-bar{display:flex;gap:14px;align-items:center;padding:8px 14px;margin-bottom:12px;background:var(--surface);border:1px solid var(--line);border-radius:16px}
-.mascot-bar .mascot{width:84px;height:84px;flex:none}.mascot-bar .bub{position:relative;flex:1;background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:10px 14px;line-height:1.35}
-.mascot-bar .bub::before{content:"";position:absolute;left:-7px;top:50%;width:12px;height:12px;background:var(--surface2);border-left:1px solid var(--line);border-bottom:1px solid var(--line);transform:translateY(-50%) rotate(45deg)}
-.mascot-big{width:130px;height:130px}.mascot-xs{width:44px;height:44px;flex:none;animation:mpop .35s ease-out}@keyframes mpop{0%{transform:scale(.7)}60%{transform:scale(1.12)}100%{transform:scale(1)}}.mascot-sm{width:46px;height:46px;flex:none}
-@keyframes mbounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}@keyframes mshake{0%,100%{transform:rotate(0)}25%{transform:rotate(-2.5deg)}75%{transform:rotate(2.5deg)}}
-.mm-flex,.mascot-big{animation:mbounce 1.6s ease-in-out infinite}.mm-angry{animation:mshake .5s ease-in-out 3}
-@media (prefers-reduced-motion:reduce){.mm-flex,.mascot-big,.mm-angry,.mascot-xs{animation:none}}
 .stress-pick{margin-top:8px}.sp{display:flex;flex-wrap:wrap;align-items:center;gap:2px;font-size:1.5rem;line-height:1.2}
 .sp .sl{min-width:1.35em;height:1.7em;border:1px solid var(--line);border-radius:7px;background:var(--surface2);color:var(--text);font:inherit;font-weight:600;padding:0 3px;cursor:pointer}
 .sp .sl:hover{border-color:var(--accent)}.sp .sl.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}.sp .sx{padding:0 2px;color:var(--muted)}
@@ -491,7 +487,7 @@ svg.pg-svg{width:100%;height:auto;display:block;overflow:visible}
 
 <header class="top">
   <div class="top-in">
-    <div class="logo"><div class="logo-mark" aria-hidden="true">🎧</div>LitLingo</div>
+    <div class="logo"><div class="logo-mark" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2bbf8c"/><stop offset="1" stop-color="#0b5a43"/></linearGradient></defs><rect width="512" height="512" rx="112" fill="url(#lg)"/><g><path d="M144 104h224a64 64 0 0 1 64 64v116a64 64 0 0 1-64 64H236l-84 62v-62h-8a64 64 0 0 1-64-64V168a64 64 0 0 1 64-64z" fill="#fff"/><rect x="135" y="198" width="30" height="56" rx="15" fill="#0f6a50"/><rect x="188" y="172" width="30" height="108" rx="15" fill="#0f6a50"/><rect x="241" y="150" width="30" height="152" rx="15" fill="#f2a900"/><rect x="294" y="172" width="30" height="108" rx="15" fill="#0f6a50"/><rect x="347" y="198" width="30" height="56" rx="15" fill="#0f6a50"/><defs><clipPath id="lgc"><rect x="300" y="290" width="136" height="92" rx="16"/></clipPath></defs><g clip-path="url(#lgc)"><rect x="300" y="290" width="136" height="31" fill="#fdb913"/><rect x="300" y="320" width="136" height="32" fill="#006a44"/><rect x="300" y="351" width="136" height="31" fill="#c1272d"/></g><rect x="300" y="290" width="136" height="92" rx="16" fill="none" stroke="#fff" stroke-width="7"/></g></svg></div>LitLingo</div>
     <nav class="tabs" aria-label="Sections">
       <button data-tab="dict" aria-current="page">📖 Dictionary</button>
       <button data-tab="lessons">🎓 Lessons</button>
@@ -513,7 +509,7 @@ svg.pg-svg{width:100%;height:auto;display:block;overflow:visible}
       <div>
         <div class="statline" id="stats"></div>
         <div class="toolbar">
-          <div class="search"><input type="search" id="q" placeholder="Search…  ( / )   ·   -oje finds word endings" aria-label="Search phrases" autocomplete="off"></div>
+          <div class="search"><input type="search" id="q" placeholder="Search…  ( / )" title="Tip: type -oje to find every phrase with a word ending in “oje”" aria-label="Search phrases" autocomplete="off"></div>
           <select id="catSel" aria-label="Lesson / category"></select>
           <select id="tagSel" aria-label="Grammar tag" hidden></select>
           <select id="sortSel" aria-label="Sort">
@@ -1005,7 +1001,7 @@ function getMS() { return ('mediaSession' in navigator) ? navigator.mediaSession
 function msMeta() {
   const MS = getMS(), s = play.src; if (!MS || !s || typeof MediaMetadata === 'undefined') return;
   const k = s.key + '|' + s.title + '|' + s.sub; if (k === msKey) return; msKey = k;
-  try { MS.metadata = new MediaMetadata({ title: s.title || 'LitLingo', artist: s.sub || 'LitLingo', album: 'LitLingo', artwork: [{ src: 'icon-v2-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icon-v2-512.png', sizes: '512x512', type: 'image/png' }] }); } catch (e) {}
+  try { MS.metadata = new MediaMetadata({ title: s.title || 'LitLingo', artist: s.sub || 'LitLingo', album: 'LitLingo', artwork: [{ src: 'icon-v4-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icon-v4-512.png', sizes: '512x512', type: 'image/png' }] }); } catch (e) {}
 }
 function msState() {
   const MS = getMS(); if (!MS) return;
@@ -1404,7 +1400,7 @@ function itemHTML(e) {
     <div class="txt" data-act="toggle"><span class="lt" lang="lt">${esc(e.stress || e.lt)}</span><span class="en">${esc(e.en)}</span></div>
     ${ui.cat === 'all' && e.cat ? `<span class="tag" title="${esc(e.cat)}">${esc(e.cat)}</span>` : ''}
     <span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-    <button class="dotbtn" data-act="status" title="${st.label} — click to change (M)" aria-label="Status: ${st.label}">${st.icon}</button>
+    <button class="dotbtn" data-act="status" title="${st.label} — click to change (M)" aria-label="Status: ${st.label}"><span class="sdot s${e.status}" aria-hidden="true"></span></button>
     <button class="icon-btn" data-act="fav" aria-pressed="${e.fav}" title="Favorite (F)" aria-label="Favorite">${e.fav ? '★' : '☆'}</button>
     <button class="icon-btn" data-act="toggle" aria-expanded="${open}" title="Details (Enter)" aria-label="Details">${open ? '▴' : '▾'}</button>
     ${extra}</div>`;
@@ -2641,14 +2637,14 @@ function renderPractice() {
   if (ls.active) return lsScreen(root);
   if (pr.done) {
     const t = pr.tally, n = t.again + t.hard + t.good + t.easy, ok = t.good + t.easy;
-    root.innerHTML = `<div class="pr-card">${mascotT(n && ok / n >= 0.8 ? 'flex' : n && ok / n < 0.4 ? 'neutral' : 'happy', { cls: 'mascot mascot-big' })}<h2 style="margin:0">Session complete</h2><p class="muted" style="margin:0">${n} review${n === 1 ? '' : 's'} · ${n ? Math.round(ok / n * 100) : 0}% recalled</p>
+    root.innerHTML = `<div class="pr-card"><div style="font-size:2.6rem">🎉</div><h2 style="margin:0">Session complete</h2><p class="muted" style="margin:0">${n} review${n === 1 ? '' : 's'} · ${n ? Math.round(ok / n * 100) : 0}% recalled</p>
       <div class="stat-mini"><div><b style="color:var(--red)">${t.again}</b>Again</div><div><b style="color:var(--gold-text)">${t.hard}</b>Hard</div><div><b style="color:var(--green)">${t.good}</b>Good</div><div><b style="color:var(--green)">${t.easy}</b>Easy</div></div>${todayGoalHTML()}
       <div style="display:flex;gap:10px"><button class="btn primary" id="prAgain">New session</button><button class="btn" id="prBack">Dictionary</button></div></div>`;
     $('#prAgain').onclick = () => { pr.done = false; renderPractice(); }; $('#prBack').onclick = () => { pr.done = false; showTab('dict'); }; return;
   }
   if (!pr.active) {
     const c = pr.cfg, info = queueInfo(c), avail = info.list.length, cs = cats(), L = lim();
-    root.innerHTML = `<div class="panel"><h2 class="sec">🧠 Quick practice</h2><p class="muted" style="margin-top:0">Rate how well you knew each phrase. New phrases go through short learning steps, then come back after longer and longer gaps — the better you know a phrase, the longer the gap (like Anki).</p><div id="goalWrap">${todayGoalHTML()}</div>
+    root.innerHTML = `<div class="panel"><h2 class="sec">🧠 Quick practice</h2><p class="muted" style="margin-top:0">Rate how well you knew each phrase — the better you know it, the longer until it comes back (like Anki).</p><div id="goalWrap">${todayGoalHTML()}</div>
       <div class="pr-form">
         <div><label class="lbl" for="prMode">Mode</label><select id="prMode">${PR_MODES.map(([v, t]) => `<option value="${v}" ${c.mode === v ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
         <div><label class="lbl" for="prCat">Lesson</label><select id="prCat"><option value="all">All lessons</option>${cs.map(x => `<option value="${esc(x)}" ${x === c.cat ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div>
@@ -2666,11 +2662,10 @@ function renderPractice() {
     ['prMode', 'prScope', 'prCount', 'prAudioOnly', 'prCat', 'prTag'].forEach(id => $('#' + id) && ($('#' + id).onchange = sync)); $('#prStart').onclick = startSession;
     const lm = (id, key, max) => { $('#' + id).onchange = ev => { const v = Math.max(0, Math.min(max, Math.floor(+ev.target.value) || 0)); ev.target.value = v; state.settings[key] = v; state.settings._limitsOpen = true; save(); prRefreshStatus(); renderStats(); }; };
     const dl = $('.pr-limits'); if (dl) dl.addEventListener('toggle', () => { state.settings._limitsOpen = dl.open; });   // stays open when you change another option
-    lm('stNew', 'newPerDay', 500); lm('stRev', 'maxReviews', 2000); lm('stGoal', 'dailyGoal', 2000); weakMount(root); mascotMount(root); focusMount(root); lsMount(root); aiMount(root); return;
+    lm('stNew', 'newPerDay', 500); lm('stRev', 'maxReviews', 2000); lm('stGoal', 'dailyGoal', 2000); weakMount(root); root.insertAdjacentHTML('afterbegin', '<div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn sm" data-go="progress">📈 Your progress</button></div>'); focusMount(root); lsMount(root); aiMount(root); return;
   }
   const e = byId(pr.queue[pr.i]); if (!e) { endSession(); return; }
   const total = pr.queue.length, m = pr.mode, typed = isTyped(m), res = pr.result;
-  const pmood = res ? ({ exact: 'happy', diacritics: 'neutral', close: 'neutral' }[res.kind] || 'sad') : (pr.mood || 'happy');
   const rb = ['again', 'hard', 'good', 'easy'].map((r, k) => `<button class="r-${r}${res && res.suggest === r ? ' suggested' : ''}" data-rate="${r}"><span>${cap(r)}</span><small>${fmtIv(schedule(e, r).ivMs)} · <kbd>${k + 1}</kbd></small></button>`).join('');
   const typeForm = `<form class="pr-type" id="prForm" autocomplete="off"><input type="text" id="prInput" lang="lt" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done" aria-label="Your answer in Lithuanian" placeholder="Type in Lithuanian…">
       <div class="charpad" role="group" aria-label="Lithuanian letters">${[...'ąčęėįšųūž'].map(ch => `<button type="button" data-ch="${ch}" tabindex="-1" aria-label="Insert ${ch}">${ch}</button>`).join('')}</div>
@@ -2697,7 +2692,7 @@ function renderPractice() {
       ${e.note ? `<p class="muted" style="margin:0;max-width:520px">${esc(e.note)}</p>` : ''}<button class="btn sm" id="prPlay2">🔊 Play again <kbd>Space</kbd></button>${shadowHTML(e, m === 'shadow')}<div class="rate">${rb}</div>`;
   }
   root.innerHTML = `<div class="pr-prog" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${pr.i}"><i style="width:${pr.i / total * 100}%"></i></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px" class="muted"><span style="display:inline-flex;align-items:center;gap:8px">${mascotT(pmood, { cls: 'mascot mascot-xs' })}Card ${pr.i + 1} / ${total} · ${esc((PR_MODES.find(x => x[0] === m) || [0, ''])[1].replace(/^\S+\s/, ''))}</span><button class="btn sm ghost" id="prEnd">End session <kbd>Esc</kbd></button></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px" class="muted"><span style="display:inline-flex;align-items:center;gap:8px">Card ${pr.i + 1} / ${total} · ${esc((PR_MODES.find(x => x[0] === m) || [0, ''])[1].replace(/^\S+\s/, ''))}</span><button class="btn sm ghost" id="prEnd">End session <kbd>Esc</kbd></button></div>
     <div class="pr-card" aria-live="polite">${front}</div>`;
   const pb = $('#prPlay') || $('#prPlay2'); if (pb) pb.onclick = () => replay(e.id);
   const rv = $('#prReveal'); if (rv) rv.onclick = reveal; $$('[data-rate]').forEach(b => b.onclick = () => rateCard(b.dataset.rate)); $('#prEnd').onclick = () => endSession();
@@ -2744,9 +2739,9 @@ function answerPick(v) {
    Weak-spot rescue + hands-free listening walk
 =================================================================== */
 function weakMount(root) {
-  root.insertAdjacentHTML('afterbegin', '<div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn sm" data-go="progress">📈 Your progress</button></div>');
+  
   const w = weakList(); if (!w.length) return;
-  root.firstElementChild.insertAdjacentHTML('afterend', `<div class="panel pr-weak"><div style="flex:1;min-width:200px"><b>⚠ ${w.length} weak spot${w.length === 1 ? '' : 's'}</b><div class="muted" style="font-size:.88rem">Phrases you keep missing: ${w.slice(0, 3).map(e => '<span lang="lt">' + esc(e.lt) + '</span>').join(' · ')}${w.length > 3 ? ' …' : ''}</div></div><button class="btn primary" id="prWeak">Rescue session · ${Math.min(10, w.length)}</button></div>`);
+  root.insertAdjacentHTML('afterbegin', `<div class="panel pr-weak"><div style="flex:1;min-width:200px"><b>⚠ ${w.length} weak spot${w.length === 1 ? '' : 's'}</b><div class="muted" style="font-size:.88rem">Phrases you keep missing: ${w.slice(0, 3).map(e => '<span lang="lt">' + esc(e.lt) + '</span>').join(' · ')}${w.length > 3 ? ' …' : ''}</div></div><button class="btn primary" id="prWeak">Rescue session · ${Math.min(10, w.length)}</button></div>`);
   $('#prWeak').onclick = () => { pr.cfg = Object.assign({}, pr.cfg, { scope: 'weak', count: 10, cat: 'all', tag: 'all', audioOnly: false }); startSession(); };
 }
 const weakList = () => state.entries.filter(isWeak).sort((x, y) => weakScore(y) - weakScore(x));
@@ -2893,65 +2888,6 @@ function aiMount(root) {
   $('#aiOpen').onclick = openTutor;
 }
 
-/* ===================================================================
-   Mascot: Gandriukas the little stork — mood follows your habit; the tab icon changes with it
-=================================================================== */
-const MASCOT_BG = { happy: '#1f9d6c', flex: '#f39c12', neutral: '#2e86c1', sad: '#6c7a9c', angry: '#d64545' };
-function mascotSVG(mood, o) {
-  o = o || {}; const D = '#2b2f38', W = '#fff', LN = '#c9d3dd', R = '#ff5a43', R2 = '#d93f2c';
-  const m = MASCOT_BG[mood] ? mood : 'happy';
-  const wing = '<path d="M52 112 Q26 126 38 158 Q54 152 62 134Z" fill="' + W + '" stroke="' + LN + '" stroke-width="3" stroke-linejoin="round"/><path d="M38 158 Q54 152 60 140 L56 164Z" fill="' + D + '"/>';
-  const relaxed = '<g>' + wing + '</g><g transform="translate(200 0) scale(-1 1)">' + wing + '</g>';
-  const armR = '<path d="M146 122 H176 V84" fill="none" stroke="' + LN + '" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/><path d="M146 122 H176 V84" fill="none" stroke="' + W + '" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/><circle cx="176" cy="78" r="11" fill="' + W + '" stroke="' + LN + '" stroke-width="3"/><circle cx="164" cy="108" r="9" fill="' + W + '" stroke="' + LN + '" stroke-width="3"/><path d="M146 122 H172" stroke="' + W + '" stroke-width="14" stroke-linecap="round"/>';
-  const flexArms = '<g>' + armR + '</g><g transform="translate(200 0) scale(-1 1)">' + armR + '</g>';
-  const sparkle = (x, y, s) => '<path transform="translate(' + x + ' ' + y + ') scale(' + s + ')" d="M0 -9 L2.4 -2.4 L9 0 L2.4 2.4 L0 9 L-2.4 2.4 L-9 0 L-2.4 -2.4Z" fill="#ffc83d"/>';
-  const eyeW = '<circle cx="80" cy="92" r="14" fill="#fff" stroke="' + D + '" stroke-width="3.5"/><circle cx="120" cy="92" r="14" fill="#fff" stroke="' + D + '" stroke-width="3.5"/>';
-  const pup = (dy, r) => '<circle cx="82" cy="' + (93 + dy) + '" r="' + r + '" fill="' + D + '"/><circle cx="118" cy="' + (93 + dy) + '" r="' + r + '" fill="' + D + '"/><circle cx="84.5" cy="' + (90 + dy) + '" r="2.6" fill="#fff"/><circle cx="120.5" cy="' + (90 + dy) + '" r="2.6" fill="#fff"/>';
-  const brow = d => '<path d="' + d + '" fill="none" stroke="' + D + '" stroke-width="5" stroke-linecap="round"/>';
-  const beakBase = '<path d="M86 101 Q100 95 114 101 Q108 126 100 140 Q92 126 86 101Z" fill="' + R + '"/>';
-  const mouth = d => '<path d="' + d + '" fill="none" stroke="' + R2 + '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>';
-  const beakShut = beakBase;
-  const beakOpen = '<path d="M87 101 Q100 95 113 101 Q109 113 100 115 Q91 113 87 101Z" fill="' + R + '"/><path d="M90 118 Q100 146 110 118 Q100 124 90 118Z" fill="' + R2 + '"/><path d="M95 127 Q100 138 105 127 Q100 131 95 127Z" fill="#ff8fa3"/>';
-  const cheeks = '<circle cx="62" cy="112" r="8" fill="#ffb3b8" opacity=".85"/><circle cx="138" cy="112" r="8" fill="#ffb3b8" opacity=".85"/>';
-  let face = '', arms = relaxed, extra = '';
-  if (m === 'happy') { face = eyeW + pup(0, 7) + brow('M68 74 Q80 66 92 74') + brow('M108 74 Q120 66 132 74') + cheeks + beakOpen; }
-  else if (m === 'neutral') { face = eyeW + pup(0, 7) + brow('M68 76 L92 76') + brow('M108 74 Q120 68 132 74') + beakShut + mouth('M92 113 L108 113'); }
-  else if (m === 'flex') { arms = flexArms; face = eyeW + pup(0, 7) + brow('M65 76 L94 84') + brow('M135 76 L106 84') + cheeks + beakOpen; extra = sparkle(24, 52, 1.1) + sparkle(178, 40, 1.3) + sparkle(36, 24, .8); }
-  else if (m === 'sad') { face = eyeW + pup(4, 8) + brow('M64 82 L92 70') + brow('M136 82 L108 70') + beakShut + mouth('M91 117 Q100 108 109 117') + '<path d="M68 108 Q61 120 68 126 Q75 120 68 108Z" fill="#5aa9ff"/>'; }
-  else { face = '<ellipse cx="100" cy="64" rx="38" ry="12" fill="' + R + '" opacity=".22"/>' + eyeW + pup(1, 6) + brow('M62 68 L95 87') + brow('M138 68 L105 87') + beakShut + mouth('M90 115 L95 109 L100 115 L105 109 L110 115'); extra = '<path d="M150 46 q7 2 7 9 M165 46 q-7 2 -7 9 M150 66 q7 -2 7 -9 M165 66 q-7 -2 -7 -9" fill="none" stroke="#e5383b" stroke-width="3.5" stroke-linecap="round"/><circle cx="46" cy="52" r="7" fill="#c9d3dd" opacity=".9"/><circle cx="34" cy="62" r="5" fill="#c9d3dd" opacity=".8"/>'; }
-  const body = '<ellipse cx="100" cy="124" rx="54" ry="52" fill="#e3e9ef"/><ellipse cx="100" cy="120" rx="54" ry="52" fill="' + W + '" stroke="' + LN + '" stroke-width="3"/>';
-  const legs = '<path d="M84 168 V190 M116 168 V190 M77 190 H91 M109 190 H123" stroke="' + R + '" stroke-width="6" stroke-linecap="round" fill="none"/>';
-  const tier = o.tier || 0, tufts = '<path d="M90 70 Q86 52 95 45 Q98 58 101 68 Q105 52 115 50 Q110 62 109 72Z" fill="' + W + '" stroke="' + LN + '" stroke-width="3" stroke-linejoin="round"/>';
-  const scarf = (tier === 1 || tier === 3) ? '<path d="M56 130 Q100 152 144 130 L144 144 Q100 166 56 144Z" fill="#e5383b"/><path d="M122 150 L134 178 L119 181 L112 153Z" fill="#c92a2d"/><path d="M70 138 l4 8 M92 146 l4 8 M114 146 l4 8" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".7"/>' : '';
-  const crown = tier >= 2 ? '<path d="M74 72 L78 44 L91 58 L100 38 L109 58 L122 44 L126 72Z" fill="#ffc83d" stroke="#d99a00" stroke-width="3" stroke-linejoin="round"/><circle cx="78" cy="44" r="3.5" fill="#ff5a43"/><circle cx="100" cy="38" r="3.5" fill="#ff5a43"/><circle cx="122" cy="44" r="3.5" fill="#ff5a43"/>' : '';
-  const inner = legs + body + (tier >= 2 ? '' : tufts) + scarf + arms + face + extra + crown, label = { happy: 'Happy', neutral: 'Waiting', flex: 'Flexing', sad: 'Sad', angry: 'Angry' }[m] + ' stork mascot';
-  if (o.icon) return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="' + label + '"><rect width="200" height="200" rx="' + (o.round ?? 44) + '" fill="' + MASCOT_BG[m] + '"/><g transform="translate(100 100) scale(' + (o.scale || (m === 'flex' ? 1.2 : 1.4)) + ') translate(-100 ' + (m === 'flex' ? -108 : -104) + ')">' + inner + '</g></svg>';
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="' + label + '"' + (o.cls ? ' class="' + o.cls + '"' : '') + '>' + inner + '</svg>';
-}
-
-const tierOf = n => n >= 100 ? 3 : n >= 30 ? 2 : n >= 7 ? 1 : 0;
-const mascotTier = () => { try { return tierOf(calcStreak()); } catch (e) { return 0; } };
-const mascotT = (mood, o) => mascotSVG(mood, Object.assign({ tier: mascotTier() }, o));
-const TIER_NAME = ['', 'a red scarf 🧣 for a 7-day streak', 'a golden crown 👑 for a 30-day streak', 'the scarf and the crown 🧣👑 for a 100-day streak'];
-function daysSinceStudy() { const d = new Date(); for (let i = 0; i < 60; i++) { const k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); if (state.days[k] > 0) return i; d.setDate(d.getDate() - 1); } return -1; }
-function mascotMood() {
-  const today = state.days[todayStr()] || 0, goal = lim().goal, gap = daysSinceStudy(), streak = calcStreak();
-  if (today > 0 && goal && today >= goal) return { mood: 'flex', msg: `Daily goal smashed — ${today} reviews today! 💪` };
-  if (today > 0) return { mood: 'happy', msg: goal ? `Nice work! ${today} of ${goal} reviews today.` : 'Nice work today!' };
-  if (!state.entries.length) return { mood: 'happy', msg: 'Hi, I’m Gandriukas! Add a lesson and we’ll learn Lithuanian together.' };
-  if (gap < 0) return { mood: 'happy', msg: 'Ready when you are — your first session is waiting.' };
-  if (gap <= 1) return { mood: 'neutral', msg: streak ? `Your ${streak}-day streak is waiting. Just a few cards?` : 'A few cards today keeps the words fresh.' };
-  if (gap === 2) return { mood: 'sad', msg: 'I missed you… two days without practice. Even 5 minutes helps.' };
-  return { mood: 'angry', msg: `${gap} days! My phrases are getting rusty. Let’s fix that — 5 minutes?` };
-}
-let favMood = '';
-function refreshMascot() {
-  try { const { mood } = mascotMood(), tr = mascotTier(), key = mood + tr; const was = state.settings.mtier || 0; if (tr !== was) { state.settings.mtier = tr; save(); if (tr > was && TIER_NAME[tr]) toast('Gandriukas earned ' + TIER_NAME[tr] + '!'); } if (key === favMood) return; favMood = key; const l = document.getElementById('favicon'); if (l) { l.type = 'image/svg+xml'; l.href = 'data:image/svg+xml,' + encodeURIComponent(mascotT(mood, { icon: 1, round: 100 })); } const lm = document.querySelector('.logo-mark'); if (lm) lm.innerHTML = mascotT(mood, { icon: 1, round: 44 }); } catch (e) {}
-}
-function mascotMount(root) {
-  const { mood, msg } = mascotMood();
-  const tr = mascotTier(); root.insertAdjacentHTML('afterbegin', `<div class="mascot-bar">${mascotT(mood, { cls: 'mascot mm-' + mood })}<div class="bub" role="status">${esc(msg)}${tr ? `<div class="muted" style="font-size:.8rem;margin-top:4px">${['', '🧣 Scarf', '👑 Crown', '🧣👑 Scarf and crown'][tr]} — earned by your streak. ${tr < 3 ? 'Next: ' + (tr === 0 ? '🧣 at 7 days' : tr === 1 ? '👑 at 30 days' : '🧣👑 at 100 days') + '.' : ''}</div>` : '<div class="muted" style="font-size:.8rem;margin-top:4px">Keep a 7-day streak to earn a scarf 🧣</div>'}</div></div>`);
-}
 const WEEKN = () => Math.floor(Date.now() / (7 * DAYMS));
 function focusTag() { const f = state.settings.focus || 'auto', used = tagsInUse().map(x => x[0]); if (f === 'off') return null; if (f !== 'auto') return used.includes(f) ? f : null; const cs = used.filter(t => CASE_IDS.includes(t)), pool = cs.length ? cs : used; return pool.length ? pool[WEEKN() % pool.length] : null; }
 function focusMount(root) {
@@ -3096,7 +3032,7 @@ function renderProgress() {
   const catRows = [...byCat.keys()].sort(natCmp).map(c => { const o = byCat.get(c), t = o.m + o.l + o.n; return `<div class="pg-row" data-tip="${esc(c + ': ' + o.m + ' mastered, ' + o.l + ' learning, ' + o.n + ' new')}"><span class="nm">${esc(c)}</span>${seg(o)}<span class="fg">${o.m}/${t}</span></div>`; });
   const byTag = tagsInUse().map(([t, n]) => { const o = { m: 0, l: 0, n: 0 }; E.forEach(e => { if ((e.tags || []).includes(t)) o[e.status === 2 ? 'm' : e.status === 1 ? 'l' : 'n']++; }); return `<div class="pg-row" data-tip="${esc(tagName(t) + ': ' + o.m + ' mastered, ' + o.l + ' learning, ' + o.n + ' new')}"><span class="nm">${esc(tagName(t))}</span>${seg(o)}<span class="fg">${o.m}/${n}</span></div>`; });
   const mature = E.filter(e => e.state === 'review' && e.ivl >= 21).length, young = E.filter(e => e.state === 'review' && e.ivl < 21).length, learning = E.filter(e => e.state === 'learn' || e.state === 'relearn').length, fresh = E.filter(e => e.state === 'new').length;
-  root.innerHTML = `<div class="pg"><div class="pg-head">${mascotT(mascotMood().mood, { cls: 'mascot mascot-sm' })}<h2>Your progress</h2><div class="pg-seg" role="group" aria-label="Period">${[7, 30, 90].map(n => `<button data-pgd="${n}" aria-pressed="${pg.days === n}">${n} days</button>`).join('')}</div></div>
+  root.innerHTML = `<div class="pg"><div class="pg-head"><h2>Your progress</h2><div class="pg-seg" role="group" aria-label="Period">${[7, 30, 90].map(n => `<button data-pgd="${n}" aria-pressed="${pg.days === n}">${n} days</button>`).join('')}</div></div>
     <div class="pg-kpis">${kpi('🔥 ' + calcStreak(), 'day streak', 'best: ' + longestStreak() + ' days')}${kpi(rev7, 'reviews, last 7 days', (dl >= 0 ? '▲ ' : '▼ ') + Math.abs(dl) + ' vs the week before')}${kpi(fmtMin(time7), 'study time, last 7 days', 'practice, walks and reading')}${kpi(ret == null ? '–' : ret + '%', 'answered correctly', tr + ' answers in total')}${kpi(m + '<span class="muted" style="font-size:1rem;font-weight:600"> / ' + N + '</span>', 'phrases mastered', pct(m, N) + '%')}</div>
     <div class="pg-card"><h3>Reviews per day</h3><p class="sub">Last ${pg.days} days${goal ? ' · dashed line is your daily goal' : ''}. Today is gold.</p>${barChart(dayItems, { goal, aria: 'Reviews per day' })}
       <details style="margin-top:8px"><summary style="cursor:pointer;color:var(--muted);font-size:.86rem">Show as a table</summary><div style="max-height:220px;overflow:auto"><table style="width:100%;font-size:.86rem;border-collapse:collapse"><thead><tr><th align="left">Day</th><th align="right">Reviews</th><th align="right">Study time</th></tr></thead><tbody>${days.slice().reverse().map(d => `<tr><td>${esc(shortDate(d.d))}</td><td align="right">${state.days[d.k] || 0}</td><td align="right">${state.time[d.k] ? fmtMin(state.time[d.k]) : '–'}</td></tr>`).join('')}</tbody></table></div></details></div>
@@ -3125,7 +3061,7 @@ document.addEventListener('click', ev => { const g = ev.target.closest('[data-go
 function startSession() {
   const c = pr.cfg; let ids = queueInfo(c).list.map(e => e.id); if (!ids.length) { toast('Nothing to practise with those settings.', 'warn'); return; }
   if (c.count) ids = ids.slice(0, c.count);
-  Object.assign(pr, { active: true, done: false, run: 0, mood: 'happy', queue: ids, i: 0, mode: c.mode, tally: { again: 0, hard: 0, good: 0, easy: 0 } }); showCardAudio();
+  Object.assign(pr, { active: true, done: false, queue: ids, i: 0, mode: c.mode, tally: { again: 0, hard: 0, good: 0, easy: 0 } }); showCardAudio();
 }
 function showCardAudio() {
   shadowReset(); pr.revealed = pr.mode === 'shadow'; pr.result = null; pr.t0 = Date.now();
@@ -3150,13 +3086,12 @@ function rateCard(r) {
   const wasNew = e.state === 'new', wasReview = e.state === 'review', now = Date.now(), sc = schedule(e, r, now);
   Object.assign(e, { state: sc.state, step: sc.step, ivl: sc.ivl, ease: sc.ease, lapses: sc.lapses, due: sc.due, reviews: e.reviews + 1, lastReview: now });
   if (r === 'good' || r === 'easy') e.correct++;
-  pr.run = (r === 'good' || r === 'easy') ? (pr.run || 0) + 1 : 0; pr.mood = pr.run >= 5 ? 'flex' : r === 'again' ? 'sad' : r === 'hard' ? 'neutral' : 'happy';
   e.status = e.state === 'review' && e.ivl >= SR.mature ? 2 : 1;
   const k = dayCounts(); if (wasNew) k.n++; else if (wasReview) k.r++;
   const before = state.days[todayStr()] || 0, goal = lim().goal; bumpReview(); pr.tally[r]++;
   if (goal && before < goal && before + 1 >= goal) toast('🎉 Daily goal reached — ' + goal + ' reviews today!');
   if ((sc.state === 'learn' || sc.state === 'relearn') && sc.due - now <= LEARN_AHEAD) pr.queue.splice(Math.min(pr.queue.length, pr.i + 1 + (sc.ivMs >= 5 * MINMS ? 6 : 3)), 0, e.id);   // learning cards come back in this session
-  save(); renderStats(); renderChips(); refreshMascot(); pr.i++;
+  save(); renderStats(); renderChips(); pr.i++;
   if (pr.i >= pr.queue.length) endSession(true); else showCardAudio();
 }
 function endSession(finished) { const any = Object.values(pr.tally).some(v => v > 0); shadowReset(); pr.active = false; pr.done = finished === true && any; stopAudio(); renderPractice(); renderList(); }
@@ -3555,7 +3490,7 @@ function showTab(name, keepLesson) {
 }
 $$('nav.tabs button, #tabbar button').forEach(b => b.onclick = () => showTab(b.dataset.tab, b.dataset.tab === 'lessons' && !!wb));
 function updateTabBadge() {        // number of cards waiting in a default practice session, shown on the Practice tab of the bottom bar
-  refreshMascot(); const b = $('#tbBadge'); if (!b) return; let n = 0;
+  const b = $('#tbBadge'); if (!b) return; let n = 0;
   try { n = pr.active ? 0 : queueInfo({ scope: 'due', cat: 'all', audioOnly: false, mode: 'listen' }).list.length; } catch (e) {}
   try { if (navigator.setAppBadge) { if (n) navigator.setAppBadge(n); else navigator.clearAppBadge(); } } catch (e) {}
   b.hidden = !n; b.textContent = n > 99 ? '99+' : String(n); const pb = $('#tabbar [data-tab=practice]'); if (pb) pb.setAttribute('aria-label', n ? `Practice, ${n} to do` : 'Practice');
