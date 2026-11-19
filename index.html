@@ -3324,14 +3324,14 @@ async function exportAnki() {
 }
 $('#fileJson').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) importJSONFile(f); };
 /* ---- merging a backup into this device: newest change per phrase wins, deletions travel along ---- */
-async function mergeData(data, smart, dry) {
-  const fills = [], S = { lessonAudio: 0, fill: 0, add: 0, upd: 0, same: 0, kept: 0, del: 0, skip: 0, noAudio: 0, lNew: 0, lUpd: 0, tNew: 0, tUpd: 0, need: new Set() };
+async function mergeData(data, smart, dry, revive) {
+  const fills = [], S = { revived: 0, lessonAudio: 0, fill: 0, add: 0, upd: 0, same: 0, kept: 0, del: 0, skip: 0, noAudio: 0, lNew: 0, lUpd: 0, tNew: 0, tUpd: 0, need: new Set() };
   const incE = (data.entries || []).filter(e => e && (e.lt || e.stress)).map(mkEntry), incTomb = (smart && data.tomb) || {}, hasAudio = id => !!(data.audio && data.audio[id]);
   const byIdM = new Map(state.entries.map(e => [e.id, e])), byKeyM = new Map(); state.entries.forEach(e => { const k = ekey(e); if (!byKeyM.has(k)) byKeyM.set(k, e); });
   const adds = [], upds = [], idMap = new Map(), incOf = new Map();
   for (const i of incE) {
     const t = byIdM.get(i.id) || byKeyM.get(ekey(i));
-    if (!t) { if (smart && tombOf(i.id, ekey(i)) >= Math.max(i.upd, 1)) { S.skip++; continue; } adds.push(i); idMap.set(i.id, i.id); if (i.audioId) { if (hasAudio(i.audioId)) S.need.add(i.audioId); else S.noAudio++; } continue; }
+    if (!t) { if (smart && tombOf(i.id, ekey(i)) >= Math.max(i.upd, 1)) { if (!revive) { S.skip++; continue; } S.revived++; if (!dry) { delete state.tomb[i.id]; delete state.tomb['k:' + ekey(i)]; } } adds.push(i); idMap.set(i.id, i.id); if (i.audioId) { if (hasAudio(i.audioId)) S.need.add(i.audioId); else S.noAudio++; } continue; }
     idMap.set(i.id, t.id); incOf.set(t.id, i);
     if (!t.audioId && i.audioId && hasAudio(i.audioId)) { fills.push([t, i]); S.need.add(i.audioId); S.fill++; }   // phrase already here but its audio never arrived
     if (smart && entryFP(i) === entryFP(t)) { S.same++; continue; }
@@ -3379,6 +3379,7 @@ async function importAudioFrom(data, ids, prog) {
   const list = ids || Object.keys(data.audio); let k = 0;
   for (const id of list) { k++; if (prog && k % 3 === 0) { prog('Saving audio ' + k + '/' + list.length + '…'); await sleep(0); } const a = data.audio[id]; if (!a || !a.data || (ids && have.has(id))) continue; const blob = await (await fetch(a.data)).blob(); mem.set(id, new Blob([blob], { type: a.type || blob.type || 'audio/mpeg' })); await idbPut(id, mem.get(id)); }
 }
+const reviveHTML = S => S.skip ? `<label style="display:flex;gap:8px;align-items:flex-start;margin:10px 0 0"><input type="checkbox" id="revive"> <span><b>${S.skip}</b> phrase${S.skip === 1 ? ' is' : 's are'} not coming over because this device remembers deleting ${S.skip === 1 ? 'it' : 'them'}. Tick to bring ${S.skip === 1 ? 'it' : 'them'} back anyway.</span></label>` : '';
 const planHTML = S => {
   const li = (n, t) => n ? `<li><b>${n}</b> ${t}</li>` : '';
   const lsA = S.lessonAudio ? li(S.lessonAudio, `full lesson MP3${S.lessonAudio === 1 ? '' : 's'} added`) : '';
@@ -3387,25 +3388,26 @@ const planHTML = S => {
 };
 async function readBackup(file) {
   const bt = busyToast('Reading ' + file.name + (file.size > 5e6 ? ' (' + (file.size / 1048576).toFixed(0) + ' MB — this can take a moment)' : '') + '…'); await sleep(30);
-  let data; try { data = JSON.parse(await file.text()); } catch (e) { bt.done(); toast('That file is not valid JSON.', 'err'); return null; } bt.done();
+  let txt; try { txt = await file.text(); } catch (e) { bt.done(); toast('Could not read the file (' + (e && e.name || 'error') + '). It may be too big for this device’s memory — or still downloading from Drive. Try again with Drive set to keep the file offline.', 'err'); return null; }
+  let data; try { data = JSON.parse(txt); } catch (e) { bt.done(); toast(e instanceof SyntaxError ? 'That file is not valid JSON — it may be incomplete (still syncing from Drive?).' : 'Not enough memory to open this file on this device.', 'err'); return null; } txt = null; bt.done();
   if (!data || !Array.isArray(data.entries)) { toast('This does not look like a dashboard backup.', 'err'); return null; } return data;
 }
 async function importJSONFile(file) {
   const data = await readBackup(file); if (!data) return;
   const n = data.entries.length, nl = (data.lessons || []).length, hasA = data.audio ? Object.keys(data.audio).length : 0, S = await mergeData(data, true, true);
   const m = openModal(`<div class="modal-head"><h2>Import backup</h2></div><div class="modal-body"><p style="margin-top:0">The file has <b>${n}</b> phrase${n === 1 ? '' : 's'}, <b>${nl}</b> lesson${nl === 1 ? '' : 's'}${hasA ? ` and <b>${hasA}</b> audio file${hasA === 1 ? '' : 's'}` : ''}.</p>
-    <p style="margin-bottom:0"><b>Smart merge</b> keeps the newer version of every phrase, so you never lose newer practice:</p>${planHTML(S)}
+    <p style="margin-bottom:0"><b>Smart merge</b> keeps the newer version of every phrase, so you never lose newer practice:</p>${planHTML(S)}${reviveHTML(S)}
     <p class="muted" style="font-size:.86rem;margin-bottom:0"><b>Overwrite</b> makes matching phrases look like the file. <b>Replace all</b> discards everything stored here first.</p></div>
     <div class="modal-foot"><button class="btn" data-x>Cancel</button><button class="btn danger" data-mode="replace">Replace all</button><button class="btn" data-mode="merge">Overwrite</button><button class="btn primary" data-mode="smart">Smart merge</button></div>`);
   m.el.addEventListener('click', async ev => {
     if (ev.target.closest('[data-x]')) return m.close(); const b = ev.target.closest('[data-mode]'); if (!b) return; b.disabled = true; b.textContent = 'Importing…';
-    try { await applyImport(data, b.dataset.mode, t => { b.textContent = t; }); toast('Backup imported.'); } catch (err) { console.error(err); toast('Import failed: ' + err.message, 'err'); } m.close();
+    try { await applyImport(data, b.dataset.mode, t => { b.textContent = t; }, !!($('#revive', m.el) && $('#revive', m.el).checked)); toast('Backup imported.'); } catch (err) { console.error(err); toast('Import failed: ' + err.message, 'err'); } m.close();
   });
 }
-async function applyImport(data, mode, prog) {
+async function applyImport(data, mode, prog, revive) {
   stopAudio(); lv.open = null; wb = null; const smart = mode === 'smart';
   if (mode === 'replace') { const ids = new Set(); state.entries.forEach(e => e.audioId && ids.add(e.audioId)); state.lessons.forEach(l => l.audioId && ids.add(l.audioId)); state.entries = []; state.lessons = []; state.texts = []; state.tomb = {}; state.days = {}; state.time = {}; state.hist = {}; for (const i of ids) await deleteAudio(i); }
-  const S = await mergeData(data, smart, false);
+  const S = await mergeData(data, smart, false, revive);
   await importAudioFrom(data, mode === 'replace' || !smart ? null : [...S.need], prog);
   if (mode === 'replace') { state.tomb = data.tomb && typeof data.tomb === 'object' ? data.tomb : {}; if (data.settings) state.settings = Object.assign({}, DEF_SETTINGS, data.settings); }
   await verifyAudioRefs(); stampChanges(true); applyTheme(); save(); refresh(); return S;
@@ -3423,7 +3425,7 @@ function fileBase() {                    // name used for exported / sync files 
 }
 const syncBuild = carry => buildBackup(!!state.settings.syncAudio, !!(state.settings.syncAudio && state.settings.syncLessons), carry);
 async function syncWrite(handle, carry) { const w = await handle.createWritable(); await w.write(await syncBuild(carry)); await w.close(); state.lastSync = Date.now(); save(); }
-const syncSummary = S => { const bits = [S.add && S.add + ' added', S.upd && S.upd + ' updated', S.del && S.del + ' removed', S.lNew + S.lUpd && (S.lNew + S.lUpd) + ' lesson(s)'].filter(Boolean); return bits.length ? bits.join(', ') : 'already up to date'; };
+const syncSummary = S => { const bits = [S.add && S.add + ' added', S.upd && S.upd + ' updated', S.del && S.del + ' removed', S.skip && S.skip + ' skipped (deleted here earlier)', S.lNew + S.lUpd && (S.lNew + S.lUpd) + ' lesson(s)'].filter(Boolean); return bits.length ? bits.join(', ') : 'already up to date'; };
 async function syncNow(silent) {
   const h = await syncH.get();
   if (!h) { if (!silent) $('#fileSync').click(); return; }                                      // no linked file: pick one, merge, download
@@ -3432,18 +3434,18 @@ async function syncNow(silent) {
     if (silent ? (await h.queryPermission({ mode: 'readwrite' })) !== 'granted' : (await h.requestPermission({ mode: 'readwrite' })) !== 'granted') { if (!silent) toast('Allow access to the file to sync.', 'warn'); return false; }
     const f = await h.getFile(); let S = null, carry = null;
     if (f.size > 2) { const data = await readBackup(f); if (!data) return; carry = data.audio; const bt = busyToast('Merging…'); try { S = await applyImport(data, 'smart', t => bt.set(t)); } finally { bt.done(); } }
-    await syncWrite(h, carry); if (!silent || (S && (S.add || S.upd || S.del))) toast((silent ? 'Auto-synced — ' : 'Synced — ') + (S ? syncSummary(S) : 'file created') + '.'); return true;
+    await syncWrite(h, carry); if (!silent || (S && (S.add || S.upd || S.del))) toast((silent ? 'Auto-synced — ' : 'Synced — ') + (S ? syncSummary(S) : 'file created') + ' · ' + state.entries.length + ' phrases now.'); return true;
   } catch (err) { console.error(err); if (!silent) toast('Sync failed: ' + (err.message || err), 'err'); return false; }
   finally { if (!silent || tab === 'backup') renderBackup(); }
 }
 async function syncPicked(file) {                                                   // phone / no linked file: preview, merge, then download the merged file
-  const data = await readBackup(file); if (!data) return; const S = await mergeData(data, true, true);
-  const m = openModal(`<div class="modal-head"><h2>Sync with “${esc(file.name)}”</h2><button class="icon-btn" data-x aria-label="Close">✕</button></div><div class="modal-body"><p style="margin-top:0">This is what will change on this device:</p>${planHTML(S)}
+  const data = await readBackup(file); if (!data) return; const S = await mergeData(data, true, true), nf = data.entries.length, nh = state.entries.length, na = data.audio ? Object.keys(data.audio).length : 0;
+  const m = openModal(`<div class="modal-head"><h2>Sync with “${esc(file.name)}”</h2><button class="icon-btn" data-x aria-label="Close">✕</button></div><div class="modal-body"><p style="margin-top:0">The file has <b>${nf}</b> phrase${nf === 1 ? '' : 's'}${na ? ` and <b>${na}</b> audio file${na === 1 ? '' : 's'}` : ' and no audio'}. This device has <b>${nh}</b>. After merging: about <b>${nh + S.add - S.del}</b>.</p><p style="margin-bottom:0">This is what will change on this device:</p>${planHTML(S)}${reviveHTML(S)}
     <p class="muted" style="font-size:.86rem">After merging, an updated file is downloaded. Upload it to your shared folder (replace the old file) so your other devices get the same data.</p></div>
     <div class="modal-foot"><button class="btn" data-x>Cancel</button><button class="btn primary" id="syncGo">Merge &amp; download updated file</button></div>`);
   $('#syncGo', m.el).onclick = async ev => {
     ev.target.disabled = true; ev.target.textContent = 'Working…';
-    try { await applyImport(data, 'smart', t => { ev.target.textContent = t; }); downloadBlob(await syncBuild(data.audio), fileBase() + '-sync.json'); state.lastSync = Date.now(); save(); toast('Merged. Upload the downloaded file to replace the old one.'); }
+    try { await applyImport(data, 'smart', t => { ev.target.textContent = t; }, !!($('#revive', m.el) && $('#revive', m.el).checked)); downloadBlob(await syncBuild(data.audio), fileBase() + '-sync.json'); state.lastSync = Date.now(); save(); toast('Merged. Upload the downloaded file to replace the old one.'); }
     catch (err) { console.error(err); toast('Sync failed: ' + (err.message || err), 'err'); } m.close(); renderBackup();
   };
 }
