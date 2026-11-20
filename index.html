@@ -121,6 +121,7 @@ code.k{background:var(--bg2);border:1px solid var(--line);border-radius:5px;padd
 .dotbtn{border:0;background:transparent;font-size:.95rem;padding:4px 5px;border-radius:7px;flex:none}
 .dotbtn:hover{background:var(--surface2)}
 .pick{width:18px;height:18px;flex:none;accent-color:var(--accent)}
+input[type=checkbox],input[type=radio]{width:18px;height:18px;accent-color:var(--accent);flex:none}
 .wave{display:none;gap:2px;align-items:center;height:16px}
 .item.playing .wave,.clip.playing .wave{display:inline-flex}
 .wave i{display:block;width:3px;height:4px;border-radius:2px;background:var(--accent);animation:bar .9s ease-in-out infinite}
@@ -132,6 +133,7 @@ code.k{background:var(--bg2);border:1px solid var(--line);border-radius:5px;padd
 .extra .xc{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
 .sdot{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid var(--muted);background:transparent;vertical-align:middle}.sdot.s1{border-color:var(--gold);background:linear-gradient(90deg,var(--gold) 50%,transparent 50%)}.sdot.s2{border-color:var(--accent);background:var(--accent)}
 .ph{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.approx{white-space:nowrap}
+@media (pointer:coarse){#btnHelp{display:none}}
 #btnInstall:not([hidden]){margin-left:auto}#btnInstall[hidden]+#btnHelp{margin-left:auto}@media (min-width:701px){#btnInstall[hidden]+#btnHelp{margin-left:0}}
 .approx{font-size:.68rem;border:1px solid var(--line);border-radius:5px;padding:0 4px;font-style:normal;margin-left:4px}
 .items.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
@@ -499,8 +501,8 @@ svg.pg-svg{width:100%;height:auto;display:block;overflow:visible}
       <button data-tab="backup">💾 Backup</button>
     </nav>
     <button class="btn sm" id="btnInstall" hidden title="Install as an app">⤓ Install</button>
-    <button class="icon-btn" id="btnHelp" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">⌨</button>
-    <button class="icon-btn" id="btnTheme" title="Toggle light / dark" aria-label="Toggle theme">◐</button>
+    <button class="icon-btn" id="btnHelp" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01M7 14h10"/></svg></button>
+    <button class="icon-btn" id="btnTheme" title="Toggle light / dark" aria-label="Toggle theme"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none"/></svg></button>
   </div>
 </header>
 
@@ -560,8 +562,8 @@ svg.pg-svg{width:100%;height:auto;display:block;overflow:visible}
 <input type="file" id="fileLesson" data-mode="lesson" accept="audio/*,.mp3,.m4a,.wav,.ogg" multiple hidden>
 <input type="file" id="fileSingle" data-mode="single" accept="audio/*,.mp3,.m4a,.wav,.ogg" multiple hidden>
 <input type="file" id="fileOne" accept="audio/*,.mp3,.m4a,.wav,.ogg" hidden>
-<input type="file" id="fileJson" accept="application/json,.json" hidden>
-<input type="file" id="fileSync" accept="application/json,.json" hidden>
+<input type="file" id="fileJson" accept="application/json,application/zip,.json,.zip" hidden>
+<input type="file" id="fileSync" accept="application/json,application/zip,.json,.zip" hidden>
 
 <script>
 (() => {
@@ -777,8 +779,9 @@ function stampChanges(rebase) {         // every phrase/lesson/text carries the 
   for (const t of state.texts) chk('T' + t.id, t.title + '\u0001' + t.body, t);
   for (const k of [...fpMap.keys()]) if (!seen.has(k)) fpMap.delete(k);
 }
+let saveWarned = false;
 const saveNow = () => {
-  try { stampChanges(); snapHist(); const str = JSON.stringify({ v: 2, entries: state.entries, lessons: state.lessons, texts: state.texts, tomb: state.tomb, time: state.time, hist: state.hist, lastSync: state.lastSync, days: state.days, counts: state.counts, settings: state.settings, lastExport: state.lastExport }); localStorage.setItem(LS_KEY, str); lastSaved = str; }
+  try { stampChanges(); snapHist(); const str = JSON.stringify({ v: 2, entries: state.entries, lessons: state.lessons, texts: state.texts, tomb: state.tomb, time: state.time, hist: state.hist, lastSync: state.lastSync, days: state.days, counts: state.counts, settings: state.settings, lastExport: state.lastExport }); localStorage.setItem(LS_KEY, str); lastSaved = str; if (str.length > 3.5e6 && !saveWarned) { saveWarned = true; toast('Your phrase data is getting large (' + (str.length / 1e6).toFixed(1) + ' MB of about 5 MB the browser allows). Export a backup and tell Claude so the storage can be moved.', 'warn'); } }
   catch (e) { toast('Could not save to localStorage (storage full or blocked).', 'err'); }
 };
 const saveDeb = debounce(saveNow, 250);
@@ -1259,6 +1262,19 @@ async function zipRead(buf) {
     return new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
   };
   return { names: [...files.keys()], get };
+}
+async function zipOpenFile(file) {         // reads a (stored) zip straight from the file with slices — never loads the whole thing into memory
+  const tail = file.slice(Math.max(0, file.size - 66000)), tb = await tail.arrayBuffer(), tv = new DataView(tb); let e = -1;
+  for (let i = tb.byteLength - 22; i >= 0; i--) if (tv.getUint32(i, true) === 0x06054b50) { e = i; break; }
+  if (e < 0) throw new Error('This does not look like a backup file.');
+  const n = tv.getUint16(e + 10, true), cdSize = tv.getUint32(e + 12, true), cdOff = tv.getUint32(e + 16, true), cb = await file.slice(cdOff, cdOff + cdSize).arrayBuffer(), dv = new DataView(cb), u8 = new Uint8Array(cb), td = new TextDecoder(), files = new Map(); let o = 0;
+  for (let i = 0; i < n; i++) {
+    if (o + 46 > cb.byteLength || dv.getUint32(o, true) !== 0x02014b50) break;
+    const meth = dv.getUint16(o + 10, true), cs = dv.getUint32(o + 20, true), nl = dv.getUint16(o + 28, true), el = dv.getUint16(o + 30, true), cl = dv.getUint16(o + 32, true), lo = dv.getUint32(o + 42, true);
+    files.set(td.decode(u8.subarray(o + 46, o + 46 + nl)), { meth, cs, lo }); o += 46 + nl + el + cl;
+  }
+  const blob = async (name, type) => { const f = files.get(name); if (!f) return null; if (f.meth !== 0) throw new Error('Unsupported zip compression.'); const lh = new DataView(await file.slice(f.lo, f.lo + 30).arrayBuffer()), ds = f.lo + 30 + lh.getUint16(26, true) + lh.getUint16(28, true); return file.slice(ds, ds + f.cs, type || ''); };
+  return { names: [...files.keys()], blob };
 }
 function sqliteRead(u8) {                // minimal read-only SQLite reader: table b-trees, overflow pages, UTF-8 text
   if (String.fromCharCode(...u8.subarray(0, 15)) !== 'SQLite format 3') throw new Error('The package does not contain a readable Anki collection.');
@@ -2792,13 +2808,13 @@ function lsMount(root) {
 =================================================================== */
 const AI_KEY = 'litlingo.aiKey', AI_CHAT = 'litlingo.aiChat';
 const aiKey = () => { try { return localStorage.getItem(AI_KEY) || ''; } catch (e) { return ''; } };
-const aiSetKey = k => { try { k ? localStorage.setItem(AI_KEY, k) : localStorage.removeItem(AI_KEY); } catch (e) {} };
+const aiSetKey = k => { try { k ? localStorage.setItem(AI_KEY, k) : localStorage.removeItem(AI_KEY); } catch (e) { toast('Could not store the key on this device (storage blocked or full).', 'err'); } };
 const AI_MODELS = [['claude-haiku-5-5', 'Haiku 5.5 — fast and cheapest (recommended)'], ['claude-sonnet-5-5', 'Sonnet 5.5 — smarter corrections, costs more']];
 const AI_TOPICS = [['free', 'Anything you like'], ['intro', 'Introducing yourself'], ['food', 'Ordering food and drink'], ['shop', 'Shopping'], ['travel', 'Travel and directions'], ['family', 'Family and daily life'], ['work', 'Work and hobbies']];
 const AI_LEVELS = [['A1', 'Beginner (A1) — very short and simple'], ['A2', 'Elementary (A2)'], ['B1', 'Intermediate (B1)']];
 const aiCfg = () => (state.settings.ai = Object.assign({ model: AI_MODELS[0][0], level: 'A1', topic: 'free', vocab: true, fix: true }, state.settings.ai || {}));
 const aiLoad = () => { try { const a = JSON.parse(localStorage.getItem(AI_CHAT) || '[]'); return Array.isArray(a) ? a.slice(-60) : []; } catch (e) { return []; } };
-const aiStore = a => { try { localStorage.setItem(AI_CHAT, JSON.stringify(a.slice(-60))); } catch (e) {} };
+const aiStore = a => { try { localStorage.setItem(AI_CHAT, JSON.stringify(a.slice(-60))); } catch (e) { toast('Could not save the conversation on this device.', 'warn'); } };
 function aiSystem() {
   const c = aiCfg(), topic = (AI_TOPICS.find(x => x[0] === c.topic) || AI_TOPICS[0])[1];
   const known = c.vocab ? shuffle(state.entries.filter(e => (e.status >= 1 || e.reviews > 0) && e.lt && e.lt.length <= 60).map(e => e.lt)).slice(0, 80) : [];
@@ -3206,10 +3222,10 @@ function renderBackup() {
       <p class="muted" style="font-size:.84rem;margin:10px 0 0"><b>iPhone / iPad:</b> Share → <i>Add to Home Screen</i>. <b>Android / desktop Chrome &amp; Edge:</b> use Install.</p></div>
     <div class="panel"><h2 class="sec">Delete all phrases</h2><p class="muted" style="margin-top:0">Empties the dictionary but keeps your lesson audio and clip splits, so you can re-add phrases from the Lessons tab.</p><button class="btn danger" id="btnWipePhrases">Delete all phrases…</button></div>
     <div class="panel"><h2 class="sec">Erase everything</h2><p class="muted" style="margin-top:0">Deletes all phrases, lessons, stored audio and progress from this browser.</p><button class="btn danger" id="btnWipe">Erase everything…</button></div></div>`;
-  $('#autoSync').onchange = ev => { state.settings.autoSync = ev.target.checked; save(); if (ev.target.checked) autoSync('enabled'); }; $('#btnSync').onclick = () => syncNow(); $('#syncAudio').onchange = ev => { state.settings.syncAudio = ev.target.checked; save(); $('#syncLessons').disabled = !ev.target.checked; };
+  $('#autoSync').onchange = ev => { state.settings.autoSync = ev.target.checked; save(); if (ev.target.checked) autoSync('enabled'); }; $('#btnSync').onclick = () => syncNow(); $('#syncAudio').onchange = ev => { state.settings.syncAudio = ev.target.checked; save(); $('#syncLessons').disabled = !ev.target.checked; prevName(); };
   $('#syncLessons').onchange = ev => { state.settings.syncLessons = ev.target.checked; save(); };
-  const prevName = () => { $('#fileNamePrev').innerHTML = 'Files will be called <b>' + esc(fileBase()) + '-sync.json</b> and <b>' + esc(fileBase()) + '-' + todayStr() + '.json</b>'; };
-  $('#fileName').oninput = ev => { state.settings.fileName = ev.target.value; save(); prevName(); }; prevName();
+  const prevName = () => { $('#fileNamePrev').innerHTML = 'Files will be called <b>' + esc(fileBase()) + '-sync.' + (state.settings.syncAudio ? 'zip' : 'json') + '</b> and <b>' + esc(fileBase()) + '-' + todayStr() + ($('#expAudio') && $('#expAudio').checked ? '-with-audio.zip' : '.json') + '</b>'; };
+  $('#fileName').oninput = ev => { state.settings.fileName = ev.target.value; save(); prevName(); }; prevName(); $('#expAudio').addEventListener('change', prevName);
   (async () => { const box = $('#syncLink'); if (!box) return; const h = await syncH.get(); if (!box.isConnected) return;       // the panel was redrawn while we waited
     if (!canLink()) { box.innerHTML = '<p class="muted" style="font-size:.86rem;margin:0">On this device Sync asks you to choose the file, merges it, then downloads the updated file to upload again. (One-tap sync with a linked file works in desktop Chrome and Edge.)</p>'; return; }
     box.innerHTML = h ? `<span class="muted" style="font-size:.86rem">Linked file: <b>${esc(h.name)}</b> — Sync reads it, merges, and writes it back.</span> <button class="btn sm" id="btnUnlink">Unlink</button>` : '<span class="muted" style="font-size:.86rem">Link a file for one-tap sync:</span> <button class="btn sm" id="btnLinkOpen">Choose existing file…</button> <button class="btn sm" id="btnLinkNew">Create new file…</button>';
@@ -3232,26 +3248,31 @@ function renderBackup() {
   };
 }
 const blobToDataURL = b => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
+const hasCarry = c => !!(c && (c.blob || c.data));
 async function buildBackup(withAudio, withLessons, carry) {
   stampChanges();
   const base = { app: 'lithuanian-audio-dashboard', version: 2, exported: new Date().toISOString(), entries: state.entries, lessons: state.lessons, texts: state.texts, tomb: state.tomb, time: state.time, hist: state.hist, days: state.days, counts: state.counts, settings: state.settings };
-  const head = JSON.stringify(base), parts = [];
-  const cIds = carry ? Object.keys(carry).filter(id => carry[id] && carry[id].data && (state.entries.some(e => e.audioId === id) || state.lessons.some(l => l.audioId === id))) : [];
-  if (!withAudio && !cIds.length) parts.push(head);
-  else {
-    parts.push(head.slice(0, -1) + ',"audio":{'); const names = new Map(); state.entries.forEach(e => e.audioId && names.set(e.audioId, e.audioName)); if (withLessons) state.lessons.forEach(l => l.audioId && !names.has(l.audioId) && names.set(l.audioId, l.name)); let first = true;
-    if (!withAudio) names.clear();
-    for (const id of cIds) if (!names.has(id)) names.set(id, null);       // audio already in the shared file stays there even if this device does not add its own
-    for (const [id, name] of names) { const b = await getBlob(id); if (!b) { const c = carry && carry[id]; if (c && c.data) { parts.push((first ? '' : ',') + JSON.stringify(id) + ':' + JSON.stringify(c)); first = false; } continue; } parts.push((first ? '' : ',') + JSON.stringify(id) + ':' + JSON.stringify({ name, type: b.type, data: await blobToDataURL(b) })); first = false; }
-    parts.push('}}');
+  const used = id => state.entries.some(e => e.audioId === id) || state.lessons.some(l => l.audioId === id);
+  const cIds = carry ? Object.keys(carry).filter(id => hasCarry(carry[id]) && used(id)) : [];
+  if (!withAudio && !cIds.length) return new Blob([JSON.stringify(base)], { type: 'application/json' });
+  // with audio the backup is a .zip: litlingo.json (phrases, lessons, history…) + one raw audio file each — no base64, no giant string
+  const names = new Map(); if (withAudio) { state.entries.forEach(e => e.audioId && names.set(e.audioId, e.audioName)); if (withLessons) state.lessons.forEach(l => l.audioId && !names.has(l.audioId) && names.set(l.audioId, l.name)); }
+  for (const id of cIds) if (!names.has(id)) names.set(id, null);       // audio already in the shared file stays there even if this device does not add its own
+  const index = {}, files = [];
+  for (const [id, name] of names) {
+    let blob = await getBlob(id), type = blob && blob.type, nm = name;
+    if (!blob) { const c = carry && carry[id]; if (!hasCarry(c)) continue; blob = c.blob || await (await fetch(c.data)).blob(); type = c.type || blob.type; nm = c.name || name; }
+    index[id] = { name: nm || id, type: type || 'audio/mpeg' }; files.push({ name: 'audio/' + encodeURIComponent(id), data: blob });
   }
-  return new Blob(parts, { type: 'application/json' });
+  base.audioIndex = index;
+  return makeZip([{ name: 'litlingo.json', data: JSON.stringify(base) }].concat(files));
 }
+const backupExt = blob => blob.type === 'application/zip' ? 'zip' : 'json';
 function downloadBlob(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
 async function exportJSON() {
   const withAudio = $('#expAudio').checked, btn = $('#btnExport'); btn.disabled = true; btn.textContent = 'Preparing…';
   try {
-    downloadBlob(await buildBackup(withAudio, withAudio && $('#expLessons').checked), fileBase() + '-' + todayStr() + (withAudio ? '-with-audio' : '') + '.json');
+    { const bk = await buildBackup(withAudio, withAudio && $('#expLessons').checked); downloadBlob(bk, fileBase() + '-' + todayStr() + (withAudio ? '-with-audio' : '') + '.' + backupExt(bk)); }
     state.lastExport = Date.now(); save(); toast('Backup downloaded.');
   } catch (err) { toast('Export failed: ' + err.message, 'err'); }
   btn.disabled = false; btn.textContent = 'Download backup'; renderBackup();
@@ -3325,7 +3346,7 @@ async function exportAnki() {
 $('#fileJson').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) importJSONFile(f); };
 /* ---- merging a backup into this device: newest change per phrase wins, deletions travel along ---- */
 async function mergeData(data, smart, dry, revive) {
-  const fills = [], S = { revived: 0, lessonAudio: 0, fill: 0, add: 0, upd: 0, same: 0, kept: 0, del: 0, skip: 0, noAudio: 0, lNew: 0, lUpd: 0, tNew: 0, tUpd: 0, need: new Set() };
+  const fills = [], takes = [], SCH = ['status', 'state', 'due', 'ivl', 'ease', 'step', 'lapses', 'reviews', 'correct', 'lastReview'], pickSch = e => Object.fromEntries(SCH.map(k => [k, e[k]])), S = { revived: 0, lessonAudio: 0, fill: 0, add: 0, upd: 0, same: 0, kept: 0, del: 0, skip: 0, noAudio: 0, lNew: 0, lUpd: 0, tNew: 0, tUpd: 0, need: new Set() };
   const incE = (data.entries || []).filter(e => e && (e.lt || e.stress)).map(mkEntry), incTomb = (smart && data.tomb) || {}, hasAudio = id => !!(data.audio && data.audio[id]);
   const byIdM = new Map(state.entries.map(e => [e.id, e])), byKeyM = new Map(); state.entries.forEach(e => { const k = ekey(e); if (!byKeyM.has(k)) byKeyM.set(k, e); });
   const adds = [], upds = [], idMap = new Map(), incOf = new Map();
@@ -3335,7 +3356,7 @@ async function mergeData(data, smart, dry, revive) {
     idMap.set(i.id, t.id); incOf.set(t.id, i);
     if (!t.audioId && i.audioId && hasAudio(i.audioId)) { fills.push([t, i]); S.need.add(i.audioId); S.fill++; }   // phrase already here but its audio never arrived
     if (smart && entryFP(i) === entryFP(t)) { S.same++; continue; }
-    if (smart && !(i.upd > t.upd)) { S.kept++; continue; }
+    if (smart && !(i.upd > t.upd)) { if ((i.lastReview || 0) > (t.lastReview || 0)) takes.push([t, i]); S.kept++; continue; }   // yours is newer overall, but the file has a more recent review of this card
     upds.push([t, i]); if (!t.audioId && i.audioId && hasAudio(i.audioId)) S.need.add(i.audioId);
   }
   const dels = []; for (const [k, ts] of Object.entries(incTomb)) { if (k[0] === 'T') continue; const t = k.startsWith('k:') ? byKeyM.get(k.slice(2)) : byIdM.get(k); const i = t && incOf.get(t.id); if (t && ts > t.upd && !(i && i.upd >= ts) && !dels.includes(t)) dels.push(t); }
@@ -3356,10 +3377,11 @@ async function mergeData(data, smart, dry, revive) {
   for (const [t, i] of fills) if (!t.audioId) Object.assign(t, { audioId: i.audioId, audioName: i.audioName, clip: i.clip, s0: i.s0, s1: i.s1, t0: i.t0, t1: i.t1 });
   const incIds = new Set(incE.map(e => e.id)), fixClips = il => il.clips.forEach(c => { if (c.entryId && incIds.has(c.entryId)) c.entryId = idMap.get(c.entryId) || null; });
   for (const i of adds) { i.lessonId = lMap.get(i.lessonId) || i.lessonId; state.entries.push(i); }
+  if (!dry) for (const [t, i] of takes) Object.assign(t, pickSch(i));
   for (const [t, i] of upds) {
-    const keep = { id: t.id, audioId: t.audioId || i.audioId, audioName: t.audioName || i.audioName, lessonId: lMap.get(i.lessonId) || i.lessonId };
+    const old = pickSch(t), keep = { id: t.id, audioId: t.audioId || i.audioId, audioName: t.audioName || i.audioName, lessonId: lMap.get(i.lessonId) || i.lessonId };
     if (t.audioId) Object.assign(keep, { clip: t.clip, s0: t.s0, s1: t.s1, t0: t.t0, t1: t.t1 });
-    Object.assign(t, i, keep); t.upd = smart ? i.upd : Date.now();
+    Object.assign(t, i, keep); if (smart && (old.lastReview || 0) > (i.lastReview || 0)) Object.assign(t, old); t.upd = smart ? i.upd : Date.now();
   }
   for (const [ex, il, src] of lOps) {
     if (!ex) { fixClips(il); state.lessons.push(il); }
@@ -3377,7 +3399,7 @@ async function mergeData(data, smart, dry, revive) {
 async function importAudioFrom(data, ids, prog) {
   if (!data.audio) return; const have = new Set((await idb('readonly', s => s.getAllKeys()).catch(() => [])) || []); mem.forEach((_, k) => have.add(k));
   const list = ids || Object.keys(data.audio); let k = 0;
-  for (const id of list) { k++; if (prog && k % 3 === 0) { prog('Saving audio ' + k + '/' + list.length + '…'); await sleep(0); } const a = data.audio[id]; if (!a || !a.data || (ids && have.has(id))) continue; const blob = await (await fetch(a.data)).blob(); mem.set(id, new Blob([blob], { type: a.type || blob.type || 'audio/mpeg' })); await idbPut(id, mem.get(id)); }
+  for (const id of list) { k++; if (prog && k % 3 === 0) { prog('Saving audio ' + k + '/' + list.length + '…'); await sleep(0); } const a = data.audio[id]; if (!a || !(a.data || a.blob) || (ids && have.has(id))) continue; const blob = a.blob ? new Blob([await a.blob.arrayBuffer()], { type: a.type || 'audio/mpeg' }) : await (await fetch(a.data)).blob(); mem.set(id, new Blob([blob], { type: a.type || blob.type || 'audio/mpeg' })); await idbPut(id, mem.get(id)); }
 }
 const reviveHTML = S => S.skip ? `<label style="display:flex;gap:8px;align-items:flex-start;margin:10px 0 0"><input type="checkbox" id="revive"> <span><b>${S.skip}</b> phrase${S.skip === 1 ? ' is' : 's are'} not coming over because this device remembers deleting ${S.skip === 1 ? 'it' : 'them'}. Tick to bring ${S.skip === 1 ? 'it' : 'them'} back anyway.</span></label>` : '';
 const planHTML = S => {
@@ -3388,8 +3410,14 @@ const planHTML = S => {
 };
 async function readBackup(file) {
   const bt = busyToast('Reading ' + file.name + (file.size > 5e6 ? ' (' + (file.size / 1048576).toFixed(0) + ' MB — this can take a moment)' : '') + '…'); await sleep(30);
-  let txt; try { txt = await file.text(); } catch (e) { bt.done(); toast('Could not read the file (' + (e && e.name || 'error') + '). It may be too big for this device’s memory — or still downloading from Drive. Try again with Drive set to keep the file offline.', 'err'); return null; }
-  let data; try { data = JSON.parse(txt); } catch (e) { bt.done(); toast(e instanceof SyntaxError ? 'That file is not valid JSON — it may be incomplete (still syncing from Drive?).' : 'Not enough memory to open this file on this device.', 'err'); return null; } txt = null; bt.done();
+  let data; try {
+    const head = new Uint8Array(await file.slice(0, 4).arrayBuffer());
+    if (head[0] === 0x50 && head[1] === 0x4b) {                                   // new format: zip with litlingo.json + audio/<id>
+      const z = await zipOpenFile(file), jb = await z.blob('litlingo.json'); if (!jb) throw new Error('litlingo.json is missing');
+      data = JSON.parse(await jb.text()); data.audio = {};
+      const ids = Object.keys(data.audioIndex || {}); for (let i = 0; i < ids.length; i += 40) await Promise.all(ids.slice(i, i + 40).map(async id => { const b = await z.blob('audio/' + encodeURIComponent(id), data.audioIndex[id].type); if (b) data.audio[id] = { name: data.audioIndex[id].name, type: data.audioIndex[id].type, blob: b }; }));
+    } else { let txt = await file.text(); data = JSON.parse(txt); txt = null; }       // older backups: one JSON file with base64 audio
+  } catch (e) { bt.done(); toast(e instanceof SyntaxError ? 'That file is not valid JSON — it may be incomplete (still syncing from Drive?).' : 'Could not read the file (' + (e && (e.name === 'NotReadableError' ? 'it may still be downloading from Drive — set Drive to keep it offline' : e.message) || 'error') + ').', 'err'); return null; } bt.done();
   if (!data || !Array.isArray(data.entries)) { toast('This does not look like a dashboard backup.', 'err'); return null; } return data;
 }
 async function importJSONFile(file) {
@@ -3424,7 +3452,7 @@ function fileBase() {                    // name used for exported / sync files 
   const n = String(state.settings.fileName || '').replace(/[\\/:*?"<>|\u0000-\u001f]+/g, '-').replace(/\s+/g, ' ').trim().replace(/^[.\-\s]+|[.\-\s]+$/g, '').slice(0, 60); return n || 'LitLingo';
 }
 const syncBuild = carry => buildBackup(!!state.settings.syncAudio, !!(state.settings.syncAudio && state.settings.syncLessons), carry);
-async function syncWrite(handle, carry) { const w = await handle.createWritable(); await w.write(await syncBuild(carry)); await w.close(); state.lastSync = Date.now(); save(); }
+async function syncWrite(handle, carry) { const out = await syncBuild(carry), w = await handle.createWritable(); await w.write(out); await w.close(); state.lastSync = Date.now(); save(); }
 const syncSummary = S => { const bits = [S.add && S.add + ' added', S.upd && S.upd + ' updated', S.del && S.del + ' removed', S.skip && S.skip + ' skipped (deleted here earlier)', S.lNew + S.lUpd && (S.lNew + S.lUpd) + ' lesson(s)'].filter(Boolean); return bits.length ? bits.join(', ') : 'already up to date'; };
 async function syncNow(silent) {
   const h = await syncH.get();
@@ -3440,19 +3468,20 @@ async function syncNow(silent) {
 }
 async function syncPicked(file) {                                                   // phone / no linked file: preview, merge, then download the merged file
   const data = await readBackup(file); if (!data) return; const S = await mergeData(data, true, true), nf = data.entries.length, nh = state.entries.length, na = data.audio ? Object.keys(data.audio).length : 0;
-  const m = openModal(`<div class="modal-head"><h2>Sync with “${esc(file.name)}”</h2><button class="icon-btn" data-x aria-label="Close">✕</button></div><div class="modal-body"><p style="margin-top:0">The file has <b>${nf}</b> phrase${nf === 1 ? '' : 's'}${na ? ` and <b>${na}</b> audio file${na === 1 ? '' : 's'}` : ' and no audio'}. This device has <b>${nh}</b>. After merging: about <b>${nh + S.add - S.del}</b>.</p><p style="margin-bottom:0">This is what will change on this device:</p>${planHTML(S)}${reviveHTML(S)}
+  const m = openModal(`<div class="modal-head"><h2>Sync with “${esc(file.name)}”</h2><button class="icon-btn" data-x aria-label="Close">✕</button></div><div class="modal-body"><p style="margin-top:0">The file has <b>${nf}</b> phrase${nf === 1 ? '' : 's'}${na ? ` and <b>${na}</b> audio file${na === 1 ? '' : 's'}` : ' and no audio'}. This device has <b>${nh}</b>. After merging: about <b id="aftN">${nh + S.add - S.del}</b>.</p><p style="margin-bottom:0">This is what will change on this device:</p>${planHTML(S)}${reviveHTML(S)}
     <p class="muted" style="font-size:.86rem">After merging, an updated file is downloaded. Upload it to your shared folder (replace the old file) so your other devices get the same data.</p></div>
     <div class="modal-foot"><button class="btn" data-x>Cancel</button><button class="btn primary" id="syncGo">Merge &amp; download updated file</button></div>`);
+  { const rv = $('#revive', m.el); if (rv) rv.onchange = () => { $('#aftN', m.el).textContent = nh + S.add - S.del + (rv.checked ? S.skip : 0); }; }
   $('#syncGo', m.el).onclick = async ev => {
     ev.target.disabled = true; ev.target.textContent = 'Working…';
-    try { await applyImport(data, 'smart', t => { ev.target.textContent = t; }, !!($('#revive', m.el) && $('#revive', m.el).checked)); downloadBlob(await syncBuild(data.audio), fileBase() + '-sync.json'); state.lastSync = Date.now(); save(); toast('Merged. Upload the downloaded file to replace the old one.'); }
+    try { await applyImport(data, 'smart', t => { ev.target.textContent = t; }, !!($('#revive', m.el) && $('#revive', m.el).checked)); { const out = await syncBuild(data.audio); downloadBlob(out, fileBase() + '-sync.' + backupExt(out)); } state.lastSync = Date.now(); save(); toast('Merged. Upload the downloaded file to replace the old one.'); }
     catch (err) { console.error(err); toast('Sync failed: ' + (err.message || err), 'err'); } m.close(); renderBackup();
   };
 }
 async function linkSyncFile(create) {
   try {
-    const opts = { types: [{ description: 'Backup', accept: { 'application/json': ['.json'] } }] };
-    const h = create ? await window.showSaveFilePicker(Object.assign({ suggestedName: fileBase() + '-sync.json' }, opts)) : (await window.showOpenFilePicker(opts))[0];
+    const opts = { types: [{ description: 'Backup', accept: { 'application/json': ['.json'], 'application/zip': ['.zip'] } }] };
+    const h = create ? await window.showSaveFilePicker(Object.assign({ suggestedName: fileBase() + '-sync.' + (state.settings.syncAudio ? 'zip' : 'json') }, opts)) : (await window.showOpenFilePicker(opts))[0];
     await syncH.set(h); toast('File linked. Press Sync to merge and update it.'); renderBackup();
   } catch (e) { if (e && e.name !== 'AbortError') toast('Could not link the file: ' + e.message, 'err'); }
 }
