@@ -1,2 +1,0 @@
-# lithuanian
-learn lithuanian language
