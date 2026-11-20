@@ -1756,6 +1756,7 @@ function openModal(html, { wide = false, dismiss = true } = {}) {
     if (e.shiftKey && (a === first || !dlg.contains(a))) { e.preventDefault(); last.focus(); }
     else if (!e.shiftKey && (a === last || !dlg.contains(a))) { e.preventDefault(); first.focus(); }
   });
+  ov.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-x]') && dlg.contains(e.target) && modals.includes(api)) api.close(); });   // every ✕ / Close button, even where the dialog code forgot its own handler
   if (dismiss) ov.addEventListener('mousedown', e => { if (e.target === ov) api.close(); });
   modals.push(api);
   const f = $('[autofocus]', ov) || $('input:not([type=checkbox]),textarea,select,button', ov); if (f) setTimeout(() => f.focus(), 30);
