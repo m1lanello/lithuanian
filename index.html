@@ -2857,13 +2857,19 @@ function lsMount(root) {
    AI conversation partner (optional: you bring your own Anthropic API key)
    The key lives only in this browser (its own localStorage entry) — it is never put in the backup / sync file.
 =================================================================== */
-const AI_KEY = 'litlingo.aiKey', AI_CHAT = 'litlingo.aiChat';
-const aiKey = () => { try { return localStorage.getItem(AI_KEY) || ''; } catch (e) { return ''; } };
-const aiSetKey = k => { try { k ? localStorage.setItem(AI_KEY, k) : localStorage.removeItem(AI_KEY); } catch (e) { toast('Could not store the key on this device (storage blocked or full).', 'err'); } };
-const AI_MODELS = [['claude-haiku-5-5', 'Haiku 5.5 — fast and cheapest (recommended)'], ['claude-sonnet-5-5', 'Sonnet 5.5 — smarter corrections, costs more']];
+const AI_KEYS = { anthropic: 'litlingo.aiKey', gemini: 'litlingo.aiKeyGemini' }, AI_CHAT = 'litlingo.aiChat';
+const aiProv = () => (state.settings.ai && state.settings.ai.provider) || (localStorage.getItem(AI_KEYS.anthropic) ? 'anthropic' : 'gemini');
+const aiKey = (p = aiProv()) => { try { return localStorage.getItem(AI_KEYS[p]) || ''; } catch (e) { return ''; } };
+const aiSetKey = (k, p = aiProv()) => { try { k ? localStorage.setItem(AI_KEYS[p], k) : localStorage.removeItem(AI_KEYS[p]); } catch (e) { toast('Could not store the key on this device (storage blocked or full).', 'err'); } };
+const AI_PROVIDERS = [['gemini', 'Google Gemini — free tier available'], ['anthropic', 'Anthropic Claude — paid, pay-as-you-go']];
+const AI_MODELS_BY = {
+  anthropic: [['claude-haiku-5-5', 'Haiku 5.5 — fast and cheapest (recommended)'], ['claude-sonnet-5-5', 'Sonnet 5.5 — smarter corrections, costs more']],
+  gemini: [['gemini-3.8-flash', 'Gemini 3.8 Flash — best free choice (recommended)'], ['gemini-3.6-flash', 'Gemini 3.6 Flash'], ['gemini-3.5-flash-lite', 'Gemini 3.5 Flash-Lite — lighter, higher limits']]
+};
+const AI_MODELS = AI_MODELS_BY.anthropic;
 const AI_TOPICS = [['free', 'Anything you like'], ['intro', 'Introducing yourself'], ['food', 'Ordering food and drink'], ['shop', 'Shopping'], ['travel', 'Travel and directions'], ['family', 'Family and daily life'], ['work', 'Work and hobbies']];
 const AI_LEVELS = [['A1', 'Beginner (A1) — very short and simple'], ['A2', 'Elementary (A2)'], ['B1', 'Intermediate (B1)']];
-const aiCfg = () => (state.settings.ai = Object.assign({ model: AI_MODELS[0][0], level: 'A1', topic: 'free', vocab: true, fix: true }, state.settings.ai || {}));
+const aiCfg = () => { const c = (state.settings.ai = Object.assign({ level: 'A1', topic: 'free', vocab: true, fix: true }, state.settings.ai || {})); c.provider = aiProv(); const list = AI_MODELS_BY[c.provider]; const k = c.provider === 'gemini' ? 'gmodel' : 'model'; if (!list.some(x => x[0] === c[k])) c[k] = list[0][0]; return c; };
 const aiLoad = () => { try { const a = JSON.parse(localStorage.getItem(AI_CHAT) || '[]'); return Array.isArray(a) ? a.slice(-60) : []; } catch (e) { return []; } };
 const aiStore = a => { try { localStorage.setItem(AI_CHAT, JSON.stringify(a.slice(-60))); } catch (e) { toast('Could not save the conversation on this device.', 'warn'); } };
 function aiSystem() {
@@ -2875,11 +2881,19 @@ ${known.length ? `The learner already knows these phrases, so reuse their words 
 Reply with ONE JSON object and nothing else: {"reply": "<your Lithuanian message>", "en": "<English translation of your reply>", "fix": "<short English feedback with the corrected sentence, or an empty string if nothing to fix>"}`;
 }
 async function aiCall(msgs) {
-  const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 60000);
+  const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 60000), cfg = aiCfg();
   try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', signal: ctl.signal, headers: { 'content-type': 'application/json', 'x-api-key': aiKey(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' }, body: JSON.stringify({ model: aiCfg().model, max_tokens: 700, system: aiSystem(), messages: msgs }) });
-    if (!r.ok) { let m = ''; try { m = (await r.json()).error.message; } catch (e) {} const err = new Error(m || r.statusText || 'Request failed'); err.status = r.status; throw err; }
-    const d = await r.json(); return (d.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+    let r;
+    if (cfg.provider === 'gemini') {
+      r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(cfg.gmodel) + ':generateContent', { method: 'POST', signal: ctl.signal, headers: { 'content-type': 'application/json', 'x-goog-api-key': aiKey() },
+        body: JSON.stringify({ systemInstruction: { parts: [{ text: aiSystem() }] }, contents: msgs.map(x => ({ role: x.role === 'assistant' ? 'model' : 'user', parts: [{ text: x.content }] })), generationConfig: { maxOutputTokens: 2000, responseMimeType: 'application/json' } }) });
+    } else {
+      r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', signal: ctl.signal, headers: { 'content-type': 'application/json', 'x-api-key': aiKey(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' }, body: JSON.stringify({ model: cfg.model, max_tokens: 700, system: aiSystem(), messages: msgs }) });
+    }
+    if (!r.ok) { let m = ''; try { m = (await r.json()).error.message; } catch (e) {} const err = new Error(m || r.statusText || 'Request failed'); err.status = r.status; if (cfg.provider === 'gemini' && r.status === 400 && /api key/i.test(m)) err.status = 401; throw err; }
+    const d = await r.json();
+    if (cfg.provider === 'gemini') { const c = (d.candidates || [])[0]; const t = c && c.content && c.content.parts ? c.content.parts.map(p => p.text || '').join('') : ''; if (!t) { const err = new Error((d.promptFeedback && d.promptFeedback.blockReason) ? 'The request was blocked (' + d.promptFeedback.blockReason + ').' : 'The model returned no text — try again.'); err.status = 502; throw err; } return t; }
+    return (d.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
   } finally { clearTimeout(to); }
 }
 function aiParse(t) {
@@ -2887,27 +2901,31 @@ function aiParse(t) {
   if (a >= 0 && b > a) { try { const o = JSON.parse(t.slice(a, b + 1)); if (o && typeof o.reply === 'string') return { reply: o.reply.trim(), en: String(o.en || '').trim(), fix: String(o.fix || '').trim() }; } catch (e) {} }
   return { reply: String(t).trim(), en: '', fix: '' };
 }
-const aiErrText = err => err.name === 'AbortError' ? 'The tutor took too long to answer — try again.' : err.status === 401 ? 'The API key was rejected. Check it in ⚙ Settings.' : err.status === 403 ? 'This key is not allowed to use that model.' : err.status === 429 ? 'Too many requests, or your credit balance is empty. Wait a moment, or check your balance in the Anthropic console.' : err.status === 400 && /credit/i.test(err.message) ? 'Your Anthropic credit balance is too low. Add credit in the console.' : err.status ? 'The tutor service said: ' + err.message : 'Could not reach the tutor — check your internet connection.';
+const aiErrText = err => err.name === 'AbortError' ? 'The tutor took too long to answer — try again.' : err.status === 401 ? 'The API key was rejected. Check it in ⚙ Settings.' : err.status === 403 ? 'This key is not allowed to use that model.' : err.status === 404 && aiProv() === 'gemini' ? 'That Gemini model is not available — pick another one in ⚙ Settings.' : err.status === 429 && aiProv() === 'gemini' ? 'Gemini free limit reached. Wait a minute (or until tomorrow if it is the daily limit), or pick another model in ⚙ Settings.' : err.status === 429 ? 'Too many requests, or your credit balance is empty. Wait a moment, or check your balance in the Anthropic console.' : err.status === 400 && /credit/i.test(err.message) ? 'Your Anthropic credit balance is too low. Add credit in the console.' : err.status ? 'The tutor service said: ' + err.message : 'Could not reach the tutor — check your internet connection.';
 function openTutor() {
   let msgs = aiLoad(), busy = false, rec = null;
   const selHTML = (id, opts, cur) => `<select id="${id}">${opts.map(([v, t]) => `<option value="${v}" ${v === cur ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>`;
   const m = openModal(`<div class="modal-head"><h2>💬 AI conversation partner</h2><button class="icon-btn" id="aiGear" aria-label="Settings" title="Settings">⚙</button><button class="icon-btn" data-x aria-label="Close">✕</button></div><div class="modal-body" id="aiBody"></div><div class="modal-foot" id="aiFoot" style="flex-wrap:nowrap;align-items:flex-end"></div>`, { wide: true });
   const body = $('#aiBody', m.el), foot = $('#aiFoot', m.el);
-  const setup = () => {
-    foot.style.display = 'none'; const c = aiCfg();
-    body.innerHTML = `<p style="margin-top:0">Practise real conversation: the tutor writes in Lithuanian at your level, reuses words you already know, and corrects your mistakes. It uses <b>your own</b> Anthropic API key — the key stays in this browser and is never saved in your backup or sync file.</p>
-      <ol class="ai-steps"><li>Open <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com → API keys</a> and sign in (this is separate from a Claude chat subscription).</li><li>Add a few dollars of credit under <b>Billing</b> and, to be safe, set a low monthly spend limit.</li><li>Press <b>Create key</b>, copy it (it starts with <code>sk-ant-</code>) and paste it below.</li></ol>
-      <label class="lbl" for="aiKeyIn">Your API key</label><input type="password" id="aiKeyIn" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-…" value="${esc(aiKey())}">
-      <div class="pr-form" style="margin-top:10px"><div><label class="lbl" for="aiModel">Model</label>${selHTML('aiModel', AI_MODELS, c.model)}</div><div><label class="lbl" for="aiLevel">Your level</label>${selHTML('aiLevel', AI_LEVELS, c.level)}</div><div><label class="lbl" for="aiTopic">Topic</label>${selHTML('aiTopic', AI_TOPICS, c.topic)}</div></div>
+  const setup = (pv) => {
+    foot.style.display = 'none'; const c = aiCfg(), P = pv || c.provider, G = P === 'gemini', prevKey = aiKey(P);
+    body.innerHTML = `<p style="margin-top:0">Practise real conversation: the tutor writes in Lithuanian at your level, reuses words you already know, and corrects your mistakes. It uses <b>your own</b> API key — the key stays in this browser and is never saved in your backup or sync file.</p>
+      <label class="lbl" for="aiProv">Service</label>${selHTML('aiProv', AI_PROVIDERS, P)}
+      ${G ? `<ol class="ai-steps"><li>Open <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com → API keys</a> and sign in with your Google account.</li><li>Press <b>Create API key</b> (no payment details are needed for the free tier).</li><li>Copy the key (it starts with <code>AIza</code>) and paste it below.</li></ol>`
+      : `<ol class="ai-steps"><li>Open <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com → API keys</a> and sign in (this is separate from a Claude chat subscription).</li><li>Add a few dollars of credit under <b>Billing</b> and, to be safe, set a low monthly spend limit.</li><li>Press <b>Create key</b>, copy it (it starts with <code>sk-ant-</code>) and paste it below.</li></ol>`}
+      <label class="lbl" for="aiKeyIn">Your API key</label><input type="password" id="aiKeyIn" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${G ? 'AIza…' : 'sk-ant-…'}" value="${esc(prevKey)}">
+      <div class="pr-form" style="margin-top:10px"><div><label class="lbl" for="aiModel">Model</label>${selHTML('aiModel', AI_MODELS_BY[P], c[G ? 'gmodel' : 'model'])}</div><div><label class="lbl" for="aiLevel">Your level</label>${selHTML('aiLevel', AI_LEVELS, c.level)}</div><div><label class="lbl" for="aiTopic">Topic</label>${selHTML('aiTopic', AI_TOPICS, c.topic)}</div></div>
       <label style="display:flex;gap:8px;align-items:center;margin-top:8px"><input type="checkbox" id="aiVocab" ${c.vocab ? 'checked' : ''}> Use words from my dictionary (sends up to 80 of your known phrases with each message)</label>
       <label style="display:flex;gap:8px;align-items:center;margin-top:6px"><input type="checkbox" id="aiFix" ${c.fix ? 'checked' : ''}> Correct my mistakes</label>
-      <p class="muted" style="font-size:.85rem">Cost: roughly a cent or two for a 15-minute chat with Haiku. Your messages go straight from this device to Anthropic. Tutor answers can contain mistakes — double-check anything important.</p>
-      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="aiSave">Save and start chatting</button>${aiKey() ? '<button class="btn danger" id="aiForget">Remove key from this device</button>' : ''}${msgs.length ? '<button class="btn" id="aiClear">Clear conversation</button>' : ''}</div>`;
+      <p class="muted" style="font-size:.85rem">${G ? 'Cost: free within Google’s daily limits (a short chat is well inside them). On the free tier Google may use what you send to improve its products, so keep personal details out of the chat. Free limits can change.' : 'Cost: roughly a cent or two for a 15-minute chat with Haiku.'} Your messages go straight from this device to ${G ? 'Google' : 'Anthropic'}. Tutor answers can contain mistakes — double-check anything important.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="aiSave">Save and start chatting</button>${prevKey ? '<button class="btn danger" id="aiForget">Remove key from this device</button>' : ''}${msgs.length ? '<button class="btn" id="aiClear">Clear conversation</button>' : ''}</div>`;
+    $('#aiProv', m.el).onchange = ev => setup(ev.target.value);
     $('#aiSave', m.el).onclick = () => {
-      const k = $('#aiKeyIn', m.el).value.trim(); if (!/^sk-ant-/.test(k)) { toast('That does not look like an Anthropic key (it starts with sk-ant-).', 'warn'); return; }
-      aiSetKey(k); Object.assign(aiCfg(), { model: $('#aiModel', m.el).value, level: $('#aiLevel', m.el).value, topic: $('#aiTopic', m.el).value, vocab: $('#aiVocab', m.el).checked, fix: $('#aiFix', m.el).checked }); save(); chat();
+      const k = $('#aiKeyIn', m.el).value.trim();
+      if (G ? !/^AIza/.test(k) : !/^sk-ant-/.test(k)) { toast(G ? 'That does not look like a Gemini key (it starts with AIza).' : 'That does not look like an Anthropic key (it starts with sk-ant-).', 'warn'); return; }
+      aiSetKey(k, P); const cc = aiCfg(); cc.provider = P; cc[G ? 'gmodel' : 'model'] = $('#aiModel', m.el).value; Object.assign(cc, { level: $('#aiLevel', m.el).value, topic: $('#aiTopic', m.el).value, vocab: $('#aiVocab', m.el).checked, fix: $('#aiFix', m.el).checked }); save(); chat();
     };
-    const f = $('#aiForget', m.el); if (f) f.onclick = () => { aiSetKey(''); toast('Key removed from this device.'); setup(); };
+    const f = $('#aiForget', m.el); if (f) f.onclick = () => { aiSetKey('', P); toast('Key removed from this device.'); setup(P); };
     const cl = $('#aiClear', m.el); if (cl) cl.onclick = () => { msgs = []; aiStore(msgs); toast('Conversation cleared.'); setup(); };
   };
   const bubble = (x, i) => {
@@ -2949,12 +2967,12 @@ function openTutor() {
     if (a === 'say') speak(v.reply); else if (a === 'en') { const e = b.closest('.ai-b').querySelector('.ai-en'); e.hidden = !e.hidden; }
     else if (a === 'save') { const first = v.reply.split(/\n+/)[0]; openEdit(null, { lt: first, en: v.en, cat: 'AI tutor', tags: suggestTags({ lt: first, en: v.en }) }); }
   });
-  $('#aiGear', m.el).onclick = setup;
+  $('#aiGear', m.el).onclick = () => setup();
   if (aiKey()) chat(); else setup();
 }
 function aiMount(root) {
   root.insertAdjacentHTML('beforeend', `<div class="panel" style="margin-top:14px"><h2 class="sec">💬 AI conversation partner <span class="chip" style="font-size:.7rem;vertical-align:middle">optional</span></h2>
-    <p class="muted" style="margin-top:0">Chat in Lithuanian with a tutor that adapts to your level, reuses your own vocabulary and corrects you. ${aiKey() ? 'Your API key is saved on this device.' : 'You paste your own Anthropic API key — the setup screen explains how.'}</p><button class="btn primary" id="aiOpen">${aiKey() ? 'Open the tutor' : 'Set up the tutor'}</button></div>`);
+    <p class="muted" style="margin-top:0">Chat in Lithuanian with a tutor that adapts to your level, reuses your own vocabulary and corrects you. ${aiKey() ? 'Your API key is saved on this device.' : 'You paste your own API key — Google Gemini has a free tier, and the setup screen explains how.'}</p><button class="btn primary" id="aiOpen">${aiKey() ? 'Open the tutor' : 'Set up the tutor'}</button></div>`);
   $('#aiOpen').onclick = openTutor;
 }
 
