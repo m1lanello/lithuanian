@@ -123,7 +123,9 @@ code.k{background:var(--bg2);border:1px solid var(--line);border-radius:5px;padd
 .pick{width:18px;height:18px;flex:none;accent-color:var(--accent)}
 input[type=checkbox],input[type=radio]{width:18px;height:18px;accent-color:var(--accent);flex:none}
 .wave{display:none;gap:2px;align-items:center;height:16px}
-.item.playing .wave,.clip.playing .wave{display:inline-flex}
+.clip.playing .wave{display:inline-flex}
+.item .wave{display:none!important}
+.item.playing{border-color:var(--accent)}
 .wave i{display:block;width:3px;height:4px;border-radius:2px;background:var(--accent);animation:bar .9s ease-in-out infinite}
 .wave i:nth-child(2){animation-delay:-.7s}.wave i:nth-child(3){animation-delay:-.3s}.wave i:nth-child(4){animation-delay:-.55s}
 @keyframes bar{0%,100%{height:4px}50%{height:16px}}
@@ -327,6 +329,7 @@ main{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env
 @media (max-width:600px){
   .top-in{flex-wrap:wrap}nav.tabs{margin-left:0;width:100%;order:3}
   nav.tabs button{padding:6px 2px;font-size:.86rem}
+  .item{gap:3px;padding-right:4px}.item .dotbtn,.item .icon-btn{padding:4px 3px;min-width:28px}.item .txt{flex-direction:column;gap:0}
   .fgrid,.pr-form{grid-template-columns:1fr}
   .rate{grid-template-columns:repeat(2,1fr)}
   /* workbench row becomes a two-line card: controls on top, full-width text below */
@@ -624,6 +627,7 @@ function buildPairs(clips, mode) {
 /* ---- spaced repetition: Anki-style SM-2 with learning steps ---- */
 const SR = { learn: [1, 10], relearn: [10], grad: 1, easy: 4, ease0: 2.5, minEase: 1.3, easyBonus: 1.3, hardMul: 1.2, lapseMul: 0.3, maxIvl: 365, mature: 21 };
 const MINMS = 6e4, DAYMS = 864e5;
+const applyLearn = () => { SR.learn = (typeof state !== 'undefined' && state.settings && state.settings.learnSteps === 'light') ? [10] : [1, 10]; };   // standard: new phrases return after 1 and 10 min; light: only after Again/Hard
 function dayStartPlus(days, now = Date.now()) { const d = new Date(now); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + days); return d.getTime(); }
 // e: {state:'new'|'learn'|'review'|'relearn', step, ivl (days), ease, lapses, due (ms)}; r: 'again'|'hard'|'good'|'easy'
 // returns the new fields plus ivMs, the wait shown on the rating button
@@ -756,7 +760,7 @@ function loadState(given) {
     if (raw) {
       const o = JSON.parse(raw);
       state.entries = (o.entries || []).map(mkEntry); state.lessons = (o.lessons || []).map(mkLesson); state.texts = (o.texts || []).map(mkText); wIdx = null; hayC = new WeakMap();
-      state.tomb = o.tomb && typeof o.tomb === 'object' ? o.tomb : {}; state.lastSync = +o.lastSync || 0; state.time = o.time && typeof o.time === 'object' ? o.time : {}; state.hist = o.hist && typeof o.hist === 'object' ? o.hist : {}; state.days = o.days || {}; state.counts = o.counts && typeof o.counts === 'object' ? o.counts : { d: '', n: 0, r: 0 }; state.settings = Object.assign(state.settings, o.settings || {}); state.lastExport = o.lastExport || 0; stampChanges(true);
+      state.tomb = o.tomb && typeof o.tomb === 'object' ? o.tomb : {}; state.lastSync = +o.lastSync || 0; state.time = o.time && typeof o.time === 'object' ? o.time : {}; state.hist = o.hist && typeof o.hist === 'object' ? o.hist : {}; state.days = o.days || {}; state.counts = o.counts && typeof o.counts === 'object' ? o.counts : { d: '', n: 0, r: 0 }; state.settings = Object.assign(state.settings, o.settings || {}); state.lastExport = o.lastExport || 0; applyLearn(); stampChanges(true);
     }
   } catch (e) {
     console.warn('Could not read saved data', e);
@@ -983,6 +987,7 @@ async function playSrc(src, opts = {}) {
   audio.currentTime = abOn() ? play.ab.a : (src.t0 || 0); audio.playbackRate = rateOf(src.key);
   try {
     await audio.play(); startClipTimer();
+    if (opts.fromQueue && src.entry) followRow(src.entry);
     if (src.entry) { const e = byId(src.entry); if (e) { e.plays++; save(); } }
   } catch (err) { if (err.name !== 'AbortError') toast('Could not play audio: ' + err.message, 'err'); }
   syncUI();
@@ -1052,6 +1057,17 @@ function queueStep(d) {
   h('seekto', d => { const s = play.src; if (s && d && d.seekTime != null) audio.currentTime = (s.t0 || 0) + d.seekTime; });
 })();
 
+function followRow(id) {   // keep the playing phrase (and its English) visible between the sticky header and the bottom bars
+  const row = $$('#list .item').find(c => c.dataset.id === id); if (!row) return;
+  const top = $('.top'), np = $('.np'), tb = $('#tabbar');
+  const vis = el => el && el.offsetParent !== null || (el && getComputedStyle(el).position === 'fixed' && getComputedStyle(el).display !== 'none');
+  const topH = top ? top.getBoundingClientRect().bottom : 0;
+  let botY = innerHeight; [np, tb].forEach(el => { if (vis(el)) { const r = el.getBoundingClientRect(); if (r.height) botY = Math.min(botY, r.top); } });
+  const r = row.getBoundingClientRect(), pad = 12, h = botY - topH;
+  if (r.top >= topH + pad && r.bottom <= botY - pad) return;
+  const want = r.height >= h - 2 * pad ? r.top - topH - pad : r.top - topH - (h - r.height) / 3;
+  scrollBy({ top: want, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+}
 function playAll(startId) {
   if (!startId && play.queue) { play.queue = null; audio.pause(); syncUI(); return; }
   let ids = getFiltered().filter(e => e.audioId).map(e => e.id);
@@ -2709,12 +2725,13 @@ function renderPractice() {
         <div><label class="lbl" for="stNew">New phrases per day</label><input type="number" id="stNew" min="0" max="500" inputmode="numeric" value="${L.newPerDay}"></div>
         <div><label class="lbl" for="stRev">Max reviews per day</label><input type="number" id="stRev" min="0" max="2000" inputmode="numeric" value="${L.maxRev}"></div>
         <div><label class="lbl" for="stGoal">Daily goal (reviews, 0 = off)</label><input type="number" id="stGoal" min="0" max="2000" inputmode="numeric" value="${L.goal}"></div>
+        <div class="full"><label class="lbl" for="stLearn">How often new phrases repeat in one session</label><select id="stLearn"><option value="std" ${state.settings.learnSteps !== 'light' ? 'selected' : ''}>Standard — each new phrase comes back about twice (1 and 10 min)</option><option value="light" ${state.settings.learnSteps === 'light' ? 'selected' : ''}>Fewer — “Good” is enough; it only comes back after Again or Hard</option></select></div>
         <p class="muted full" style="margin:0;font-size:.84rem">The limits only apply to “Due + new”. New phrases are introduced in course order. Studied today: <b>${dayCounts().n}</b> new, <b>${dayCounts().r}</b> older reviews.</p></div></details></div>`;
     const sync = () => { pr.cfg = { mode: $('#prMode').value, scope: $('#prScope').value, count: +$('#prCount').value, audioOnly: $('#prAudioOnly').checked, cat: $('#prCat').value, tag: $('#prTag') ? $('#prTag').value : 'all' }; renderPractice(); };
     ['prMode', 'prScope', 'prCount', 'prAudioOnly', 'prCat', 'prTag'].forEach(id => $('#' + id) && ($('#' + id).onchange = sync)); $('#prStart').onclick = startSession;
     const lm = (id, key, max) => { $('#' + id).onchange = ev => { const v = Math.max(0, Math.min(max, Math.floor(+ev.target.value) || 0)); ev.target.value = v; state.settings[key] = v; state.settings._limitsOpen = true; save(); prRefreshStatus(); renderStats(); }; };
     const dl = $('.pr-limits'); if (dl) dl.addEventListener('toggle', () => { state.settings._limitsOpen = dl.open; });   // stays open when you change another option
-    lm('stNew', 'newPerDay', 500); lm('stRev', 'maxReviews', 2000); lm('stGoal', 'dailyGoal', 2000); weakMount(root); root.insertAdjacentHTML('afterbegin', '<div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn sm" data-go="progress">📈 Your progress</button></div>'); focusMount(root); lsMount(root); aiMount(root); return;
+    $('#stLearn').onchange = ev => { state.settings.learnSteps = ev.target.value; state.settings._limitsOpen = true; applyLearn(); save(); prRefreshStatus(); }; lm('stNew', 'newPerDay', 500); lm('stRev', 'maxReviews', 2000); lm('stGoal', 'dailyGoal', 2000); weakMount(root); root.insertAdjacentHTML('afterbegin', '<div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn sm" data-go="progress">📈 Your progress</button></div>'); focusMount(root); lsMount(root); aiMount(root); return;
   }
   const e = byId(pr.queue[pr.i]); if (!e) { endSession(); return; }
   const total = pr.queue.length, m = pr.mode, typed = isTyped(m), res = pr.result;
@@ -3441,16 +3458,23 @@ const planHTML = S => {
   const body = lsA + li(S.add, `new phrase${S.add === 1 ? '' : 's'} added`) + li(S.upd, `updated from the file (file is newer)`) + li(S.kept, `kept as they are (yours are newer)`) + li(S.del, `removed (deleted on another device)`) + li(S.skip, `skipped (you deleted them here)`) + li(S.fill, `phrase${S.fill === 1 ? '' : 's'} that are missing audio here get it from the file`) + li(S.same, `already identical`) + li(S.lNew + S.lUpd, `lesson${S.lNew + S.lUpd === 1 ? '' : 's'} added or updated`) + li(S.tNew + S.tUpd, `text${S.tNew + S.tUpd === 1 ? '' : 's'} added or updated`);
   return `<ul style="margin:6px 0 0;padding-left:20px">${body || '<li>Nothing to change — this device is already up to date.</li>'}</ul>${S.noAudio ? `<p class="muted" style="font-size:.86rem">${S.noAudio} new phrase${S.noAudio === 1 ? ' arrives' : 's arrive'} without audio because the file has none. Import a file saved with “Include phrase audio” once to get it.</p>` : ''}`;
 };
+async function readableCopy(file, prog) {           // some providers (Google Drive on Android) cannot be read in pieces — read once, in order, into a local copy
+  const rd = file.stream().getReader(); let acc = new Blob([]), parts = [], n = 0, tot = 0;
+  for (;;) { const { done, value } = await rd.read(); if (done) break; parts.push(value); n += value.length; tot += value.length; if (n >= 8 << 20) { acc = new Blob([acc, ...parts]); parts = []; n = 0; prog && prog(Math.round(tot / Math.max(1, file.size) * 100)); } }
+  return new File([acc, ...parts], file.name, { type: file.type });
+}
 async function readBackup(file) {
   const bt = busyToast('Reading ' + file.name + (file.size > 5e6 ? ' (' + (file.size / 1048576).toFixed(0) + ' MB — this can take a moment)' : '') + '…'); await sleep(30);
   let data; try {
+    try { if (!file.size) throw new Error('empty'); await file.slice(0, 4).arrayBuffer(); await file.slice(file.size - 4).arrayBuffer(); }
+    catch (e0) { bt.set('Copying ' + file.name + ' from your storage (' + (file.size ? (file.size / 1048576).toFixed(0) + ' MB' : 'Drive') + ')…'); file = await readableCopy(file, pc => bt.set('Copying from Drive… ' + pc + '%')); bt.set('Reading ' + file.name + '…'); }
     const head = new Uint8Array(await file.slice(0, 4).arrayBuffer());
     if (head[0] === 0x50 && head[1] === 0x4b) {                                   // new format: zip with litlingo.json + audio/<id>
       const z = await zipOpenFile(file), jb = await z.blob('litlingo.json'); if (!jb) throw new Error('litlingo.json is missing');
       data = JSON.parse(await jb.text()); data.audio = {};
       const ids = Object.keys(data.audioIndex || {}); for (let i = 0; i < ids.length; i += 40) await Promise.all(ids.slice(i, i + 40).map(async id => { const b = await z.blob('audio/' + encodeURIComponent(id), data.audioIndex[id].type); if (b) data.audio[id] = { name: data.audioIndex[id].name, type: data.audioIndex[id].type, blob: b }; }));
     } else { let txt = await file.text(); data = JSON.parse(txt); txt = null; }       // older backups: one JSON file with base64 audio
-  } catch (e) { bt.done(); toast(e instanceof SyntaxError ? 'That file is not valid JSON — it may be incomplete (still syncing from Drive?).' : 'Could not read the file (' + (e && (e.name === 'NotReadableError' ? 'it may still be downloading from Drive — set Drive to keep it offline' : e.message) || 'error') + ').', 'err'); return null; } bt.done();
+  } catch (e) { bt.done(); toast(e instanceof SyntaxError ? 'That file is not valid JSON — it may be incomplete (still syncing from Drive?).' : 'Could not read the file (' + (e && (e.name === 'NotReadableError' ? 'Drive would not hand over the file — in Drive tap ⋮ → Download, then pick it from your Downloads folder' : e.message) || 'error') + ').', 'err'); return null; } bt.done();
   if (!data || !Array.isArray(data.entries)) { toast('This does not look like a dashboard backup.', 'err'); return null; } return data;
 }
 async function importJSONFile(file) {
