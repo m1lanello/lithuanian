@@ -3269,6 +3269,7 @@ function renderBackup() {
     <label style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><input type="checkbox" id="autoSync" ${state.settings.autoSync ? 'checked' : ''}> Sync automatically in the background (needs a linked file; otherwise you get a weekly reminder)</label>
     <label style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><input type="checkbox" id="syncAudio" ${state.settings.syncAudio ? 'checked' : ''}> Include phrase audio in the sync file (much bigger)</label>
     <label style="display:flex;gap:8px;align-items:center;margin:0 0 6px 26px" class="${state.settings.syncAudio ? '' : 'muted'}"><input type="checkbox" id="syncLessons" ${state.settings.syncLessons ? 'checked' : ''} ${state.settings.syncAudio ? '' : 'disabled'}> Also include the full lesson MP3s</label>
+    <label style="display:flex;gap:8px;align-items:center;margin:0 0 6px"><input type="checkbox" id="keysInBackup" ${state.settings.keysInBackup ? 'checked' : ''}> Include my AI tutor API keys in backups and the sync file <span class="muted">(stored as plain text — only on if the file stays private)</span></label>
     <p class="muted" style="font-size:.82rem;margin:0 0 10px 26px">With full MP3s the file can reach hundreds of MB. Phones with little memory may struggle to open it, so keep this on for the device you sync from most.</p>
     <div style="margin-bottom:12px"><label class="lbl" for="fileName">File name</label><input type="text" id="fileName" maxlength="60" placeholder="LitLingo" value="${esc(state.settings.fileName || '')}" style="max-width:320px"><div class="muted" style="font-size:.82rem;margin-top:4px" id="fileNamePrev"></div></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="btn primary" id="btnSync">⇄ Sync with file…</button><span class="muted" id="syncInfo">Last sync: <b>${state.lastSync ? esc(new Date(state.lastSync).toLocaleString()) : 'never'}</b></span></div>
@@ -3291,6 +3292,7 @@ function renderBackup() {
       <p class="muted" style="font-size:.84rem;margin:10px 0 0"><b>iPhone / iPad:</b> Share → <i>Add to Home Screen</i>. <b>Android / desktop Chrome &amp; Edge:</b> use Install.</p></div>
     <div class="panel"><h2 class="sec">Delete all phrases</h2><p class="muted" style="margin-top:0">Empties the dictionary but keeps your lesson audio and clip splits, so you can re-add phrases from the Lessons tab.</p><button class="btn danger" id="btnWipePhrases">Delete all phrases…</button></div>
     <div class="panel"><h2 class="sec">Erase everything</h2><p class="muted" style="margin-top:0">Deletes all phrases, lessons, stored audio and progress from this browser.</p><button class="btn danger" id="btnWipe">Erase everything…</button></div></div>`;
+  $('#keysInBackup').onchange = ev => { state.settings.keysInBackup = ev.target.checked; save(); toast(ev.target.checked ? 'Your API keys will be written into the next backup or sync, as plain text. Keep those files private.' : 'API keys will no longer be written to backups. Copies already in older files stay there.', ev.target.checked ? 'warn' : undefined); };
   $('#autoSync').onchange = ev => { state.settings.autoSync = ev.target.checked; save(); if (ev.target.checked) autoSync('enabled'); }; $('#btnSync').onclick = () => syncNow(); $('#syncAudio').onchange = ev => { state.settings.syncAudio = ev.target.checked; save(); $('#syncLessons').disabled = !ev.target.checked; prevName(); };
   $('#syncLessons').onchange = ev => { state.settings.syncLessons = ev.target.checked; save(); };
   const prevName = () => { $('#fileNamePrev').innerHTML = 'Files will be called <b>' + esc(fileBase()) + '-sync.' + (state.settings.syncAudio ? 'zip' : 'json') + '</b> and <b>' + esc(fileBase()) + '-' + todayStr() + ($('#expAudio') && $('#expAudio').checked ? '-with-audio.zip' : '.json') + '</b>'; };
@@ -3321,6 +3323,7 @@ const hasCarry = c => !!(c && (c.blob || c.data));
 async function buildBackup(withAudio, withLessons, carry) {
   stampChanges();
   const base = { app: 'lithuanian-audio-dashboard', version: 2, exported: new Date().toISOString(), entries: state.entries, lessons: state.lessons, texts: state.texts, tomb: state.tomb, time: state.time, hist: state.hist, days: state.days, counts: state.counts, settings: state.settings };
+  if (state.settings.keysInBackup) { const k = {}; for (const p of Object.keys(AI_KEYS)) { const v = aiKey(p); if (v) k[p] = v; } if (Object.keys(k).length) base.aiKeys = k; }   // only when the user switched it on
   const used = id => state.entries.some(e => e.audioId === id) || state.lessons.some(l => l.audioId === id);
   const cIds = carry ? Object.keys(carry).filter(id => hasCarry(carry[id]) && used(id)) : [];
   if (!withAudio && !cIds.length) return new Blob([JSON.stringify(base)], { type: 'application/json' });
@@ -3514,6 +3517,7 @@ async function applyImport(data, mode, prog, revive) {
   const S = await mergeData(data, smart, false, revive);
   await importAudioFrom(data, mode === 'replace' || !smart ? null : [...S.need], prog);
   if (mode === 'replace') { state.tomb = data.tomb && typeof data.tomb === 'object' ? data.tomb : {}; if (data.settings) state.settings = Object.assign({}, DEF_SETTINGS, data.settings); }
+  if (data.aiKeys && typeof data.aiKeys === 'object') for (const p of Object.keys(AI_KEYS)) { const v = data.aiKeys[p]; if (typeof v === 'string' && v.length > 10 && v.length < 400 && !aiKey(p)) aiSetKey(v, p); }   // fills a missing key, never replaces one already on this device
   await verifyAudioRefs(); stampChanges(true); applyTheme(); save(); refresh(); return S;
 }
 
