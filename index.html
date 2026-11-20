@@ -749,10 +749,10 @@ function setManualStatus(e, st) {      // dictionary buttons: keep the scheduler
   else { e.state = 'new'; e.ivl = 0; e.ease = SR.ease0; e.step = 0; e.lapses = 0; e.due = 0; }
 }
 let loadWarning = '';
-function loadState() {
-  let raw = null;
+function loadState(given) {
+  let raw = given !== undefined ? given : null;
   try {
-    raw = localStorage.getItem(LS_KEY);
+    if (given === undefined) raw = localStorage.getItem(LS_KEY);
     if (raw) {
       const o = JSON.parse(raw);
       state.entries = (o.entries || []).map(mkEntry); state.lessons = (o.lessons || []).map(mkLesson); state.texts = (o.texts || []).map(mkText); wIdx = null; hayC = new WeakMap();
@@ -765,7 +765,19 @@ function loadState() {
     catch (e2) { loadWarning = 'Saved data could not be read, and no backup copy could be made.'; }
   }
 }
-let lastSaved = null;
+let lastSavedAt = 0, stateReady = false;
+/* Phrase data lives in its own IndexedDB database (no 5 MB cap). A copy is also kept in localStorage while it is small, so nothing is lost if the page closes mid-save. */
+let sdb = null;
+function openStateDB() { return new Promise(res => { try { const q = indexedDB.open('litlingoState', 1); q.onupgradeneeded = () => q.result.createObjectStore('kv'); q.onsuccess = () => { sdb = q.result; sdb.onversionchange = () => sdb.close(); res(true); }; q.onerror = q.onblocked = () => res(false); } catch (e) { res(false); } }); }
+const kvGet = k => new Promise(res => { if (!sdb) return res(null); try { const q = sdb.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result == null ? null : q.result); q.onerror = () => res(null); } catch (e) { res(null); } });
+const kvPut = (k, v) => new Promise((res, rej) => { if (!sdb) return rej(new Error('no database')); try { const t = sdb.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = () => res(); t.onerror = t.onabort = () => rej(t.error || new Error('write failed')); } catch (e) { rej(e); } });
+const svOf = raw => { const m = /^\{"v":2,"sv":(\d+)/.exec(raw || ''); return m ? +m[1] : 0; };
+async function readStored() {
+  let ls = null; try { ls = localStorage.getItem(LS_KEY); } catch (e) {}
+  const ib = await kvGet('state');
+  return ib && svOf(ib) > svOf(ls) ? { raw: ib, src: 'idb' } : { raw: ls, src: 'ls' };
+}
+const stateBC = 'BroadcastChannel' in window ? new BroadcastChannel('litlingo-state') : null;
 const entryFP = e => [e.lt, e.stress, e.en, e.cat, e.note, e.ph, e.fav ? 1 : 0, e.status, e.state, e.due, e.ivl, e.ease, e.step, e.lapses, e.reviews, e.correct, e.order, e.audioId ? 1 : 0, (e.tags || []).join(',')].join('\u0001');
 function snapHist() {                   // one snapshot per day: how many phrases were mastered / learning / total (for the growth chart)
   if (!state.entries.length) return; let m = 0, l = 0; for (const e of state.entries) { if (e.status === 2) m++; else if (e.status === 1) l++; }
@@ -781,8 +793,14 @@ function stampChanges(rebase) {         // every phrase/lesson/text carries the 
 }
 let saveWarned = false;
 const saveNow = () => {
-  try { stampChanges(); snapHist(); const str = JSON.stringify({ v: 2, entries: state.entries, lessons: state.lessons, texts: state.texts, tomb: state.tomb, time: state.time, hist: state.hist, lastSync: state.lastSync, days: state.days, counts: state.counts, settings: state.settings, lastExport: state.lastExport }); localStorage.setItem(LS_KEY, str); lastSaved = str; if (str.length > 3.5e6 && !saveWarned) { saveWarned = true; toast('Your phrase data is getting large (' + (str.length / 1e6).toFixed(1) + ' MB of about 5 MB the browser allows). Export a backup and tell Claude so the storage can be moved.', 'warn'); } }
-  catch (e) { toast('Could not save to localStorage (storage full or blocked).', 'err'); }
+  if (!stateReady) return;
+  try {
+    stampChanges(); snapHist(); const at = Math.max(Date.now(), lastSavedAt + 1);
+    const str = JSON.stringify({ v: 2, sv: at, entries: state.entries, lessons: state.lessons, texts: state.texts, tomb: state.tomb, time: state.time, hist: state.hist, lastSync: state.lastSync, days: state.days, counts: state.counts, settings: state.settings, lastExport: state.lastExport });
+    lastSavedAt = at; let lsOk = false;
+    if (str.length < 4.2e6) { try { localStorage.setItem(LS_KEY, str); lsOk = true; } catch (e) {} } else { try { localStorage.removeItem(LS_KEY); } catch (e) {} }
+    kvPut('state', str).then(() => { if (stateBC) stateBC.postMessage(at); }).catch(() => { if (!lsOk && !saveWarned) { saveWarned = true; toast('Could not save your data (browser storage is full or blocked). Export a backup now.', 'err'); } });
+  } catch (e) { toast('Could not save your data (' + (e && e.message || 'error') + ').', 'err'); }
 };
 const saveDeb = debounce(saveNow, 250);
 const save = () => { wIdx = null; hayC = new WeakMap(); saveDeb(); };
@@ -791,14 +809,15 @@ window.addEventListener('pagehide', saveNow);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveNow(); });
 // Another tab/window saved newer data: reload it here instead of overwriting it with stale state later.
 let externalPending = false;
-function syncFromOtherTab() {
-  let raw = null; try { raw = localStorage.getItem(LS_KEY); } catch (e) { return; }
-  if (!raw || raw === lastSaved) { externalPending = false; return; }
+async function syncFromOtherTab() {
+  if (!stateReady) return;
+  const best = await readStored(); if (!best.raw || svOf(best.raw) <= lastSavedAt) { externalPending = false; return; }
   const busy = modals.length || (typeof lv !== 'undefined' && lv.open) || (typeof pr !== 'undefined' && pr.active) || document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
   if (busy) { if (!externalPending) { externalPending = true; toast('Your data changed in another tab. Finish what you are doing and switch tabs to load it.', 'warn'); } return; }
-  externalPending = false; loadState(); lastSaved = raw; applyTheme(); refresh(); toast('Loaded changes from another tab.');
+  externalPending = false; loadState(best.raw); lastSavedAt = svOf(best.raw); applyTheme(); refresh(); toast('Loaded changes from another tab.');
 }
 window.addEventListener('storage', e => { if (e.key === LS_KEY) syncFromOtherTab(); });
+if (stateBC) stateBC.onmessage = () => syncFromOtherTab();
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') syncFromOtherTab(); });
 const byId = id => state.entries.find(e => e.id === id);
 const lessonById = id => state.lessons.find(l => l.id === id);
@@ -1310,13 +1329,16 @@ async function openApkg(file) {
     const deckOf = new Map(); S.rows('cards', (id, r) => { if (!deckOf.has(r[1])) deckOf.set(r[1], r[2]); });
     const notes = []; S.rows('notes', (id, r) => notes.push({ id, mid: String(r[2]), tags: r[5] || '', flds: String(r[6] || '').split('\x1f') }));
     if (!notes.length) throw new Error('No notes found in this package.');
-    const cnt = {}; notes.forEach(x => cnt[x.mid] = (cnt[x.mid] || 0) + 1); const mid = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0], use = notes.filter(x => x.mid === mid), skipped = notes.length - use.length;
-    const nf = Math.max(...use.map(x => x.flds.length)), M = models[mid], headers = M && M.flds ? M.flds.sort((a, b) => a.ord - b.ord).map(f => f.name) : [];
-    const rows = use.map(x => { const r = x.flds.slice(); while (r.length < nf) r.push(''); r.push(x.tags.trim()); const d = decks[deckOf.get(x.id)]; r.push(d ? d.name : ''); return r; });
-    headers[nf] = 'Anki tags'; headers[nf + 1] = 'Deck';
+    const cnt = {}; notes.forEach(x => cnt[x.mid] = (cnt[x.mid] || 0) + 1); const mids = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]);
     const media = new Map(); try { const mj = JSON.parse(td.decode(await z.get('media') || new Uint8Array())); for (const [idx, name] of Object.entries(mj)) media.set(name, () => z.get(idx)); } catch (e) {}
-    toastHide(busy);
-    openAnkiImport('', file.name, { rows, tagsCol: nf, deckCol: nf + 1, headers, media, note: skipped ? `${skipped} note${skipped === 1 ? '' : 's'} of another note type were left out.` : '' });
+    const types = mids.map(m => ({ mid: m, name: (models[m] && models[m].name) || 'Note type ' + m, count: cnt[m] }));
+    const show = mid => {                                  // one note type at a time: words and sentences are often different types with different fields
+      const use = notes.filter(x => x.mid === mid), nf = Math.max(...use.map(x => x.flds.length)), M = models[mid], headers = M && M.flds ? M.flds.slice().sort((a, b) => a.ord - b.ord).map(f => f.name) : [];
+      const rows = use.map(x => { const r = x.flds.slice(); while (r.length < nf) r.push(''); r.push(x.tags.trim()); const d = decks[deckOf.get(x.id)]; r.push(d ? d.name : ''); return r; });
+      headers[nf] = 'Anki tags'; headers[nf + 1] = 'Deck';
+      openAnkiImport('', file.name, { rows, tagsCol: nf, deckCol: nf + 1, headers, media, types, curType: mid, onType: show, note: types.length > 1 ? 'This package has ' + types.length + ' note types. Import each one in turn — phrases you already have are skipped.' : '' });
+    };
+    toastHide(busy); show(mids[0]);
   } catch (err) { console.error(err); toastHide(busy); toast(err.message || 'Could not read that Anki package.', 'err'); }
 }
 const toastHide = t => { try { t && t.remove && t.remove(); } catch (e) {} };
@@ -1338,11 +1360,16 @@ function openAnkiImport(text, fileName, pre) {
   const colName = i => pre && pre.headers && pre.headers[i] ? pre.headers[i] + ' (col ' + (i + 1) + ')' : 'Column ' + (i + 1) + ' — ' + (ankiClean((rows[0] || [])[i]).slice(0, 22) || '…');
   const opts = (sel, none) => (none ? `<option value="-1" ${sel < 0 ? 'selected' : ''}>— none —</option>` : '') + [...Array(ncol).keys()].map(i => `<option value="${i}" ${i === sel ? 'selected' : ''}>${esc(colName(i))}</option>`).join('');
   const hasSound = rows.some(r => r.some(c => /\[sound:/i.test(c)));
+  const H = (pre && pre.headers) || [], hf = (...res) => H.findIndex((h, i) => i < ncol && h && res.every(x => x.test(h))), sl0 = hf(/sentence/i, /lithuanian/i, /^(?!.*audio)/i), se0 = hf(/sentence/i, /english/i, /^(?!.*audio)/i), sa0 = hf(/sentence/i, /lithuanian/i, /audio/i), wa0 = hf(/word/i, /lithuanian/i, /audio/i);
   const m = openModal(`<div class="modal-head"><h2>Import from Anki / CSV</h2><button class="icon-btn" data-x aria-label="Close">✕</button></div><div class="modal-body">
     <p class="muted" style="margin-top:0">${esc(fileName || 'Pasted text')} · ${rows.length} row${rows.length === 1 ? '' : 's'}. Check which column is which — the preview updates as you choose.</p>
+    ${pre && pre.types && pre.types.length > 1 ? `<div style="margin-bottom:10px"><label class="lbl" for="aiType">Note type</label><select id="aiType">${pre.types.map(t => `<option value="${esc(t.mid)}" ${t.mid === pre.curType ? 'selected' : ''}>${esc(t.name)} — ${t.count} note${t.count === 1 ? '' : 's'}</option>`).join('')}</select></div>` : ''}
     <div class="pr-form"><div><label class="lbl" for="aiLt">Lithuanian</label><select id="aiLt">${opts(lt, false)}</select></div><div><label class="lbl" for="aiEn">English</label><select id="aiEn">${opts(en ?? -1, true)}</select></div>
       <div><label class="lbl" for="aiNote">Notes (optional)</label><select id="aiNote">${opts(-1, true)}</select></div><div><label class="lbl" for="aiTags">Anki tags (optional)</label><select id="aiTags">${opts(tagsCol, true)}</select></div>
       <div class="full"><label class="lbl" for="aiCat">Lesson / category</label><input type="text" id="aiCat" value="Anki import" maxlength="40"> ${deckCol >= 0 ? '<label style="display:flex;gap:8px;align-items:center;margin-top:6px"><input type="checkbox" id="aiDeck"> Use the Anki deck name instead</label>' : ''}</div></div>
+    ${sl0 >= 0 ? `<div style="margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:10px"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="aiSent" checked> <b>Also add each example sentence as its own phrase</b></label>
+      <div class="pr-form" style="margin-top:8px"><div><label class="lbl" for="aiSL">Sentence (Lithuanian)</label><select id="aiSL">${opts(sl0, false)}</select></div><div><label class="lbl" for="aiSE">Sentence (English)</label><select id="aiSE">${opts(se0, true)}</select></div>
+      <div><label class="lbl" for="aiSA">Sentence audio</label><select id="aiSA">${opts(sa0, true)}</select></div><div><label class="lbl" for="aiWA">Word audio</label><select id="aiWA">${opts(wa0, true)}</select></div></div></div>` : ''}
     <label style="display:flex;gap:8px;align-items:center;margin-top:8px"><input type="checkbox" id="aiKeepTags"> Keep Anki tags as tags here too</label>
     <div id="aiPrev" style="margin-top:10px;font-size:.9rem;overflow:auto"></div><p id="aiSum" style="margin:10px 0 0"></p>
     <label id="aiAudWrap" style="display:flex;gap:8px;align-items:center;margin-top:8px" hidden><input type="checkbox" id="aiAud" checked> <span id="aiAudTxt"></span></label>
@@ -1351,22 +1378,28 @@ function openAnkiImport(text, fileName, pre) {
     <div class="modal-foot"><button class="btn" data-x>Cancel</button><button class="btn primary" id="aiGo">Import</button></div>`);
   const known = new Set(state.entries.map(e => key(stripStress(e.lt)))); const g = id => +$('#' + id, m.el).value;
   const plan = () => {
-    const L = g('aiLt'), E = g('aiEn'), N = g('aiNote'), T = g('aiTags'), seen = new Set(), out = []; let dup = 0, empty = 0;
-    for (const r of rows) {
-      let t = ankiClean(r[L]); if (!t) { empty++; continue; }
+    const L = g('aiLt'), E = g('aiEn'), N = g('aiNote'), T = g('aiTags'), seen = new Set(), out = [], sentOn = !!$('#aiSent', m.el) && $('#aiSent', m.el).checked, SL = sentOn ? g('aiSL') : -1, SE = sentOn ? g('aiSE') : -1, SA = sentOn ? g('aiSA') : -1, WA = $('#aiWA', m.el) ? g('aiWA') : -1; let dup = 0, empty = 0, sentN = 0;
+    const sm = c => (/\[sound:([^\]]+)\]/i.exec(String(c || '')) || [])[1], hasMed = n => n && pre && pre.media && pre.media.has(n);
+    const add = (r, text, en, note, snd, isSent) => {
+      let t = ankiClean(text); if (!t) { if (!isSent) empty++; return; }
       let stress = ''; const plain = stripStress(t); if (plain !== t.normalize('NFC')) { stress = t.normalize('NFC'); t = plain; }
-      const k = key(stripStress(t)); if (known.has(k) || seen.has(k)) { dup++; continue; } seen.add(k);
+      const k = key(stripStress(t)); if (known.has(k) || seen.has(k)) { dup++; return; } seen.add(k);
       const tags = []; if (T >= 0 && $('#aiKeepTags', m.el).checked) String(r[T] || '').split(/\s+/).filter(Boolean).forEach(x => { const nm = x.split('::').pop().replace(/_/g, ' ').slice(0, 24), hit = [...GT].find(([id, lab]) => tagName(id).toLowerCase() === nm.toLowerCase()); tags.push(hit ? hit[0] : nm); });
-      const sm = c => (/\[sound:([^\]]+)\]/i.exec(String(c || '')) || [])[1], snd = pre && pre.media ? [sm(r[L]), ...r.map(sm)].find(n => n && pre.media.has(n)) : '';
-      out.push({ snd, lt: t, stress, en: E >= 0 ? ankiClean(r[E]) : '', note: N >= 0 ? ankiClean(r[N]) : '', tags, deck: deckCol >= 0 ? ankiClean(r[deckCol]) : '' });
+      out.push({ snd: hasMed(snd) ? snd : '', lt: t, stress, en: ankiClean(en), note: ankiClean(note), tags, deck: deckCol >= 0 ? ankiClean(r[deckCol]) : '' }); if (isSent) sentN++;
+    };
+    for (const r of rows) {
+      const wsnd = WA >= 0 ? sm(r[WA]) : [sm(r[L]), ...r.map(sm)].find(hasMed);
+      add(r, r[L], E >= 0 ? r[E] : '', N >= 0 ? r[N] : '', wsnd, false);            // the word / main phrase — even if it is already here, its sentence may be new
+      if (SL >= 0) add(r, r[SL], SE >= 0 ? r[SE] : '', '', SA >= 0 ? sm(r[SA]) : '', true);
     }
-    return { out, dup, empty };
+    return { out, dup, empty, sentN };
   };
   const draw = () => {
     const P = plan(); $('#aiPrev', m.el).innerHTML = P.out.length ? `<table style="width:100%;border-collapse:collapse">${P.out.slice(0, 5).map(x => `<tr><td lang="lt" style="padding:4px 8px 4px 0;font-weight:600">${x.snd ? '🔊 ' : ''}${esc(x.stress || x.lt)}</td><td style="padding:4px 0" class="muted">${esc(x.en)}</td></tr>`).join('')}</table>` : '<span class="muted">No new phrases with these settings.</span>';
-    $('#aiSum', m.el).innerHTML = `<b>${P.out.length}</b> new phrase${P.out.length === 1 ? '' : 's'}${P.dup ? ` · ${P.dup} already in your dictionary (skipped)` : ''}${P.empty ? ` · ${P.empty} empty (skipped)` : ''}`; $('#aiGo', m.el).disabled = !P.out.length; { const na = P.out.filter(x => x.snd).length; $('#aiAudWrap', m.el).hidden = !na; $('#aiAudTxt', m.el).textContent = `Import the audio too (${na} phrase${na === 1 ? '' : 's'} have a sound file)`; } return P;
+    $('#aiSum', m.el).innerHTML = `<b>${P.out.length}</b> new phrase${P.out.length === 1 ? '' : 's'}${P.sentN ? ` (${P.sentN} of them example sentences)` : ''}${P.dup ? ` · ${P.dup} already in your dictionary (skipped)` : ''}${P.empty ? ` · ${P.empty} empty (skipped)` : ''}`; $('#aiGo', m.el).disabled = !P.out.length; { const na = P.out.filter(x => x.snd).length; $('#aiAudWrap', m.el).hidden = !na; $('#aiAudTxt', m.el).textContent = `Import the audio too (${na} phrase${na === 1 ? '' : 's'} have a sound file)`; } return P;
   };
-  $$('select, #aiKeepTags, #aiDeck', m.el).forEach(x => x.addEventListener('change', draw)); draw();
+  $$('select:not(#aiType), #aiKeepTags, #aiDeck, #aiSent', m.el).forEach(x => x.addEventListener('change', draw)); draw();
+  if ($('#aiType', m.el)) $('#aiType', m.el).onchange = ev => { m.close(); pre.onType(ev.target.value); };
   $('#aiGo', m.el).onclick = async () => {
     const P = draw(), cat0 = ($('#aiCat', m.el).value.trim() || 'Anki import'), useDeck = $('#aiDeck', m.el) && $('#aiDeck', m.el).checked, wantAud = !$('#aiAudWrap', m.el).hidden && $('#aiAud', m.el).checked, go = $('#aiGo', m.el); let ord = maxOrder(), na = 0, fail = 0;
     go.disabled = true; const MIME = { mp3: 'audio/mpeg', ogg: 'audio/ogg', oga: 'audio/ogg', wav: 'audio/wav', m4a: 'audio/mp4', aac: 'audio/aac', flac: 'audio/flac', opus: 'audio/ogg', webm: 'audio/webm' };
@@ -3638,14 +3671,14 @@ function registerSW() {
    Init
 =================================================================== */
 (async function init() {
-  loadState(); applyTheme(); const ok = await openDB();
+  loadState(); applyTheme(); const ok = await openDB(); await openStateDB();
+  { const best = await readStored(); if (best.src === 'idb') { loadState(best.raw); applyTheme(); } lastSavedAt = svOf(best.raw); stateReady = true; }
   if (loadWarning) toast(loadWarning, 'err');
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) {}
   if (!ok) toast('Browser storage for audio is unavailable here — MP3s will only last for this session.', 'warn');
   const lost = await verifyAudioRefs(); if (lost) { toast(lost + ' audio file(s) were missing from browser storage — re-attach them in the Lessons tab.', 'warn'); }
   saveNow(); if ('speechSynthesis' in window) speechSynthesis.getVoices();
   renderStats(); renderChips(); renderList();
-  try { lastSaved = localStorage.getItem(LS_KEY); } catch (e) {}
   registerSW();
 })();
 })();
