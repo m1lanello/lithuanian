@@ -49,6 +49,7 @@ nav.tabs button[aria-current="page"]{background:var(--accent);color:var(--accent
 nav.tabs button:hover:not([aria-current="page"]){color:var(--text)}
 
 html{scrollbar-gutter:stable}
+html,body{overscroll-behavior-x:none}
 main{max-width:1200px;margin:0 auto;padding:12px 14px 60px}
 .btn{border:1px solid var(--line);background:var(--surface2);padding:7px 13px;border-radius:9px;font-weight:600;display:inline-flex;align-items:center;gap:7px;transition:background .15s,border-color .15s;white-space:nowrap}
 .btn:hover:not(:disabled){border-color:var(--accent)}
@@ -3611,6 +3612,31 @@ function showTab(name, keepLesson) {
   window.scrollTo({ top: 0 }); syncWbOpen();
 }
 $$('nav.tabs button, #tabbar button').forEach(b => b.onclick = () => showTab(b.dataset.tab, b.dataset.tab === 'lessons' && !!wb));
+/* ---- swipe left / right anywhere to move between tabs (touch screens only) ---- */
+(function swipeTabs() {
+  const ORDER = ['dict', 'lessons', 'reader', 'practice', 'progress', 'backup'];
+  let st = null;
+  const blocked = t => {                       // places where a horizontal drag already means something
+    if (!(t instanceof Element)) return true;
+    if (t.closest('input,textarea,select,canvas,[contenteditable],.modal-ov,.np,#tabbar,nav.tabs,.charpad,.wv-canvas,[role=slider],[role=application],pre,table')) return true;
+    for (let el = t; el && el !== document.body; el = el.parentElement) { if (el.scrollWidth > el.clientWidth + 4) { const o = getComputedStyle(el).overflowX; if (o === 'auto' || o === 'scroll') return true; } }
+    return false;
+  };
+  document.addEventListener('touchstart', e => {
+    st = null; if (e.touches.length !== 1) return; const t = e.touches[0];
+    if (t.clientX < 28 || t.clientX > innerWidth - 28 || blocked(e.target)) return;      // screen edges belong to the system back gesture
+    st = { x: t.clientX, y: t.clientY, at: Date.now() };
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    const s0 = st; st = null; if (!s0 || !e.changedTouches.length) return;
+    const t = e.changedTouches[0], dx = t.clientX - s0.x, dy = t.clientY - s0.y;
+    if (Math.abs(dx) < 90 || Math.abs(dy) > Math.abs(dx) * 0.5 || Date.now() - s0.at > 800) return;
+    if (pr.active || ui.selMode || modals.length || document.body.classList.contains('wb-open') || (getSelection && String(getSelection()).length)) return;
+    const i = ORDER.indexOf(tab); if (i < 0) return; const j = i + (dx < 0 ? 1 : -1); if (j < 0 || j >= ORDER.length) return;
+    showTab(ORDER[j], ORDER[j] === 'lessons' && !!wb);
+    const el = $('#tab-' + ORDER[j]); if (el && el.animate && !matchMedia('(prefers-reduced-motion: reduce)').matches) el.animate([{ transform: 'translateX(' + (dx < 0 ? 36 : -36) + 'px)', opacity: .35 }, { transform: 'none', opacity: 1 }], { duration: 220, easing: 'ease-out' });
+  }, { passive: true });
+})();
 function updateTabBadge() {        // number of cards waiting in a default practice session, shown on the Practice tab of the bottom bar
   const b = $('#tbBadge'); if (!b) return; let n = 0;
   try { n = pr.active ? 0 : queueInfo({ scope: 'due', cat: 'all', audioOnly: false, mode: 'listen' }).list.length; } catch (e) {}
