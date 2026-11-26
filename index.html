@@ -362,7 +362,7 @@ main{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env
   :root{--tb:calc(58px + env(safe-area-inset-bottom))}
   body.typing{--tb:0px}                       /* keyboard is open: give the space back */
   nav.tabs{display:none}
-  .tabbar{display:block;position:fixed;left:0;right:0;bottom:0;z-index:65;background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+  .tabbar{display:block;transform:translateZ(0);position:fixed;left:0;right:0;bottom:0;z-index:65;background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
   body.typing .tabbar{display:none}
   .tabbar-in{max-width:720px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);height:58px}
   .tabbar button{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;background:transparent;color:var(--muted);font-size:.72rem;font-weight:600;padding:4px 2px;min-width:0;-webkit-tap-highlight-color:transparent}
@@ -3634,7 +3634,6 @@ $$('nav.tabs button, #tabbar button').forEach(b => b.onclick = () => showTab(b.d
     if (pr.active || ui.selMode || modals.length || document.body.classList.contains('wb-open') || (getSelection && String(getSelection()).length)) return;
     const i = ORDER.indexOf(tab); if (i < 0) return; const j = i + (dx < 0 ? 1 : -1); if (j < 0 || j >= ORDER.length) return;
     showTab(ORDER[j], ORDER[j] === 'lessons' && !!wb);
-    const el = $('#tab-' + ORDER[j]); if (el && el.animate && !matchMedia('(prefers-reduced-motion: reduce)').matches) el.animate([{ transform: 'translateX(' + (dx < 0 ? 36 : -36) + 'px)', opacity: .35 }, { transform: 'none', opacity: 1 }], { duration: 220, easing: 'ease-out' });
   }, { passive: true });
 })();
 function updateTabBadge() {        // number of cards waiting in a default practice session, shown on the Practice tab of the bottom bar
