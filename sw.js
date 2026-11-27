@@ -1,38 +1,60 @@
-// Bump VERSION whenever you upload a new index.html so devices refresh.
-const VERSION = 'drako-v24';
-const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./img/0337e4a262.webp", "./img/0c2540df5c.webp", "./img/0cd88cea4c.webp", "./img/10db8cef51.webp", "./img/1a021a7415.webp", "./img/1d03a21d9a.webp", "./img/21e119123f.jpg", "./img/248c1b9696.webp", "./img/3a34ae83e3.webp", "./img/427ef29484.jpg", "./img/47aae5e9ee.jpg", "./img/4a4362e2a8.webp", "./img/4cf9078727.webp", "./img/502425ba90.webp", "./img/537f0db0e5.webp", "./img/551916fca3.webp", "./img/5853d43548.webp", "./img/5de31df32d.jpg", "./img/66029399d1.webp", "./img/6939d49d25.jpg", "./img/6b7f89793d.webp", "./img/6cf964361b.webp", "./img/6ddd708c21.webp", "./img/6ff47f3627.webp", "./img/75eb825cff.webp", "./img/7918d21f55.webp", "./img/7ba8360010.webp", "./img/810f994beb.webp", "./img/84b98c4e43.webp", "./img/8644a4c303.webp", "./img/89a859daa4.webp", "./img/93b3d3f372.jpg", "./img/a23fec1a82.webp", "./img/aebf9dcaec.webp", "./img/b189c12674.webp", "./img/b5c74fb0b9.webp", "./img/b6286e1f34.webp", "./img/b72c07d4e9.jpg", "./img/bb7e36597b.webp", "./img/bd1becbe35.webp", "./img/c7adf82e83.webp", "./img/cdfa388750.webp", "./img/cf39c11eb5.webp", "./img/d0975e92aa.jpg", "./img/d226086d35.webp", "./img/d5984d1204.webp", "./img/d83aafeca2.webp", "./img/de77d90574.webp", "./img/df304a94c7.webp", "./img/df800966d9.webp", "./img/e8316b3db7.webp", "./img/e96234c505.webp", "./img/fce7bf941f.webp", "./img/fd4634e248.webp"];
+/* Kalbėk service worker — offline app shell.
+   Bump VERSION whenever you deploy changed files to force clients to refresh the shell cache. */
+const VERSION = 'v49';
+const SHELL = 'kalbek-shell-' + VERSION;
+const CDN = 'kalbek-cdn-v1';
+const SHELL_FILES = ['./', './index.html', './manifest.webmanifest', './icon-v4.svg', './icon-v4-180.png', './icon-v4-192.png', './icon-v4-512.png', './icon-v4-maskable-512.png'];
+const CDN_HOSTS = ['cdn.jsdelivr.net'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
+  e.waitUntil((async () => {
+    const cache = await caches.open(SHELL);
+    // add files one by one so a single missing file (e.g. you renamed the page) doesn't abort the install
+    await Promise.all(SHELL_FILES.map(f => cache.add(new Request(f, { cache: 'reload' })).catch(() => {})));
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k))))
-      .then(() => self.clients.claim())
-  );
+  e.waitUntil((async () => {
+    const keep = new Set([SHELL, CDN]);
+    for (const k of await caches.keys()) if (k.startsWith('kalbek-') && !keep.has(k)) await caches.delete(k);
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener('fetch', e => {
   const req = e.request;
-  if (req.method !== 'GET') return;
+  if (req.method !== 'GET' || req.headers.has('range')) return;          // never touch audio range requests
   const url = new URL(req.url);
-  // Never cache AI / speech / translate calls: they need a live connection.
-  if (/generativelanguage\.googleapis\.com|translate\.google\.com/.test(url.hostname)) return;
-
-  // Page: network first (fresh when online), cache fallback offline.
-  if (req.mode === 'navigate') {
-    e.respondWith(
-      fetch(req).then(r => { const c = r.clone(); caches.open(VERSION).then(x => x.put('./index.html', c)); return r; })
-        .catch(() => caches.match('./index.html'))
-    );
-    return;
+  if (url.origin === location.origin) {
+    if (req.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname.endsWith('/') || url.pathname.endsWith('.webmanifest')) e.respondWith(networkFirst(req));
+    else e.respondWith(cacheFirst(req));
+  } else if (CDN_HOSTS.includes(url.hostname)) {
+    e.respondWith(staleWhileRevalidate(req));                              // transformers.js library
   }
-  // Everything else (fonts, icons, images): cache first, then fill the cache.
-  e.respondWith(
-    caches.match(req).then(hit => hit || fetch(req).then(r => {
-      if (r && (r.ok || r.type === 'opaque')) { const c = r.clone(); caches.open(VERSION).then(x => x.put(req, c)); }
-      return r;
-    }).catch(() => hit))
-  );
+  // huggingface.co model files are cached by transformers.js itself (Cache API) — don't double-store them
 });
+
+async function networkFirst(req) {
+  const cache = await caches.open(SHELL);
+  try {
+    const res = await fetch(req);
+    if (res && res.ok) cache.put(req, res.clone());
+    return res;
+  } catch (err) {
+    return (await cache.match(req)) || (await cache.match('./index.html')) || (await cache.match('./')) || Response.error();
+  }
+}
+async function cacheFirst(req) {
+  const cache = await caches.open(SHELL), hit = await cache.match(req);
+  if (hit) return hit;
+  const res = await fetch(req);
+  if (res && res.ok) cache.put(req, res.clone());
+  return res;
+}
+async function staleWhileRevalidate(req) {
+  const cache = await caches.open(CDN), hit = await cache.match(req);
+  const net = fetch(req).then(res => { if (res && (res.ok || res.type === 'opaque')) cache.put(req, res.clone()); return res; }).catch(() => null);
+  return hit || (await net) || Response.error();
+}
